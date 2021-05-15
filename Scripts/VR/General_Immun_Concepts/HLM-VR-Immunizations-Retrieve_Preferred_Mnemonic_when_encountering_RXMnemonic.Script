@@ -1,0 +1,674 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-PowerchartFramework
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-PharmacyInpatient
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-Medication-Record
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+--------------------------------------------------RQM Test Case link-------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=118097
+
+---------------------------------------Assigning Test Data to the Variables---------------------------------------
+params domain
+log "Test running in domain"&&domain
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+Set encounterOrg to setup.encounterOrg
+Set encounterType to setup.encounterType
+set relationship to setup.relationship
+set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set noVaccineHistoryImage to common.noVaccineHistoryImage
+set doubleDashImage to common.doubleDashImage
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set immunizationForecast to textStrings.immunizationForecast
+set overDue to textStrings.overDue
+set complete to textStrings.complete
+set viewForecast to textStrings.viewForecast
+set printRecord to textStrings.printRecord
+set administeredOn to textStrings.administeredOn
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set productField to fieldLabels.productField
+set performedDateField to fieldLabels.performedDateField
+set userField to fieldLabels.userField
+set documentedDateField to fieldLabels.documentedDateField
+set productNameField to fieldLabels.productNameField
+
+set testData to JSONValue(file ResourcePath("VR/Retrieve_Preferred_Mnemonic/testData.json")).(value of domain)
+set user to testData.user
+set mnemonicDisplayLevel to testData.mnemonicDisplayLevel
+Set lastName to testData.Patient.lastName
+Set firstName to testData.Patient.firstName
+Set patientName to testData.Patient.nameFullFormatted
+Set newLastName to testData.Patient.newLastName
+Set sex to testData.Patient.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.patient.dob))
+set vaccineName to testData.vaccineName
+set productName to testData.productName
+set orderedAs to testData.orderedAs
+set phamedmgrAppltn to testData.phamedmgrAppltn
+set hnaOrdermnemonicdisplay to testData.hnaOrdermnemonicdisplay0
+set hnaOrderedAsmnemonicdisplay to testData.hnaOrderedAsmnemonicdisplay1
+set hnaOrderedAsandOrdermnemonicdisplay to testData.hnaOrderedAsandOrdermnemonicdisplay2
+set hnaandOrdermnemonicdisplay to testData.hnaandOrdermnemonicdisplay4
+set hnaOrdermnemonic to testData.hnaOrdermnemonic
+set lotNumber to testData.lotNumber
+Set format to "%b %d, %Y"
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+try
+	------------------------------------------------------PatientSetup---------------------------------------------------------
+	
+	Log "Create Patient 1 – 20 years."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".CloseApplication 2
+	------------------------------------------------------ Pre-Conditions---------------------------------------------------------
+	Log "Deleting the preferences as a part of Pre-Requisite before running this plan"
+	
+	run "prefmaint".openPrefmaint username,password,domain
+	waitFor 80, "prefmaint/Text_ExistingPreferences"
+	click "prefmaint/Text_ExistingPreferences"
+	wait 3
+	typetext windowskey & upArrow
+	wait 3
+	------------------------------------------------------------------------------------------------------------ 
+	Log "Deleting the preference at application level"
+	
+	run "prefmaint".SelectApplication "PowerChart"
+	click "prefmaint/Icon_SearchPreference_64bit"
+	waitFor 80,text:immunizationForecast
+	run "prefmaint".ClickLevel "powerchart"
+	run "prefmaint".DeletePreference mnemonicDisplayLevel
+	click "prefmaint/Button_ApplyInDefinePrefrenceWindow"
+	waitFor 80,text:immunizationForecast
+	------------------------------------------------------------------------------------------------------------ 
+	Log "Deleting the preference at position level"
+	
+	run "prefmaint".SelectPosition "DBA"
+	click "prefmaint/Icon_SearchPreference_64bit"
+	waitFor 80,text:immunizationForecast
+	run "prefmaint".ClickLevel "powerchart"
+	run "prefmaint".DeletePreference mnemonicDisplayLevel
+	click "prefmaint/Button_ApplyInDefinePrefrenceWindow"
+	waitFor 80,text:immunizationForecast
+	------------------------------------------------------------------------------------------------------------ 
+	Log "Deleting the preference at user level"
+	
+	Click imagelocation ("Prefmaint/Icon_UserSearch_64bit") +(-30,10)
+	TypeText user
+	click "prefmaint/Icon_SearchPreference_64bit"
+	waitFor 80,text:immunizationForecast
+	run "prefmaint".ClickLevel "powerchart"
+	run "prefmaint".DeletePreference mnemonicDisplayLevel
+	click "Prefmaint/Button_ApplyInDefinePrefrenceWindow"
+	waitFor 80,text:immunizationForecast
+	run "Util".CloseApplication 2
+	
+	try
+		
+		------------------------------------------------------ Test Steps---------------------------------------------------------
+		BeginTestCase  "VR/General_Immun_Concepts/HLM-VR-Immunizations-Retrieve_Preferred_Mnemonic_when_encountering_RXMnemonic"
+		
+		Log "Util".stepNumber & "ACTION: Launch Powerchart.exe with User1. Search and select Patient1, Select the Immunization Workflow MPage and navigate to Immunization section."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, global cleanup, relationship
+		
+		Log "VERIFICATION: Ensure " & vaccineName & " displays in the vaccine Column."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName
+		
+		Log "VERIFICATION: Ensure status displays with 'overdue."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, overDue
+		
+		Log "VERIFICATION: Ensure Administrations displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, doubleDashImage, false
+		
+		Log "VERIFICATION: Ensure Last action displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure Last action Date displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure next recommended displays as Today "
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "Today"
+		CaptureScreen(Name: "Step" & Global stepNumber & "- MPageReview")
+		-----------------------------------------------------------------------------------------------------------------
+		log "Util".stepNumber & "ACTION: Click on "& vaccineName 
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		Log "VERIFICATION: Ensure 'Overdue - Today' displays below the " & vaccineName & "  header."
+		set SidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName, sidePanelHeaderRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyValidNextRecommendedDate overDue && " - Today ", SidePanelHeaderRectangle
+		
+		Log "VERIFICATION: Ensure 'No vaccine history to display' is shown in the body of the Side Panel."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle()
+		run "Immunizations/Util/Validation".verifyImage noVaccineHistoryImage, sidePanelRectangle
+		CaptureScreen(Name: "Step" & Global stepNumber & "-MPageSidePanel")
+		----------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: close side panel , Exit Powerchart application and launch Phamedmgr.exe with User1. Search and select Patient1, place a medication order for productA (eg: measles/mumps/rubella virus vaccine)"
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".closeSidePanel sidePanelRectangle, vaccineName
+		run "Util".CloseApplication 2
+		run "open_Application".run phamedmgrAppltn
+		run "millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		
+		Click text:"Select a patient"
+		run "CID_Common_Utilities".LoadPatient_In_MedMgr "p",patientName
+		if(ImageFound(10,"PhaMedMgr/Popup_PatientLoad"))//Handles no order pop-up
+			TypeText returnKey
+		end if
+		run "CID_Common_Utilities". Specify_Value_In_Textbox "PhaMedMgr/Text_DrugImage",productName
+		TypeText returnKey
+		WaitFor 50, "PhaMedMgr/Label_New_Med_Order" 
+		//  "PhaMedMgr/Label_NewMedOrder_Dithered" 
+		run "CID_Common_Utilities". Specify_Value_In_Textbox  "PhaMedMgr/Textbox_Dose", 1
+		run "CID_Common_Utilities". Specify_Value_In_Textbox "PhaMedMgr/Combobox_Ordered_As" , orderedAs
+		TypeText tabKey
+		Click "PhaMedMgr/Button_Update"
+		waitfor 10, "PhaChargeCredit/Icon_QPD"
+		TypeText "1"
+		Typetext returnKey		
+		run "CID_Common_Utilities". Specify_Value_In_Textbox "PhaMedMgr/Combobox_Frequency" ,"5x/Day"
+		run "CID_Common_Utilities". Specify_Value_In_Textbox "PhaMedMgr/Textbox_Physician" ,user
+		put  "CID_Common_Utilities".Retrieve_Value_From_Textbox("PhaMedMgr/Date_Startdate") into startDate//Fetch order start date/time
+		put formattedTime("%1m/%1d/%Y",startDate ) into  startDate
+		Typetext tabKey
+		Typetext controlKey,"c"
+		put  RemoteClipboard() into startTime
+		put startDate&&startTime into startDateTime
+		TypeText altKey&"o"
+		Repeat while  ImageFound ( "PhaMedMgr/Label_New_Med_Order")//This repeat excutes for 50 times to make sure the window closes, if its still open after 50 rounds, it throws an error.
+			If repeatIndex() equals 50
+				LogError "New Med Order window not closed"
+				Exit repeat
+			End If
+		End Repeat//Wait for new med order window to close
+		
+		TypeText altKey&"s"
+		Repeat while  ImageFound ("PhaMedMgr/Icon_PendingStatus")//This repeat excutes for 50 times to make sure the window closes, if its still open after 50 rounds, it throws an error.
+			If repeatIndex() equals 50
+				LogError "Order not submitted"
+				Exit repeat
+			End If
+		End Repeat//Wait for modify window to close
+		
+		Log "VERIFICATION: Ensure order has been placed successfully, status displys as 'Active.' and Order Type displays ar 'MED'. "
+		Put "PhaMedMgr/Acute_Profile".GetOrderStatus (startDateTime,productName , "PhaMedMgr/Text_StatusImg" , "PhaMedMgr/Icon_PendingStatus") into orderStatus
+		Assert that (orderStatus) is equal to "(Active,False)"
+		
+		CaptureScreen(Name: "Step" & Global stepNumber & "- ValidatingProductA_Phamedmgr")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Exit Phamedmgr.exe application and launch Powerchart with User1. Search and select Patient1, Navigate to MAR component.  "
+		run "Util".CloseApplication 2
+		run "open_Application".run "powerchart"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		run "Millennium_LoadPatient_RecentSearch".LoadPatient patientName
+		run "Millennium_SelectMenu_SubMenu".SelectMenuSubMenu "Task",menu,"MAR"
+		wait 2
+		
+		Log "VERIFICATION:  Verify the productA (eg: measles/mumps/rubella virus vaccine) placed in phamedmgr application displays in MAR as a dose to chart "
+		put "Medication_Administration_Record/MAR_Screen".IdentifyOrder_FromMARSpread("Scheduled","Task",productName,"1") into ProductValidation
+		
+		if  item 1 of ProductValidation is "True"
+			LogSuccess ("Documented Immunization result is identified in MAR for "&&productName&&"")
+		Else
+			LogError ("Documented Immunization result is not identified in MAR for "&&productName&&"")
+		end if
+		CaptureScreen(Name: "Step" & Global stepNumber & "- ValidatingProductA_MAR")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: RightClick on the dose and select 'chart details' "
+		RightClick imagelocation("Medication_Administration_Record/MAR_Screen/Label_Medications")+(140,60)
+		Run "Medication_Record_Dev_Common_Utilities/Common_Utilities".SelectOption "Chart details"
+		
+		Log "VERIFICATION: User is prompted.Verify the following warning message is displayed:This task requires a Nurse Review.Do you want to perform the review now? Yes/No"
+		if(ImageFound(10,"Medication_Record_Dev_Common_images/Label_NurseReview")) // Handles Nurse review pop up
+			LogSuccess "Nurse Review warning is displayed is displayed"
+		else
+			LogError  "Nurse Review warning is not displayed is displayed"
+		end if
+		CaptureScreen(Name: "Step" & Global stepNumber & "- ValidatingNurseReviewPopup")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: select 'Yes' and click on 'Review' button. Enter all Mandatory fields and click on sign"
+		Click image:"Medication_Record_Dev_Common_images/Button_Yes"
+		Click image:"Medication_Record_Dev_Common_images/Button_Review"
+		waitfor 60,"Medication_Record_Dev_Common_images/IV_Charting_Window/Label_Charting_for_IV"
+		run "CID_Common_Utilities".specify_Value_In_Textbox  "Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_LotNumber", lotNumber
+		run "Medication_Record_Dev_Common_Utilities/Common_Utilities".SelectItemFromDropDown "Medication_Record_Dev_Common_images/Immunization_Charting/Texbox_Manufacturer","3M Healthcare"
+		
+		run "CID_Common_Utilities". Specify_Value_In_Textbox "Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_ExpirationDate", formattedTime(format,today +1 year)
+		run "Medication_Record_Dev_Common_Utilities/Common_Utilities".SelectItemFromDropDown "Medication_Record_Dev_Common_images/Immunization_Charting/Dropdown_site","Left Buttock"
+		set the SearchRectangle to ()
+		Click ImageLocation(text:productName) + (150,-10)
+		Typetext "1"
+		TypeText tabKey 
+		TypeText "ml" 
+		click "Medication_Record_Dev_Common_images/Icon_Sign"
+		// If Early/Late Administration warning is displayed then acknowledge the warning and proceed
+		if ImageFound(30,image:"Medication_Record_Dev_Common_images/Early_Late_Alert/Label_EarlyLateReason")
+			click "Medication_Record_Dev_Common_images/Early_Late_Alert/Dropdown_Pleasespecifyareason"
+			Run "Medication_Record_Dev_Common_Utilities/Common_Utilities".SelectOption "Nursing Judgment"
+			TypeText returnKey
+		end if
+		wait 2
+		
+		Log "VERIFICATION: Ensure order has been signed and has been placed successfully. "
+		click imagelocation ("Immunizations/Common/Icon_Refresh")
+		put "Medication_Administration_Record/MAR_Screen".IdentifyResult_FromMARSpread("Scheduled","Result",productName,"1",startTime,startDate) into resultvalidation
+		
+		if  item 1 of resultvalidation is "True"
+			LogSuccess "Successfully placed" && productName 
+		Else
+			LogError productName && " is not placed."
+		end if
+		
+		CaptureScreen(Name: "Step" & Global stepNumber & "-productCharted")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Navigate to Immunization Workflow Mpage Component and refresh the component. "
+		run "Immunizations/Setup".LoadComponentViaPatientChart menu, subMenu
+		click  "Immunizations/Common/Icon_Refresh"
+		wait 3
+		
+		Log "VERIFICATION: Ensure component loads without any error."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure " & vaccineName & " header.  displays under History section with 'complete' status."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName
+		
+		Log "VERIFICATION: Ensure status of vaccine is in complete status."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, complete
+		
+		Log "VERIFICATION: Verify the Administrations displays 1."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "1"
+		
+		Log "VERIFICATION: Verify Last Action displays Administered."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		
+		Log "VERIFICATION: Verify Next Dose Recommended displays '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Verify the Last Action Date matches with the last charting event date."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName, uppercase(today), "Immunizations/Util/Date".ageCalculator(dob, today, false, false)
+		
+		CaptureScreen(Name: "Step" & Global stepNumber & "- WorkflowMpageForecastNoPreference1")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Select "& vaccineName 
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		Log "VERIFICATION: Verify Side panel opens and the system shall displays 'HNA and Ordered As Mnemonic' value for the product name under Product name field Note: when there is no preference is defined in the domain then the default preference will be set to '1-HNA and Ordered As Mnemonic' value"
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/SidePanel", "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue  "1",productField,sidePanelRectangle,hnaOrderedAsmnemonicdisplay
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"SidepanelNopreference1")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Close the side panel and click 'View Forecast'."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".closeSidePanel sidePanelRectangle, vaccineName
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: System shall displays 'HNA and Ordered As Mnemonic' value for the product name"
+		set vaccineNamerowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText hnaOrderedAsmnemonicdisplay , "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangleToday)
+		
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ForecastNoPreference1")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Click on the " && productName
+		Click text:productName, SearchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineNameRowSearchRectangle,columnSearchRectangleToday)
+		
+		Log "VERIFICATION: In the right hand pane, 'Administered on <charted Date> - HNA and Ordered As Mnemonic' value for the product name' displays."
+		set dose1AdminDate to  "Immunizations/Util/Date".todaysDate(format)
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText administeredOn && dose1AdminDate && "-" && hnaOrderedAsmnemonicdisplay, rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Ensure the details charted for Dose 1 display correctly in the right-hand pane with the following information such as: Performed date, Performed By, Source, Documented date and  'HNA and Ordered As Mnemonic' value for the product name."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, dose1AdminDate
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField userField, user
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField documentedDateField, dose1AdminDate
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField productNameField, hnaOrderedAsmnemonicdisplay
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ExpandedViewNoPreference1")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Exit out of the Expanded view and click list view."
+		Click text: immunizationForecast, searchrectangle: "Immunizations/Common/Helpers".tabListSearchrectangle()
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews 
+		
+		Log "VERIFICATION: Ensure "&vaccineName & " is displayed under Vaccine column. "
+		Set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		Set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		run "Immunizations/Util/Validation".verifyText  vaccineName & return & complete, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchrectangle, columnSearchrectangle)
+		
+		Log "VERIFICATION: Verify Action column displays HNA and Ordered As Mnemonic value for the product name on top and administrations date with age in parenthesis below it." 
+		Set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchrectangle(vaccineName)
+		Set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText "1" && hnaOrderedAsmnemonicdisplay & return & dose1AdminDate && "Immunizations/Util/Date".ageCalculator(dob, dose1AdminDate, false, true), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchrectangle, columnSearchRectangle)
+		
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ListViewNopreference1")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Click on Print Button"
+		run "Immunizations/Common/Print/Actions".clickPrintRecord (printRecord)
+		
+		Log "VERIFICATION: " & vaccineName & " is displayed within the Vaccine column"
+		run "Immunizations/Util/Validation".verifyText vaccineName,  "Immunizations/Common/Print/Helpers".vaccineColumnSearchRectangle()
+		
+		Log "VERIFICATION: The administration for dob1 displays in the row for vaccine1(Measles, Mumps, Rubella Vaccine.)  in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".adjustDate(dose1AdminDate, format), "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("True",1,1)
+		
+		Log "VERIFICATION:  Verify product column displays HNA and Ordered As Mnemonic value for the product name."
+		run "Immunizations/Util/Validation".verifyText hnaOrderedAsmnemonicdisplay, "Immunizations/Common/Print/Helpers".productSearchRectangle("True",1,1)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"PrintReportNopreference1")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Close DiscernReportViewer window and Close powerchart. Launch prefmaint tool, add the preference 'MNEM_DISP_LEVEL' with value '0- HNA Order mnemonic' at appliation level under powerchart level"
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Util".CloseApplication 2
+		run "prefmaint".openPrefmaint username,password,domain
+		waitFor 80, "prefmaint/Text_ExistingPreferences"
+		click "prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		wait 3
+		run "prefmaint".SelectApplication "PowerChart"
+		click "prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:immunizationForecast
+		run "prefmaint".ClickLevel "powerchart"
+		click "Prefmaint/Button_AddPreference_enabled"
+		run "prefmaint".AddPreference mnemonicDisplayLevel
+		run "prefmaint".ModifyListPreference mnemonicDisplayLevel, "0" 
+		Click "Prefmaint/Button_Apply"
+		
+		Log "VERIFICATION: Ensure preference is set at application level"
+		if "PreferenceMaintenanceTool".ValidatePreferenceValue (mnemonicDisplayLevel, hnaOrdermnemonic)=true then 
+			Logsuccess "Preference is set"
+		else
+			Logerror "Preference is not set"
+		end if
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ApplicationPreference0")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Ext prefmaint tool, Launch Powerchart.exe with User1. Search and select Patient1, Select the Immunization Workflow MPage and navigate to Immunization section.Select " & vaccineName 
+		run "Util".CloseApplication 2
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, global cleanup, relationship
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		Log "VERIFICATION: Verify Side panel opens and the system shall displays 'HNA Order mnemonic' value for the product name under Product name field"
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/SidePanel", "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue  "1",productField,sidePanelRectangle,hnaOrdermnemonicdisplay 
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"SidepanelPreference0")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Close the side panel and click 'View Forecast'."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".closeSidePanel sidePanelRectangle, vaccineName
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: System shall displays 'HNA Order mnemonic'' value for the product name"
+		set vaccineNamerowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText hnaOrdermnemonicdisplay , "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangleToday)
+		
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ForecastViewPreference0")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Click on the " && productName
+		Click text:productName, SearchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineNameRowSearchRectangle,columnSearchRectangleToday)
+		
+		Log "VERIFICATION: In the right hand pane, 'Administered on <charted Date> - HNA Order mnemonic'' value for the product name' displays."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText administeredOn && dose1AdminDate && "-" && hnaOrdermnemonicdisplay, rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Ensure the details charted for Dose 1 display correctly in the right-hand pane with the following information such as: Performed date, Performed By, Documented date and  'HNA Order mnemonic'' value for the product name."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, dose1AdminDate
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField userField, user
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField documentedDateField, dose1AdminDate
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField productNameField,  hnaOrdermnemonicdisplay
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ExpandedViewPreference0")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Exit out of the Expanded view and click list view."
+		Click text: immunizationForecast, searchrectangle: "Immunizations/Common/Helpers".tabListSearchrectangle()
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews 
+		
+		Log "VERIFICATION: Verify Action column displays 'HNA Order mnemonic' value for the product name on top and administrations date with age in parenthesis below it." 
+		Set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchrectangle(vaccineName)
+		Set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText "1" && hnaOrdermnemonicdisplay & return & dose1AdminDate && "Immunizations/Util/Date".ageCalculator(dob, dose1AdminDate, false, true), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchrectangle, columnSearchRectangle)
+		
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ListViewpreference0")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Click on Print Button"
+		run "Immunizations/Common/Print/Actions".clickPrintRecord (printRecord)
+		
+		Log "VERIFICATION: "&vaccineName & " is displayed within the Vaccine column"
+		run "Immunizations/Util/Validation".verifyText vaccineName,  "Immunizations/Common/Print/Helpers".vaccineColumnSearchRectangle()
+		
+		Log "VERIFICATION: The administration for dob displays in the row for "&vaccineName & " in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".adjustDate(dose1AdminDate, format), "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("True",1,1)
+		
+		Log "VERIFICATION:  Verify product column displays 'HNA Order mnemonic' value for the product name."
+		run "Immunizations/Util/Validation".verifyText hnaOrdermnemonicdisplay, "Immunizations/Common/Print/Helpers".productSearchRectangle("True",1,1)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"PrintReportpreference0")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Close DiscernReportViewer window and Close powerchart. Launch prefmaint tool, add the preference 'MNEM_DISP_LEVEL' with value '2-HNA. Ordered As. and Order mnemonic' at position level under powerchart level"
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Util".CloseApplication 2
+		run "prefmaint".openPrefmaint username,password,domain
+		waitFor 80, "prefmaint/Text_ExistingPreferences"
+		click "prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		wait 3
+		run "prefmaint".SelectPosition "DBA"
+		click "prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:immunizationForecast
+		run "prefmaint".ClickLevel "powerchart"
+		click "Prefmaint/Button_AddPreference_enabled"
+		run "prefmaint".AddPreference mnemonicDisplayLevel
+		run "prefmaint".ModifyListPreference mnemonicDisplayLevel, "2" 
+		Click "Prefmaint/Button_Apply"
+		
+		Log "VERIFICATION: Ensure preference is set at position level"
+		if "PreferenceMaintenanceTool".ValidatePreferenceValue (mnemonicDisplayLevel, hnaOrderedAsandOrdermnemonicdisplay)=true then 
+			Logsuccess "Preference is set"
+		else
+			Logerror "Preference is not set"
+		end if
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-PositionPreference2")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Ext prefmaint tool, Launch Powerchart.exe with User1. Search and select Patient1, Select the Immunization Workflow MPage and navigate to Immunization section.Select  " & vaccineName 
+		run "Util".CloseApplication 2
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, global cleanup, relationship
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		Log "VERIFICATION: Verify Side panel opens and the system shall honors the preference set at position level and displays 'HNA. Ordered As. and Order mnemonic' value for the product name under Product name field "
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/SidePanel", "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue  "1",productField,sidePanelRectangle,hnaOrderedAsandOrdermnemonicdisplay 
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"SidepanelPreference2")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Close the side panel and click 'View Forecast'."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".closeSidePanel sidePanelRectangle, vaccineName
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: System shall displays ' HNA. Ordered As. and Order mnemonic' value for the product name"
+		set vaccineNamerowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText hnaOrderedAsandOrdermnemonicdisplay , "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangleToday)
+		
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ForecastViewPreference2")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Click on the " && productName
+		Click text:productName, SearchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineNameRowSearchRectangle,columnSearchRectangleToday)
+		
+		Log "VERIFICATION: In the right hand pane, 'Administered on <charted Date> - HNA. Ordered As. and Order mnemonic'' value for the product name' displays."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText administeredOn && dose1AdminDate && "-" && hnaOrderedAsmnemonicdisplay, rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Ensure the details charted for Dose 1 display correctly in the right-hand pane with the following information such as: Performed date, Performed By, Source, Documented date and  'HNA. Ordered As. and Order mnemonic' value for the product name."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, dose1AdminDate
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField userField, user
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField documentedDateField,dose1AdminDate
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField productNameField,  hnaOrderedAsmnemonicdisplay
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ExpandedViewPreference2")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Exit out of the Expanded view and click list view."
+		Click text: immunizationForecast, searchrectangle: "Immunizations/Common/Helpers".tabListSearchrectangle()
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews 
+		
+		Log "VERIFICATION: Verify Action column displays 'HNA. Ordered As. and Order mnemonic' value for the product name on top and administrations date with age in parenthesis below it." 
+		Set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchrectangle(vaccineName)
+		Set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText "1" && hnaOrderedAsmnemonicdisplay & return & dose1AdminDate && "Immunizations/Util/Date".ageCalculator(dob, dose1AdminDate, false, true), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchrectangle, columnSearchRectangle)
+		
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ListViewpreference2")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Click on Print Button"
+		run "Immunizations/Common/Print/Actions".clickPrintRecord (printRecord)
+		
+		Log "VERIFICATION: MMR is displayed within the Vaccine column"
+		run "Immunizations/Util/Validation".verifyText vaccineName,  "Immunizations/Common/Print/Helpers".vaccineColumnSearchRectangle()
+		
+		Log "VERIFICATION: The administration for dob displays in the row for " & vaccineName & " in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".adjustDate(dose1AdminDate, format), "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("True",1,1)
+		
+		Log "VERIFICATION:  Verify product column displays  'HNA. Ordered As. and Order mnemonic' value for the product name."
+		run "Immunizations/Util/Validation".verifyText hnaOrderedAsandOrdermnemonicdisplay, "Immunizations/Common/Print/Helpers".productSearchRectangle("True",1,1)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"PrintReportpreference2")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Close DiscernReportViewer window and Close powerchart. Launch prefmaint tool, add the preference 'MNEM_DISP_LEVEL' with value '4-HNA and Order mnemonic' at User level under powerchart level"
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Util".CloseApplication 2
+		run "prefmaint".openPrefmaint username,password,domain
+		waitFor 80, "prefmaint/Text_ExistingPreferences"
+		click "prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		wait 3
+		Click imagelocation ("Prefmaint/Icon_UserSearch_64bit") +(-30,10)
+		TypeText user
+		click "prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:immunizationForecast
+		run "prefmaint".ClickLevel "powerchart"
+		click "Prefmaint/Button_AddPreference_enabled"
+		run "prefmaint".AddPreference mnemonicDisplayLevel
+		run "prefmaint".ModifyListPreference mnemonicDisplayLevel, "4" 
+		Click "Prefmaint/Button_Apply"
+		
+		Log "VERIFICATION: Ensure preference is set at position level"
+		if "PreferenceMaintenanceTool".ValidatePreferenceValue (mnemonicDisplayLevel, hnaandOrdermnemonicdisplay)=true then 
+			Logsuccess "Preference is set"
+		else
+			Logerror "Preference is not set"
+		end if
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-UserlevelPreference4")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Ext prefmaint tool, Launch Powerchart.exe with User1. Search and select Patient1, Select the Immunization Workflow MPage and navigate to Immunization section.Select " & vaccineName 
+		run "Util".CloseApplication 2
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, global cleanup, relationship
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		Log "VERIFICATION: Verify Side panel opens and the system shall honors the preference set at position level and displays 'HNA and Order mnemonic' value for the product name under Product name field "
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/SidePanel", "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue  "1",productField,sidePanelRectangle,hnaandOrdermnemonicdisplay 
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"SidepanelPreference4")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Close the side panel and click 'View Forecast'."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".closeSidePanel sidePanelRectangle, vaccineName
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: System shall displays 'HNA and Order mnemonic' value for the product name"
+		set vaccineNamerowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText hnaandOrdermnemonicdisplay , "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangleToday)
+		
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ForecastViewPreference4")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Click on the " && productName
+		Click text:productName, SearchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineNameRowSearchRectangle,columnSearchRectangleToday)
+		
+		Log "VERIFICATION: In the right hand pane, 'Administered on <charted Date> - HNAand Order mnemonic'' value for the product name' displays."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText administeredOn && dose1AdminDate && "-" && hnaandOrdermnemonicdisplay, rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Ensure the details charted for Dose 1 display correctly in the right-hand pane with the following information such as: Performed date, Performed By, Source, Documented date and  'HNA and Order mnemonic' value for the product name."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, dose1AdminDate
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField userField, user
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField documentedDateField,dose1AdminDate
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField productNameField,  hnaandOrdermnemonicdisplay
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ExpandedViewPreference4")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Exit out of the Expanded view and click list view."
+		Click text: immunizationForecast, searchrectangle: "Immunizations/Common/Helpers".tabListSearchrectangle()
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews 
+		
+		Log "VERIFICATION: Verify Action column displays 'HNA and Order mnemonic' value for the product name on top and administrations date with age in parenthesis below it." 
+		Set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchrectangle(vaccineName)
+		Set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText "1" && hnaandOrdermnemonicdisplay & return & dose1AdminDate && "Immunizations/Util/Date".ageCalculator(dob, dose1AdminDate, false, true), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchrectangle, columnSearchRectangle)
+		
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ListViewpreference4")
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber & "ACTION: Click on Print Button"
+		run "Immunizations/Common/Print/Actions".clickPrintRecord (printRecord)
+		
+		Log "VERIFICATION: " & vaccineName & "  is displayed within the Vaccine column"
+		run "Immunizations/Util/Validation".verifyText vaccineName,  "Immunizations/Common/Print/Helpers".vaccineColumnSearchRectangle()
+		
+		Log "VERIFICATION: The administration for dob displays in the row for "&vaccineName & " in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".adjustDate(dose1AdminDate, format), "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("True",1,1)
+		
+		Log "VERIFICATION:  Verify product column displays  'HNA and Order mnemonic' value for the product name."
+		run "Immunizations/Util/Validation".verifyText hnaandOrdermnemonicdisplay, "Immunizations/Common/Print/Helpers".productSearchRectangle("True",1,1)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"PrintReportpreference4")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Close DiscernReportViewer window and Close powerchart."
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Immunizations/Setup".CloseApplication global Cleanup
+		----------------------------------------------------------------------------------------------------------------	
+		EndTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-Retrieve_Preferred_Mnemonic_when_encountering_RXMnemonic"
+		
+	Catch 
+		
+		LogError "Exception encountered" & newline & "Exception Reason:" && the exception.reason
+		captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+		
+	End try
+	
+	------------------------------------------------------PatientCleanup---------------------------------------------------------
+	
+	Log "Cleanup Patient 1 – 20 years ."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".CloseApplication 2
+	----------------------------------------------------------------------------------------------------------------
+Catch 
+	LogError "Exception encountered" & newline & "Exception Reason:" && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End try
+
+--SUTCleanup
+run "Cleanup".ZeroStateCloseAllApps

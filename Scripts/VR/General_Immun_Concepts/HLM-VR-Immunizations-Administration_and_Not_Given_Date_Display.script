@@ -1,0 +1,241 @@
+﻿--------------------------------------------------HELPER SUITE INFORMATION-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+
+------------------------------------------------RQM TEST CASE LINK--------------------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=130045
+
+-------------------------------------------------------------------------------------------------------------------------------------
+params domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set format to "%b %d, %Y"
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set relationship to setup.relationship
+set conversation to setup.Conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set doubleDashImage to common.doubleDashImage
+set hepBVaccineStrikeThroughImg to common.hepBVaccineStrikeThroughImg
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set notGivenDateField to fieldLabels.notGivenDateField
+set rescheduleDateField to fieldLabels.rescheduleDateField
+set reasonField to fieldLabels.reasonField
+set authorizedByField to fieldLabels.authorizedByField
+set documentedByField to fieldLabels.documentedByField
+set notGivenTypeField to fieldLabels.notGivenTypeField
+set notGivenReasonField to fieldLabels.notGivenReasonField
+set mpageSourceField to fieldLabels.mpageSourceField
+set productField to fieldLabels.productField
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set overdue to textStrings.overdue
+set viewForecast to textStrings.viewForecast
+set seriesRefused to textStrings.seriesRefused
+
+set testData to JSONValue(file ResourcePath("VR/HepB_2_Dose_Adol/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("VR/HepB_2_Dose_Adol/testData.json")),domain)
+set lastName to testData.HepB_Adolescent_Not_Given.lastName
+set firstName to testData.HepB_Adolescent_Not_Given.firstName
+set dob to formattedTime("%m/%d/%Y", value(testData.HepB_Adolescent_Not_Given.dob)) + 1 day
+set sex to testData.HepB_Adolescent_Not_Given.sex
+set patientName to testData.HepB_Adolescent_Not_Given.nameFullFormatted
+set newLastName to testData.HepB_Adolescent_Not_Given.newLastName
+set user to testData.User
+set vaccineName to testData.vaccineName
+set Product to testData.Product
+set Source to testData.Source
+set notGivenType to testData.notGivenType
+set permNotGivenAction to testData.permNotGivenAction
+set notGivenReason to testData.notGivenReason
+set Source to testData.Source
+
+set dose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("year": 16))
+
+Try
+	//Set the time zone to a positive UTC Offset (Ensure system time is also set to the same time zone)
+	typeText windowsKey & "r"
+	typeText "cmd", returnKey
+	typeText "tzutil /s " &quote& "Fiji Standard Time" &quote
+	typeText returnKey
+	typeText "exit", returnKey
+	
+	#PATIENT CREATION
+	log "Create patient2 (16 years old) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immu nizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	run "Immunizations/PatientCreation".resetPatientToZeroState username, password, domain, lastName, firstName, dob
+	
+	
+	Try
+		#TEST STEPS
+		beginTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-Administration_and_Not_Given_Date_Display"
+		
+		log "Util".stepNumber &"ACTION: Open Powerchart.exe with User1, search for and open the chart for patient, open the Immunizations Workflow component, chart a dose at <DOB + 16 years > using product CVX 43, chart a permanent not given, reset the time zone to central time, then refresh."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, relationship
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, dose1AdminDate, source, product, "submit"
+		run "Immunizations/Common/ChartNotGiven/Task".chartWithAuthorizedDate vaccineName, notGivenType, permNotGivenAction, notGivenReason, "Immunizations/Util/Date".todaysDate(format) +1 day, "Submit"
+		//Reset the time zone
+		typeText windowsKey & "r"
+		typeText "cmd", returnKey
+		typeText "tzutil /s " &quote& "Central Standard Time" &quote
+		typeText returnKey
+		typeText "exit", returnKey
+		//Refresh the component
+		run "Immunizations/Common/Actions".temporaryRefreshClick
+		
+		log "VERIFICATION: Ensure Hepatitis B displays in the historical section with a status of series refused"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, seriesRefused
+		
+		log "VERIFICATION: Ensure Hepatitis B displays administrations of 1."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, 1
+		
+		log "VERIFICATION: Ensure Hepatitis B displays a next recommended of '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "--"
+		
+		log "VERIFICATION: Ensure Hepatitis B displays with a last action of 'Not Given'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName,"Not Given"
+		
+		log "VERIFICATION: Ensure Hepatitis B displays with a last action Date of <Today's date + 1 day>."
+		set age to "Immunizations/Util/Date".ageCalculator (dob,"Immunizations/Util/Date".todaysDate(format) + 1 day, false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName ,"Immunizations/Util/Date".todaysDate(format)+ 1 day, Age
+		capturescreen (Name:"Step"&Global stepNumber&"-Permanent Not Given")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber &"ACTION: Click on Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		log "VERIFICATION: In the Header, Ensure Hepatitis B displays with a status of 'Series Refused'."
+		set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName, sidePanelHeaderRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".VerifyValidNextRecommendedDate seriesRefused,sidePanelHeaderRectangle
+		
+		log "VERIFICATION: Ensure the Not Given Administration displays with '<Today's Date> - Not Given'. Ensure all Not Given details displays."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+		set age to "Immunizations/Util/Date".ageCalculator (dob,"Immunizations/Util/Date".todaysDate(format) + 1 day, false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex 1, documentedByField, sidePanelRectangle, "Immunizations/Util/Date".todaysDate(format) + 1 day && age && "-" && "Not Given"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, documentedByField,sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, notGivenTypeField,sidePanelRectangle, seriesRefused
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, notGivenReasonField,sidePanelRectangle, notGivenReason
+		
+		log "VERIFICATION: Ensure dose 1 displays with '<Today's Date> - Administered'. Ensure all Adminsitration details displays."
+		set age to "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, false)		
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex 2,documentedByField,sidePanelRectangle, dose1AdminDate
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, "Immunizations/Util/Date".setPattern(Age),sidePanelRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex 2,documentedByField,sidePanelRectangle, "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 2,documentedByField,sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 3, mpageSourceField,sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, productField ,sidePanelRectangle, product
+		capturescreen (Name:"Step"&Global stepNumber&"-Side Panel Not Given")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber &"ACTION: Click on the View Forecast button."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		log "VERIFICATION: In the CDC Schedule column, ensure Hepatitis B displays with a strikethrough and 'Series Refused'. "
+		set rowSearchRectangleStrikeThrough to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(hepBVaccineStrikeThroughImg)
+		set firstcolumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText seriesRefused, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangleStrikeThrough,firstColumnSearchRectangle)
+		
+		log "VERIFICATION: Ensure 'Series refused' & 'Today's Date' displays in the today column."
+		click ImageLocation("Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarRightArrow")
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set endDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "110","100")
+		run "Immunizations/Util/Validation".verifyText seriesRefused &return& "2 items documented","Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangleStrikeThrough,columnSearchRectangle)
+		
+		log "VERIFICATION: Ensure 'Series Refused' displays for the remainder of the timeline."
+		click ImageLocation("Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarRightArrow")
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set endDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-20", "-30", "1200","100")
+		run "Immunizations/Util/Validation".verifyText seriesRefused,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangleStrikeThrough,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"-Forecaster Permanent not given")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber &"ACTION: Click on the Today Column."
+		click text: seriesRefused, SearchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangleStrikeThrough,columnSearchRectangle)
+		
+		log "VERIFICATION: Ensure 'Series refused' & <Today's date> displays in the left hand column."
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneSearchRectangle()
+		set age to "Immunizations/Util/Date".ageCalculator (dob,"Immunizations/Util/Date".todaysDate(format) + 1 day, false, true)
+		run "Immunizations/Util/Validation".verifyText seriesRefused &return& "Immunizations/Util/Date".todaysDate(format) + 1 day && age, leftPaneSearchRectangle
+		
+		log "VERIFICATION: In the right hand pane header, ensure that 'Series Refused On <Today's Date> - Patient Refuses' displays."
+		click text: seriesRefused, SearchRectangle:LeftPaneSearchRectangle
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText seriesRefused & " On " & "Immunizations/Util/Date".todaysDate(format) + 1 day && "-" && "Patient Refuses", rightPaneHeaderSearchRectangle
+		
+		log "VERIFICATION: In the right hand pane body, ensure Not given Date, Reschedule date, reason, and authorized by fields are populated."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField notGivenDateField, "Immunizations/Util/Date".todaysDate(format) + 1 day
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewFieldImage rescheduleDateField, doubleDashImage
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField reasonField,notGivenReason
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField authorizedByField, user
+		capturescreen (Name:"Step"&Global stepNumber&"-Permanent not given Expanded View")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber &"ACTION: Click out of the expanded view and click on the List View."
+		Click text: "Print", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+		
+		log "VERIFICATION: Ensure Hepatitis B displays with a strikethrough and a status of 'Series Refused'."
+		set rowSearchRectangleStrikeThrough to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(hepBVaccineStrikeThroughImg)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText seriesRefused, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleStrikeThrough, columnSearchRectangle)
+		
+		log "VERIFICATION: Ensure the first action column sidplays with 'Series Refused' <Today's Date>."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle(1)
+		set age to "Immunizations/Util/Date".ageCalculator (dob,"Immunizations/Util/Date".todaysDate(format) + 1 day, false, true)
+		run "Immunizations/Util/Validation".verifyText product,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangleStrikeThrough,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".todaysDate(format)+ 1 day && age ,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangleStrikeThrough,columnSearchRectangle)
+		
+		log "VERIFICATION: Ensure the second action column sidplays with 'Series Refused' <Today's Date>."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle(2)
+		set age to "Immunizations/Util/Date".ageCalculator (dob,"Immunizations/Util/Date".todaysDate(format) + 1 day, false, true)
+		run "Immunizations/Util/Validation".verifyText seriesRefused &return& "Immunizations/Util/Date".todaysDate(format)+ 1 day && age ,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangleStrikeThrough,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"-List View Permanent not given")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber &"ACTION: Close Application."
+		run "Immunizations/Setup".closeApplication
+		---------------------------------------------------------------------------------------------------------------
+		endTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-Administration_and_Not_Given_Date_Display"
+		
+	Catch
+		logError "Test Steps Exception: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+	#PATIENT CLEANUP
+	log "ACTION: Cleanup Patient."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName,firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+Catch
+	logError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+#SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

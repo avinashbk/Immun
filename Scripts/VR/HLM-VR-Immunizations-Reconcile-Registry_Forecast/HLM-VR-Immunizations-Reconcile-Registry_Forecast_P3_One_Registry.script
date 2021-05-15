@@ -1,0 +1,88 @@
+﻿params domain
+log "Test running in domain"&&domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set testData to JSONValue(file resourcePath()).(value of domain)
+set format to "%b %d, %Y"
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+try
+	Log "Util".stepNumber & "ACTION: Open Powerchart.exe with user1 and open Patient3's chart and navigate to the Immunizations workflow mPage."
+	run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, relationship
+	
+	Log "VERIFICATION: Ensure the reconciliation banner displays on the top of the table with the message 'Outside records available. Reconciliation has not been completed on this encounter.' along with a 'View' button."
+	
+	Capturescreen (Name:"Step"&Global stepNumber&"- Base Component")
+	----------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on the 'View' button within the reconciliation banner."	
+	
+	Log "VERIFICATION: Ensure 'View outside records' window loads without any errors"
+	
+	Log "VERIFICATION: Validating Close button (bottom right corner) and registry forecast button(bottom left corner)." 
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-ViewRegistryForecastAndCloseButton_Validation")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on View Registry Forecast button."
+	
+	Log "VERIFICATION: Validating 'X' Closing registry forecast (top right side) and Back button(lower left side) "
+	
+	Log "VERIFICATION: Ensure only one tab is displayed " & registry1
+	
+	Log "VERIFICATION: Review the following immunization forecast colums  under registry name: 1.Immnization Forecast, 2.Immunization History"
+	
+	Log "VERIFICATION: Verify Immnization Forecast column displays the total number of forecast records face-up. (e.g. Immunization Forecast (3))"
+	
+	Log "VERIFICATION: Verify Immnization History column displays the total number of history records face-up. (e.g. Immunization history (5))"
+	
+	CaptureScreen{Name:"Step"&Global stepNumber&"-Registry1 Forecast Window"}
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Expand the Immunization forecast section ."
+	
+	Log "VERIFICATION: Validate the following : 1. Vaccine, 2. Earliest Date, 3. Recommended date, 4. Overdue Date, 5. Latest Date."
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Registry1 Immunization Forecast section")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Expand the Immunization Histroy section ."
+	
+	Log "VERIFICATION: Validate the following : 1. Vaccine, 2. Dose, 3. Status, 4. Valid Dose -The system shall display a Yes, No, or null value depending on dose validation., 5. Admin Date."
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Registry1 Immunization Histroy section")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on Back button(lower left side) within the registry import window"
+	
+	Log "VERIFICATION: Ensure the user is return back to reconciliation window"
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Reconciliation window")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on View Registry Forecast button" 
+	
+	Log "VERIFICATION: Validating 'X' Closing registry forecast (top right side) and Back button(lower left side) "
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on 'X' Closing registry forecast (top right side)."
+	
+	Log "VERIFICATION: Ensure the user is return back to reconciliation window"
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Reconciliation window")
+	---------------------------------------------------------------------------------------------------------------
+catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	run "CommonModules".zeroStateScript	
+end try
+---------------------------------------------------------------------------------------------------------------	
+Log "Util".stepNumber &"ACTION: Close Application."
+run "Util".closeApplication 2
+--------------------------------------------------------------------------------------------------------------- 	

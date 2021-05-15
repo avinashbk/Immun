@@ -1,0 +1,23 @@
+{
+	"SOLM64":{
+		"Patient1":{
+			"nameFullFormatted":"Barnes, Avery",
+			"encounter1": "Baseline West",
+			"encounter2": "BW Clinic",
+			"race":"White",
+			"ethnicity":"Not Hispanic or Latino",
+			"financialClass":"Self Pay",
+			"historyVFCStatus":"Not applicable",
+			"historyReason": "Result one",
+			"historyDate": "(Jun 27, 2019)",
+			"finNumber1": "110219657",
+			"finNumber2": "000000668",
+			"newVFCStatus": "Undetermined",
+		    "newReason": "Change status",
+		    "encounter2VFCStatus": "Not Applicable",
+		},
+		"Patient2":{
+			"nameFullFormatted":"BARRETT, ROY",
+		},
+	}	 	  
+}

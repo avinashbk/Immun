@@ -1,0 +1,631 @@
+﻿params domain 
+set domain to "Immunizations/Util/setup".domainrun(domain)
+Set global cleanup to "Immunizations/Setup".SetCleanup()
+Set setupVal to JSONValue(file ResourcePath("setup.json")).(value of domain)
+Set username to setupVal.Username
+Set password to setupVal.Password
+
+Set JsonVal to JSONValue(file ResourcePath("HR/HLM-WF-Immunizations - Not Given charting from mPages/NotGivenChartingFromMpages.json")).(value of domain)
+Set patientName to JsonVal.nameFullFormatted
+Set lastName to JsonVal.lastName
+Set firstName to JsonVal.firstName
+Set noImmunizationsMsg to JsonVal.noImmunizationsMsg
+Set select to JsonVal.select
+Set cancel to JsonVal.cancel
+Set userfullname to JsonVal.Userfullname
+Set vaccineName1 to JsonVal.vaccineName1
+Set vaccineName2 to JsonVal.vaccineName2
+Set vaccineName3 to JsonVal.vaccineName3
+Set vaccineName4 to JsonVal.vaccineName4
+Set vaccineName5 to JsonVal.vaccineName5
+Set vaccineName6 to JsonVal.vaccineName6
+Set vaccineName7 to JsonVal.vaccineName7
+Set vaccineName8 to JsonVal.vaccineName8
+Set vaccineName9 to JsonVal.vaccineName9
+Set vaccineName10 to JsonVal.vaccineName10
+Set vaccineName11 to JsonVal.vaccineName11
+Set vaccineName12 to JsonVal.vaccineName12
+Set reschedule to JsonVal.reschedule
+Set comment to JsonVal.comment
+Set refused to JsonVal.refused
+Set patient to JsonVal.patient
+Set userfullname to JsonVal.user
+Set overdue to JsonVal.overdue
+Set validDateMsg to JsonVal.validDateMsg
+
+Set CommonVal to JSONValue(file ResourcePath("Common.json"))
+set ChartMenu to CommonVal.menu
+set MpageName to CommonVal.subMenuenu
+Set greenCheckmark to CommonVal.greenCheckmark
+Set powerchartIcon to CommonVal.powerchartIcon
+Set immunizationsDiaLog to CommonVal.immunizationsDiaLog
+Set addImmunizations to CommonVal.addImmunizations
+Set asterisk to CommonVal.asterisk
+Set futureImmunizations to CommonVal.futureImmunizations
+Set forecastVaccine to CommonVal.forecastVaccine
+
+Set FieldVal to JSONValue(file ResourcePath("fieldLabels.json")).(value of domain)
+Set rescheduleDateField to FieldVal.rescheduleDateField
+Set seriesRefused to FieldVal.seriesRefused
+Set unnecessary to FieldVal.unnecessary
+Set contraindicated to FieldVal.contraindicated
+Set patientRefuses to FieldVal.patientRefuses
+Set cancelSeries to FieldVal.cancelSeries
+
+try
+	Log "Util".stepNumber & "ACTION: Launch Powerchart.exe with User1. Search and select Patient1, Select the Immunization Workflow MPage and navigate to Immunization section."
+	Run "Immunizations/Setup".loginAndLoadComponentViaMenu Username, Password, Domain, PatientName, ChartMenu, MpageName, cleanup
+	
+	Log "VERIFICATION:Powerchart Displays"
+	WaitFor 20, powerchartIcon
+	Run "Immunizations/Util/Validation".verifyImage powerchartIcon
+	
+	Log "VERIFICATION:Ensure Immunization Workflow Mpage opens"
+	Run "Immunizations/Util/Validation".verifyText ImmunizationsTitle, "Immunizations/Common/Helpers".tabListSearchRectangle()
+	
+	Log "VERIFICATION:Ensure Patient1's chart opens without any errors"
+	assert that "PatientChart".validatePatientNameInTopLeft(patientName) equals True
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Workflow mPage Patient1")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on the ‘+’ icon next to Immunizations section header and select Chart NotGiven option. Click on cancel button in the Select Immunzations DiaLog"
+	Run "Immunizations/Common/ChartNotGiven/Actions".openDiaLog
+	
+	Log "VERIFICATION: Select Immunizations diaLog displays face-up."
+	Set diaLogRectangle to "Immunizations/Common/DocumentHistory/Helpers".diaLogSearchRectangle
+	Run "Immunizations/Util/Validation".verifyImage immunizationsDiaLog,diaLogRectangle
+	
+	Run "Immunizations/Common/SelectImmunizationsList".clickCancelButton
+	
+	Log "VERIFICATION:Ensure Immunization-Not Given diaLog displays."
+	Run "Immunizations/Util/Validation".verifyImageNotVisible immunizationsDiaLog
+	
+	Log "VERIFICATION:No Immunization Selected message is displayed in the Immunization – Not Given diaLog."
+	Run "Immunizations/Util/Validation".verifyText noImmunizationsMsg, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Chart Not Given")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on Add Immunizations button."
+	Run "Common".clickOnImageFound addImmunizations
+	
+	Log "VERIFICATION:Ensure Select Immunizations diaLog is displayed."  
+	Run "Immunizations/Util/Validation".verifyImage immunizationsDiaLog
+	
+	Log "VERIFICATION:Vaccines are displayed in the List"
+	Set NotGivenRectangle to ("Immunizations/Common/TL_SelectImmunizations","Immunizations/Common/BR_SelectImmunizations")
+	Run "Immunizations/Util/Validation".verifyText vaccineName1, NotGivenRectangle
+	Run "Immunizations/Util/Validation".verifyText vaccineName2, NotGivenRectangle
+	Run "Immunizations/Util/Validation".verifyText vaccineName3, NotGivenRectangle
+	
+	Log "VERIFICATION:Select and Cancel buttons are displayed"
+	Run "Immunizations/Util/Validation".verifyText select, NotGivenRectangle
+	Run "Immunizations/Util/Validation".verifyText cancel, NotGivenRectangle
+	
+	Log "VERIFICATION:Select button shows a count of 0 within parenthesis"
+	Run "Immunizations/Common/ChartingDiaLog/Validation".verifySelectButton False, "0"
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Add Immunizations")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Select Hib vaccine."
+	Run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineName3
+	
+	Log "VERIFICATION:Select button is enabled and shows a count of 1 within parenthesis"
+	Run "Immunizations/Common/ChartingDiaLog/Validation".verifySelectButton True, "1"
+	CaptureScreen(Name:"Step"&Global stepNumber&"-HIB Vaccine")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Select two other vaccines. E.g. DtaP and Influenza."
+	Run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineName1
+	Run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineName4
+	
+	Log "VERIFICATION:Select button shows a count of 3 within parenthesis"
+	Run "Immunizations/Common/ChartingDiaLog/Validation".verifySelectButton True, "3"
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Vaccine Count")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: De-select any one of the selected vaccines. E.g. Influenza"
+	Run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineName1
+	
+	Log "VERIFICATION:Select button shows a count of 2 within parenthesis"
+	Run "Immunizations/Common/ChartingDiaLog/Validation".verifySelectButton True, "2"
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Influenza")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on Cancel button."
+	Run "Immunizations/Common/SelectImmunizationsList".clickCancelButton
+	
+	Log "VERIFICATION:Ensure Select Immunizations diaLog is disposed."
+	Run "Immunizations/Util/Validation".verifyImageNotVisible immunizationsDiaLog
+	
+	Log "VERIFICATION:The selected immunizations are not displayed in the Immunization - Not Given diaLog"
+	put ImageRectangle("Immunizations/Common/BR_AddImmunizations").bottomLeft() into immunizationList
+	insert immunizationList + (200,400) into immunizationList
+	Run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1, immunizationList
+	Run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName4, immunizationList
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Cancel Action")
+	---------------------------------------------------------------------------------------------------------------
+	Log "util".stepNumber & "ACTION: Click on Add Immunizations button and select any two vaccines. E.g. DtaP andInfluenza (Ensure the two vaccines are independant and do not have any othercombination vaccines associated"
+	Run "Common".ClickOnImageFound addImmunizations
+	Run "Immunizations/Common/SelectImmunizationsList".selectvaccineName vaccineName1
+	Run "Immunizations/Common/SelectImmunizationsList".selectvaccineName vaccineName4
+	
+	Log "VERIFICATION:the Select button shows a count of 2 within paranthesis"
+	Run "Immunizations/Common/ChartingDiaLog/Validation".verifySelectButton True, "2"
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Count (2)")
+	---------------------------------------------------------------------------------------------------------------
+	Log "util".stepNumber & "ACTION: Click on Select button."
+	Run "Immunizations/Common/SelectImmunizationsList".clickSelectButton
+	
+	Log "VERIFICATION: a red asterisk displayed to the left of the vaccine names" 
+	WaitFor 15, addImmunizations
+	Set asteriskRectangle to "Immunizations/Common/DocumentHistory/Validations".asteriskOrCheckmarkSearchRectangle(vaccineName1)
+	Run "Immunizations/Util/Validation".verifyimage asterisk,asteriskRectangle
+	Set asteriskRectangle to "Immunizations/Common/DocumentHistory/Validations".asteriskOrCheckmarkSearchRectangle(vaccineName4)
+	Run "Immunizations/Util/Validation".verifyimage asterisk,asteriskRectangle
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Selection asterisk")
+	---------------------------------------------------------------------------------------------------------------
+	Log "util".stepNumber & "ACTION: Select the second vaccine in the list and click on the 'Delete Entry' inside the right handpane in order to remove the 2nd vaccine. Click on the other vaccine group on the left."
+	Run "Immunizations/Common/ChartNotGiven/Actions".deletingVaccineEntry vaccineName4
+	
+	Log "VERIFICATION:Ensure the 2nd vaccine is removed with no errors."
+	Set ImmunRect to "Immunizations/Common/DocumentHistory/Helpers".DiaLogSearchRectangle
+	Run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName4,ImmunRect
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Remove SecondVaccine")
+	---------------------------------------------------------------------------------------------------------------
+	Log "util".stepNumber & "ACTION: Click on Cancel button and remove the 1st vaccine by clicking on 'Delete entry' button inthe right hand side."
+	Run "Immunizations/Common/ChartNotGiven/Actions".deletingVaccineEntry vaccineName5
+	
+	Log "VERIFICATION:Ensure the vaccine is removed from the Immunization-Not Given diaLog"
+	Set ImmunRect to "Immunizations/Common/DocumentHistory/Helpers".DiaLogSearchRectangle
+	Run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName5,ImmunRect
+	
+	Log "VERIFICATION:No Immunization Selected displays at the right hand side of the Immunization-Not Given diaLog"
+	Set notGivenRect to ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText noImmunizationsMsg,notGivenRect
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Deleting Vaccines")
+	---------------------------------------------------------------------------------------------------------------
+	Log "util".stepNumber & "ACTION: Add one of the removed vaccines. E.g. DTaP and one vaccine which has a combination vaccine associated E.g. Zoster. Select Zoster Vaccine"
+	Run "Common".clickOnImageFound addImmunizations
+	Run "Immunizations/Common/SelectImmunizationsList".selectvaccineName vaccineName4
+	Run "Immunizations/Common/SelectImmunizationsList".selectvaccineName vaccineName6
+	
+	Log "VERIFICATION:Select button displays with the count of 2"
+	Run "Immunizations/Common/ChartingDiaLog/Validation".verifySelectButton True, "2"
+	
+	Run "Immunizations/Common/SelectImmunizationsList".clickSelectButton
+	Log "VERIFICATION:Zoster Vaccine is displayed"
+	Set ImmunRect to "Immunizations/Common/DocumentHistory/Helpers".diaLogSearchRectangle
+	Run "Immunizations/Util/Validation".verifyText vaccineName6,ImmunRect
+	
+	Log "VERIFICATION:Authorized by field shows the User 1's Name"
+	Run "Immunizations/Util/Validation".verifyText userfullname, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Combination Vaccine")
+	-----------------------------------------------------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Select Zoster and select an Not Given type and Not Given reason."
+	put ImageRectangle("Immunizations/Common/BR_AddImmunizations").bottomLeft() into immunizationList
+	insert immunizationList + (200,400) into immunizationList
+	Click(text:vaccineName6,searchrectangle:(immunizationList))
+	Run "Immunizations/Common/ChartNotGiven/Actions".requiredInput refused,cancelSeries,patientRefuses
+	typetext tabKey
+	
+	Log "VERIFICATION:Ensure the values selected are displayed correctly"
+	Run "Immunizations/Util/Validation".verifyText refused, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText cancelSeries, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText patientRefuses, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	
+	Log "VERIFICATION:A check mark displays next to Zoster vaccine"
+	Set checkmarkRectangle to "Immunizations/Common/DocumentHistory/Validations".asteriskOrCheckmarkSearchRectangle(vaccineName6)
+	Run "Immunizations/Util/Validation".verifyImage greenCheckmark,checkmarkRectangle
+	
+	Log "VERIFICATION:Vaccine will also document:Varicella"
+	Run "Immunizations/Util/Validation".verifyText "Vaccine will also document", ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText vaccineName7, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Zoster Vaccine")
+	------------------------------------------------------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Select Zoster vaccine and click on 'delete entry' in the right hand side."
+	Run "Immunizations/Common/ChartNotGiven/Actions".deletingVaccineEntry vaccineName6
+	
+	Log "Ensure the the Zoster Vaccine has been removed"
+	Set ImmunRect to "Immunizations/Common/DocumentHistory/Helpers".DiaLogSearchRectangle
+	Run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName6,ImmunRect
+	Run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName7,ImmunRect
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Select 1st vaccine in the list E.g. DTaP."
+	put ImageRectangle("Immunizations/Common/BR_AddImmunizations").bottomLeft() into immunizationList
+	insert immunizationList + (200,400) into immunizationList
+	Click(text:vaccineName4,searchrectangle:(immunizationList))
+	
+	Log "VERIFICATION:Ensure the name of selected vaccine displays on the top of right hand pane"
+	Run "Immunizations/Util/Validation".verifyText vaccineName4, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	
+	Log "VERIFICATION:Verify the Date field defaults to today's date."
+	Run "Immunizations/Util/Validation".verifyText (today's day), ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Deleting Entry")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Remove the default date"
+	Set Rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DiaLogRectangle 
+	Click imageLocation(text:"Authorized Date",searchRectangle:Rectangle)+(-30,30)
+	typetext backspace
+	typetext backspace
+	typetext tabKey
+	
+	Log "VERIFICATION:Enter a valid date message displays"
+	Run "Immunizations/Util/Validation".verifyText (today's day), ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText validDateMsg, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Default Date")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on the Not Given drop list."
+	
+	Log "VERIFICATION:Ensure the following values are available for selection: 1.Refused - Do not Give. 2. Contraindicated - Do not give 3.Unncessary"
+	Set Rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle 
+	Click imageLocation(text:"Not Given Type",searchRectangle:Rectangle)+(30,30)
+	Click text:contraindicated,searchRectangle:Rectangle
+	Run "Immunizations/Util/Validation".verifyText contraindicated, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Click imageLocation(text:"Not Given Type",searchRectangle:Rectangle)+(30,30)
+	Click text:contraindicated,searchRectangle:Rectangle
+	Run "Immunizations/Util/Validation".verifyText unnecessary, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Click imageLocation(text:"Not Given Type",searchRectangle:Rectangle)+(30,30)
+	Click text:refused,searchRectangle:Rectangle
+	Run "Immunizations/Util/Validation".verifyText refused, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Not Given droplist")
+	----------------------------------------------------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Select an Not Given of Refused – Do not Give. Select an Not Given Reason and enter User 1's name in the Not Given Authorized byfield. Reenter today's date. "
+	Run "Immunizations/Common/ChartNotGiven/Actions".requiredInput refused,cancelSeries, patient
+	Run "Immunizations/Common/ChartNotGiven/Actions".authorizedDateInput today
+	
+	Log "VERIFICATION:Ensure the values selected are displayed correctly"
+	Run "Immunizations/Util/Validation".verifyText refused, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText cancelSeries, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText patientRefuses, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText userfullname, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	-------------------------------------------------------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on the Calendar icon next to Date field. and select the yesterday's date"
+	Run "Immunizations/Common/ChartNotGiven/Actions".authorizedDateInput (today - 1 day)
+	
+	Log "VERIFICATION:Ensure the date is selected"
+	Run "Immunizations/Util/Validation".verifyText (today's day - 1), ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Yesterday's date")
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Type 'today's date' in the date field"
+	Run "Immunizations/Common/ChartNotGiven/Actions".authorizedDateInput today
+	
+	Log "VERIFICATION:Ensure today's date is displayed in the date field"
+	Run "Immunizations/Util/Validation".verifyText today's day, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	
+	Log "VERIFICATION:Chart button is enabled Count of 1 displays within parenthesis next to Chart button"
+	Run "Immunizations/Util/Validation".verifyText "Submit (1)", ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	
+	Log "VERIFICATION:The vaccine displays with a green tick mark next to the vaccine name"
+	Set checkmarkRectangle to "Immunizations/Common/DocumentHistory/Validations".asteriskOrCheckmarkSearchRectangle(vaccineName4)
+	Run "Immunizations/Util/Validation".verifyImage greenCheckmark,checkmarkRectangle
+	
+	Log "VERIFICATION:All the required fields for that vaccine have been charted"
+	Run "Immunizations/Util/Validation".verifyText refused, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText cancels, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText patientRefuses, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText userfullname, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Yesterday's date")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Enter a text in the Description field."
+	Run "Immunizations/Common/ChartNotGiven/Actions".commentInput comment
+	
+	Log "VERIFICATION:Ensure the text entered is displayed properly"
+	Set Rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DiaLogRectangle 
+	Run "Immunizations/Util/Validation".verifyText comment,Rectangle
+	
+	Log "VERIFICATION:The vaccine displays with a green tick mark next to the vaccine name"
+	Set checkmarkRectangle to "Immunizations/Common/DocumentHistory/Validations".asteriskOrCheckmarkSearchRectangle(vaccineName4)
+	Run "Immunizations/Util/Validation".verifyImage greenCheckmark,checkmarkRectangle
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Greencheckmark")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click the add immunizations, select a new vaccine group and click the selectbutton.  Click the newly added vaccine group in the left list."
+	Run "Common".ClickOnImageFound addImmunizations
+	Run "Immunizations/Common/SelectImmunizationsList".selectvaccineName vaccineName2
+	Run "Immunizations/Common/SelectImmunizationsList".clickSelectButton
+	
+	Log "VERIFICATION:Ensure the contents charted for the first are not displayed for the second vaccine."
+	Set chartNotGivenRect to ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText vaccineName3,chartNotGivenRect
+	Run "Immunizations/Util/Validation".verifyTextNotVisible refused,chartNotGivenRect
+	Run "Immunizations/Util/Validation".verifyTextNotVisible patientRefuses,chartNotGivenRect
+	Run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName4,chartNotGivenRect
+	
+	Log "VERIFICATION:Verify the date defaults to today's date."
+	Run "Immunizations/Util/Validation".verifyText (today's day), ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Today's Date")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: From Not Given drop list, select Contraindicated – Do not Give.Select an Not Given reason and enter User1's name in the Not Given Authorized byfield."
+	Run "Immunizations/Common/ChartNotGiven/Actions".requiredInput contraindicated, reschedule, patient
+	
+	Log "Ensure the details entered are displayed correctly"
+	Run "Immunizations/Util/Validation".verifyText rescheduleDateField, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText vaccineName2, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText contraindicated, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText reschedule, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	
+	Log "Today's date is defaulted in the Date field"
+	Run "Immunizations/Util/Validation".verifyText (today's day), ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	
+	Log "VERIFICATION:Ensure Chart button displays with a count of 2 in the parenthesis."
+	Run "Immunizations/Util/Validation".verifyText "Submit (2)", ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	
+	Log "VERIFICATION:The second vaccine displays with a green tick mark once all the  required fields are populated for the vaccine."
+	Set checkmarkRectangle to "Immunizations/Common/DocumentHistory/Validations".asteriskOrCheckmarkSearchRectangle(vaccineName2)
+	Run "Immunizations/Util/Validation".Verifyimage greenCheckmark,checkmarkRectangle
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Contraindicated")
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION:Select 3rd vaccine and select any value from the Not Given drop list. Do notenter any other required details. Click on Chart button"
+	Run "Common".ClickOnImageFound addImmunizations
+	Run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineName3
+	Run "Immunizations/Common/SelectImmunizationsList".clickSelectButton
+	
+	Log "VERIFICATION:Ensure the selected value displays correctly"
+	Set chartNotGivenRect to ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText vaccineName3,chartNotGivenRect
+	Run "Immunizations/Util/Validation".verifyTextNotVisible refused,chartNotGivenRect
+	Run "Immunizations/Util/Validation".verifyTextNotVisible patientRefuses,chartNotGivenRect
+	
+	Log "VERIFICATION:Chart button displays with a count of 2 within parenthesis"
+	Run "Immunizations/Util/Validation".verifyText "Submit (2)", ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Log "VERIFICATION:Green tick mark is not displayed next to the 3rd vaccine"
+	Set checkmarkRectangle to "Immunizations/Common/DocumentHistory/Validations".asteriskOrCheckmarkSearchRectangle(vaccineName3)
+	Run "Immunizations/Util/Validation".verifyimageNotVisible greenCheckmark,checkmarkRectangle
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Vaccine 3")
+	----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on Chart button."
+	Run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton submit
+	WaitFor 20, "Immunizations/WorkflowMPage/Table/TL_Workflow"
+	
+	Log "VERIFICATION:Ensure the two vaccines with the check mark are charted successfully"
+	Run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName2, contraindicated
+	Run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName4,refused
+	
+	Log "VERIFICATION:3rd Vaccine doesn't get charted"
+	Run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName3, overdue
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Charting Vaccine")
+	----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Navigate back to the mPage, click on Add Immunizations button and select ChartNot Given button. Select any vaccine which is not defined in the CDC Schedule, but has a charteddose. Click on Select Button"
+	Run "Immunizations/Common/ChartNotGiven/Actions".openDiaLog
+	
+	Log "VERIFICATION: Ensure Immunization – Not Given diaLog is displayed"
+	Run "Immunizations/Util/Validation".verifyImage immunizationsDiaLog
+	Run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineName8
+	
+	Log "VERIFICATION:Ensure the vaccine is selected and Select button displays with a count of 1 within parenthesis."
+	Run "Immunizations/Common/ChartingDiaLog/Validation".verifySelectButton True, "1"
+	Run "Immunizations/Common/SelectImmunizationsList".clickSelectButton
+	
+	Log "VERIFICATION:Ensure the vaccine is displayed in the Immunization – Not Given diaLog"
+	Run "Immunizations/Util/Validation".verifyText vaccineName8, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Non-CDC Vaccine")
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Enter all the mandatory details required for charting with Not Given of Refused–Do not Give."
+	Run "Immunizations/Common/ChartNotGiven/Actions".requiredInput refused,cancelSeries,patient
+	Run "Immunizations/Common/ChartNotGiven/Actions".authorizedDateInput today
+	
+	Log "VERIFICATION:Ensure the values selected are displayed correctly"
+	Run "Immunizations/Util/Validation".verifyText refused, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText cancel, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText patientRefuses, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText userfullname, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	
+	Log "VERIFICATION:Vaccine displays with a green tick mark"
+	Set checkmarkRectangle to "Immunizations/Common/DocumentHistory/Validations".asteriskOrCheckmarkSearchRectangle(vaccineName3)
+	Run "Immunizations/Util/Validation".verifyImage greenCheckmark,checkmarkRectangle
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION:Click on Add Immunizations button and select one more vaccine from the Favoriteslist which is defined as part of the CDC Schedule."
+	click( "Immunizations/Common/BR_AddImmunizations")
+	Run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineName9
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on Select button and enter all the mandatory details required for charting with Not Given of Contraindicated – Do not Give."
+	Run "Immunizations/Common/SelectImmunizationsList".clickSelectButton
+	Run "Immunizations/Common/ChartNotGiven/Actions".requiredInput contraindicated,cancelSeries, "Allergy"
+	Run "Immunizations/Common/ChartNotGiven/Actions".authorizedDateInput today
+	
+	Log "VERIFICATION:Ensure the values selected are displayed correctly"
+	Run "Immunizations/Util/Validation".verifyText contraindicated, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText cancelSeries, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText "Allergy", ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText userfullname, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText (today's day), ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText vaccineName9, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	
+	Log "VERIFICATION: Vaccine displays with a green tick mark"
+	Set checkmarkRectangle to "Immunizations/Common/DocumentHistory/Validations".asteriskOrCheckmarkSearchRectangle(vaccineName3)
+	Run "Immunizations/Util/Validation".verifyImage greenCheckmark,checkmarkRectangle
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Contraindicated")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on Chart button."
+	Run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton submit
+	WaitFor 20, image:"Immunizations/WorkflowMPage/Table/TL_Workflow"
+	
+	Log "VERIFICATION:The first vaccine displays Refused below the vaccine name."
+	Run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName8, refused
+	
+	Log "VERIFICATION:The second vaccine displays Contraindicated below the vaccine name."
+	Run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName9,contraindicated
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Charting vaccines")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Expand any one of the vaccine."
+	Run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName8
+	
+	Log "VERIFICATION: Ensure the details for Not Given charting display correctly with the following details: 1. Not Given Type 2. Not Given Reason 3. Date 4. Not Given Authorized by 5. Description (if any)"
+	Run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyNotGivenType vaccineName8,seriesRefused
+	Run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyNotGivenReason vaccineName8,patientRefuses
+	Run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyMostRecentDocumentedBy vaccineName8,userfullname
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on the ‘+’ icon next to Immunizations section header and select ChartNot Given... button."
+	Run "Immunizations/Common/ChartNotGiven/Actions".openDiaLog
+	
+	Log "VERIFICATION:Chart not given is displayed"
+	Run "Immunizations/Util/Validation".verifyText "Not Given"
+	
+	Log "VERIFICATION: Select Immunizations diaLog displays face-up."
+	Run "Immunizations/Util/Validation".verifyImage immunizationsDiaLog
+	
+	Run "Immunizations/Common/SelectImmunizationsList".clickCancelButton
+	
+	Log "VERIFICATION:Select Immunizations diaLog displays face-up"
+	Run "Immunizations/Util/Validation".verifyImageNotVisible immunizationsDiaLog
+	
+	Log "VERIFICATION: No Immunization Selected message is displayed in the Immunization – Not Given diaLog.  "
+	Set notGivenRect to ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText noImmunizationsMsg,notGivenRect
+	
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on Add Immunizations button."
+	Run "Common".clickOnImageFound addImmunizations
+	
+	Set selectImmunRect to ("Immunizations/Common/TL_SelectImmunizations","Immunizations/Common/BR_SelectImmunizations")
+	Run "Immunizations/Util/Validation".verifyText vaccineName1,selectImmunRect
+	Run "Immunizations/Util/Validation".verifyText vaccineName2,selectImmunRect
+	Run "Immunizations/Util/Validation".verifyText vaccineName3,selectImmunRect
+	
+	Log "VERIFICATION:Select and Cancel buttons are displayed"
+	Run "Immunizations/Util/Validation".verifyText vaccineName3,selectImmunRect
+	Run "Immunizations/Util/Validation".verifyText cancel,selectImmunRect
+	
+	Log "VERIFICATION:Select button shows a count of 0 within parenthesis"
+	Run "Immunizations/Common/ChartingDiaLog/Validation".verifySelectButton False, "0"
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Select the combo vaccine (MMR) and click on Select button."
+	Run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineName10
+	Run "Immunizations/Common/SelectImmunizationsList".clickSelectButton
+	
+	Log "VERIFICATION:Ensure both MMR and Varicella are displayed in the Immunization Not Given diaLog"
+	put ImageRectangle("Immunizations/Common/BR_AddImmunizations").bottomLeft() into immunizationList
+	insert immunizationList + (200,400) into immunizationList
+	Run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName11,immunizationList
+	Run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName7,immunizationList
+	
+	Log "VERIFICATION:Vaccine will also document:Varicella"
+	Run "Immunizations/Util/Validation".verifyText "Vaccine will also document", ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText vaccineName7, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	CaptureScreen(Name:"Step"&Global stepNumber&"-MMR Vaccine")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Select the linked vaccine group (Varicella) Vaccine."
+	put imagerectangle("Immunizations/Common/BR_AddImmunizations").bottomleft() into Immunizations
+	insert Immunizations + (200,350) into Immunizations
+	Click(text:vaccineName7,searchRectangle:(Immunizations))
+	
+	Log "VERIFICATION:Ensure that the MMR Vaccine name is displayed"
+	Run "Immunizations/Util/Validation".verifyText vaccineName11, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText "Combo", ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText userfullname, ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION:Select MMR vaccine and enter all the mandatory details and click on Chartbutton."
+	put imagerectangle("Immunizations/Common/BR_AddImmunizations").bottomleft() into Immunizations
+	insert Immunizations + (200,350) into Immunizations
+	click(text:"Measles",searchRectangle:(Immunizations))
+	Run "Immunizations/Common/ChartNotGiven/Actions".requiredInput refused,cancelSeries, patient
+	
+	Log "VERIFICATION:Ensure the values selected are displayed correctly"
+	Set chartNotGivenRect to ("Immunizations/Common/ChartNotGiven/TL_DiaLog","Immunizations/Common/ChartNotGiven/BR_DiaLog")
+	Run "Immunizations/Util/Validation".verifyText refused,chartNotGivenRect
+	Run "Immunizations/Util/Validation".verifyText cancelSeries,chartNotGivenRect
+	Run "Immunizations/Util/Validation".verifyText patientRefuses,chartNotGivenRect
+	Run "Immunizations/Util/Validation".verifyText userfullname,chartNotGivenRect
+	Run "Immunizations/Util/Validation".verifyText (today's day),chartNotGivenRect
+	
+	Run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton submit
+	WaitFor 15, forecastVaccine
+	
+	Log "VERIFICATION:The first vaccine displays Refused below the vaccine name."
+	Run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName10, refused
+	Run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName7, refused
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION:Expand MMR or Varicella charted in the previous steps."
+	Run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName10
+	
+	Log "VERIFICATION:Ensure selected Not Given type , reason, and other fields display correctly for both the vaccines."
+	Run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyNotGivenType vaccineName10,seriesRefused
+	Run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyNotGivenReason vaccineName10,patientRefuses
+	Run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyMostRecentDocumentedBy vaccineName10,userfullname
+	CaptureScreen(Name:"Step"&Global stepNumber&"-MMR or Varicella")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1. Search and select Patient1."
+	TypeText altKey &F4 //Closing Powerchart
+	
+	Log "VERIFICATION:Powerchart does not Display"
+	Run "Immunizations/Util/Validation".verifyimageNotVisible powerchartIcon
+	Run "Immunizations/Setup".loginAndLoadComponentViaMenu Username, Password, Domain, PatientName, ChartMenu, MpageName, cleanup
+	
+	Log "VERIFICATION:Powerchart Displays"
+	Run "Immunizations/Util/Validation".verifyimage powerchartIcon
+	
+	Log "VERIFICATION:Ensure Immunization Workflow Mpage opens"
+	Run "Immunizations/Util/Validation".verifyText MpageName, "Immunizations/Common/Helpers".TabListSearchRectangle()
+	
+	Log "Ensure Patient1's chart opens without any errors"
+	assert that "PatientChart".validatePatientNameInTopLeft(PatientName) equals True
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Workflow mPage Patient1")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: From TOC, select Immunization Schedule"
+	Click(text:"Immunization Schedule")
+	WaitFor 35, "ImmunizationsSchedule/PreviousImmunizations/TL_PreviousImmunizations"
+	
+	Log "VERIFICATION:Ensure vaccine groups for which Not Givens were charted from MPages in the previous steps are displayed in the Previous immunizations correctly"
+	assert that "PatientChart".ValidateTitleBarValue("Immunization Schedule") equals True
+	Set Rectangle to "ImmunizationsSchedule/PreviousImmunizations/Helpers".diaLogRectangle 
+	Run "Immunizations/Util/Validation".verifyText vaccineName8,Rectangle
+	Run "Immunizations/Util/Validation".verifyText vaccineName2,Rectangle
+	Run "Immunizations/Util/Validation".verifyText vaccineName12,Rectangle
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Right click on the dose of DTaP Vaccine in the Previous Immunizations sectionand select View option."
+	Run "ImmunizationsSchedule/PreviousImmunizations/Actions".rightClickAndSelectOption vaccineName12,"View"
+	
+	WaitFor 15, "ImmunizationsSchedule/ImmunizationsDetails/Label_ImmunizationDetails"
+	Log "VERIFICATION:Ensure Immunization Details- View diaLog opens without any errors"
+	Run "Immunizations/Util/Validation".verifyImage "ImmunizationsSchedule/ImmunizationsDetails/Label_ImmunizationDetails"
+	
+	Log "VERIFICATION:The Not Given reason charted from MPages displays correctly. All other details entered are  displayed correctly."
+	Set Rectangle to "ImmunizationsSchedule/ImmunizationDetails/Helpers".diaLogRectangle 
+	Run "Immunizations/Util/Validation".verifyText patientRefuses,Rectangle
+	Run "Immunizations/Util/Validation".verifyText refused,Rectangle
+	Run "Immunizations/Util/Validation".verifyText userfullname,Rectangle
+	CaptureScreen(Name:"Step"&Global stepNumber&"-DTAP")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on Cancel button, chart an Not Given type of Refused - Do not Give for anyvaccine which was not charted from MPages in the previous steps. E.g. Hib"
+	Set Rectangle to "ImmunizationsSchedule/ImmunizationDetails/Helpers".diaLogRectangle 
+	Click(text:cancel,Searchrectangle:Rectangle)
+	
+	Set Rectangle to "ImmunizationsSchedule/FutureImmunizations/Helpers".diaLogRectangle
+	Click(text:vaccineName3,searchrectangle:Rectangle,DPI:120)
+	Run "ImmunizationsSchedule/FutureImmunizations/Actions".clickBtn "Chart"
+	WaitFor 15,"ImmunizationsSchedule/ImmunizationsDetails/Label_ImmunizationDetails"
+	Run "ImmunizationsSchedule/ImmunizationDetails/Actions".selectNot GivenType refused
+	Run "ImmunizationsSchedule/ImmunizationDetails/Actions".selectNot GivenReason patientRefuses
+	Run "ImmunizationsSchedule/ImmunizationDetails/Actions".selectNot GivenDate "2015","Mar","5" //Any date is accepted, so hardcoded this particular date
+	Run "ImmunizationsSchedule/ImmunizationDetails/Actions".clickBtn "OK"
+	
+	Set Immunrectangle to  "ImmunizationsSchedule/ImmunizationDetails/Helpers".diaLogRectangle
+	Click(text:"Chart",searchrectangle:Immunrectangle)
+	
+	WaitFor 20, futureImmunizations
+	
+	Log "VERIFICATION: Ensure the vaccine displays in the Previous Immunizations section without any errors"
+	Set ImmunSchedRectangle to "ImmunizationsSchedule/PreviousImmunizations/Helpers".diaLogRectangle 
+	Run "Immunizations/Util/Validation".verifyText vaccineName3,ImmunSchedRectangle
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Hib Vaccine")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Select the MPage configured in the prerequisites from TOC."
+	Run "Millennium_PowerchartTableOfContents".powerChartTableOfContents MpageName
+	Run "Millennium_SelectMenu_SubMenu".selectMenuSubMenu "Task","Task","Refresh"
+	WaitFor 20, "Immunizations/WorkflowMPage/Table/TL_Workflow"
+	
+	Log "VERIFICATION: Ensure the MPage opens without any errors"
+	assert that "PatientChart".validateTitleBarValue(MpageName) equals True
+	
+	Log "VERIFICATION:The Hib vaccine displays the correct Not Given type and reason entered from Immunization Schedule"
+	Run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName3
+	
+	Log "VERIFICATION:Ensure selected Not Given type , reason, and other fields display correctly for both the vaccines."
+	Run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyNotGivenType vaccineName3,seriesRefused
+	Run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyNotGivenReason vaccineName3,patientRefuses
+	Run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyMostRecentDocumentedBy vaccineName3,userfullname
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Vaccine exists")
+	--------------------------------------------------------------------------------------------------------------
+	Catch Exception 
+	Logerror "Exception encountered" && exception.reason
+	captureScreen "Exception"
+end try
+
+Log "Util".stepNumber & "ACTION: Exit Powerchart"
+Run "Immunizations/setup".closeChartViaX
+
+
+

@@ -1,0 +1,160 @@
+{
+	"SOLM64": {
+		"Patient_New_Born": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P1",
+			"nameFullFormatted": "HepB3DoseSr,P1",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P2",
+			"nameFullFormatted": "HepB3DoseSr,P2",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today - 12 years",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P3",
+			"nameFullFormatted": "HepB3DoseSr,P3",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today - 19 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Hepatitis B",
+		"vaccineName2": "Haemophilus Influenzae Type B",
+		"dateFormat": "Date",
+		"Product1": "Comvax",
+		"Product2": "HepB-CpG",
+		"Product3": "Hep B, adol/peds",
+		"Source": "Device",
+		"unchartedReason": "Test",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Patient Refuses",
+		"vis": "Hepatitis B (English)"
+	},
+	"SOLGM": {
+		"Patient_New_Born": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P1",
+			"nameFullFormatted": "HepB3DoseSr,P1",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P2",
+			"nameFullFormatted": "HepB3DoseSr,P2",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today - 12 years",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P3",
+			"nameFullFormatted": "HepB3DoseSr,P3",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today - 19 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Hepatitis B",
+		"vaccineName2": "Haemophilus Influenzae Type B",
+		"dateFormat": "Date",
+		"Product1": "Comvax",
+		"Product2": "HepB-CpG",
+		"Product3": "Hep B, adol/peds",
+		"Source": "Device",
+		"unchartedReason": "Test",
+		"notGivenType": "Contraindicated",
+		"tempNotGivenAction": "Reschedule Date",
+		"notGivenReason": "Current Fever, Moderate to Severe",
+		"rescheduleDate": "Today + 1 month",
+		"vis": "Hepatitis B (English)"
+	},
+	"ENG18": {
+		"Patient_New_Born": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P1",
+			"nameFullFormatted": "HepB3DoseSr,P1",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P2",
+			"nameFullFormatted": "HepB3DoseSr,P2",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today - 12 years",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P3",
+			"nameFullFormatted": "HepB3DoseSr,P3",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today - 19 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Hepatitis B",
+		"vaccineName2": "Haemophilus Influenzae Type B",
+		"dateFormat": "Date",
+		"Product1": "Comvax",
+		"Product2": "HepB-CpG",
+		"Product3": "Hep B, adol/peds",
+		"Source": "Device",
+		"unchartedReason": "Test",
+		"notGivenType": "Contraindicated",
+		"tempNotGivenAction": "Reschedule Date",
+		"notGivenReason": "Current Fever, Moderate to Severe",
+		"rescheduleDate": "Today + 1 month",
+		"vis": "Hepatitis B (English)"
+	},
+	"S18VX": {
+		"Patient_New_Born": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P1",
+			"nameFullFormatted": "HepB3DoseSr,P1",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P2",
+			"nameFullFormatted": "HepB3DoseSr,P2",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today - 12 years",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HepB3DoseSr",
+			"firstName": "P3",
+			"nameFullFormatted": "HepB3DoseSr,P3",
+			"newLastName": "oldHepB3DoseSr",
+			"dob": "Today - 19 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Hepatitis B",
+		"vaccineName2": "Haemophilus Influenzae Type B",
+		"dateFormat": "Date",
+		"Product1": "Comvax",
+		"Product2": "HepB-CpG",
+		"Product3": "Hep B, adol/peds",
+		"Source": "Device",
+		"unchartedReason": "Test",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Patient Refuses",
+		"vis": "Hepatitis B (English)"
+	}
+}

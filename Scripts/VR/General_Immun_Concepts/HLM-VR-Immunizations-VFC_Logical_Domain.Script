@@ -1,0 +1,105 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+#RQM Test script link: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestScript&id=93963
+--------------------------------------------------Helper Suite Information-------------------------------------------
+
+---------------------------------------Assigning Test Data to the Variables---------------------------------------
+params domain
+set domain to "solm64"
+log "Test running in domain"&&domain
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set format to "%m/%d/%Y"
+set password to decodeText(setup.("password").trimAll, "HLM")
+set conversation to setup.conversation
+set encounterType to setup.encounterType
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set common to JSONValue(file resourcePath("common.json"))
+set testData to JSONValue(file ResourcePath("VR/VFC_Logical_Domain/testData.json")).(value of domain)
+set lastName1 to testData.Patient1.lastName
+set firstName1 to testData.Patient1.firstName
+set newLastName1 to testData.Patient1.newLastName
+set lastName2 to testData.Patient2.lastName
+set firstName2 to testData.Patient2.firstName
+set newLastName2 to testData.Patient2.newLastName
+set encounterOrg1 to testData.Patient1.encounterOrg1
+set encounterOrg2 to testData.Patient2.encounterOrg2
+set dob1 to formattedTime(format, value(testData.Patient1.dob)) 
+set dob2 to formattedTime(format, value(testData.Patient2.dob)) 
+set sex1 to testData.Patient1.sex
+set sex2 to testData.Patient2.sex
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+try
+	------------------------------------------------------PatientSetup---------------------------------------------------------
+	
+	Log "Create Patient 1 – 19 years ."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName1, firstName1
+	run "Immunizations/PatientCreation".patientSearched encounterOrg1, firstName1, sex1, format, dob1, encounterType
+	----------------------------------------------------------------------------------------------------------------
+	Log "Patient 2 – 19 years ."
+	run "Immunizations/PatientCreation".searchPatient lastName2, firstName2
+	run "Immunizations/PatientCreation".patientSearched encounterOrg2, firstName2, sex2, format, dob2, encounterType
+	run "Util".CloseApplication 2
+	
+	try
+		BeginTestCase "HLM-VR-Immunizations-VFC_Logical_Domain"		
+		------------------------------------------------------Test Steps---------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open Patient 1's chart in location one and navigate to the page which contains the VFC component"
+		Run "Immunizations/Setup".LoginAndLoadComponentViaMenu  setup.username, decodeText(setup.("password").trimAll, "HLM"), "Immunizations/Util/Setup".domainRun(domain), testData.Patient1.nameFullFormatted,  common.menu, common.subMenu, global Cleanup, setup.relationship
+		
+		Log "VERIFICATION: Ensure that the VFC status displays and View/Modify button is displayed next to the VFC status and the page contatining component loads correctly"
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "VFC Status:", "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".Verifyimage common.vfcViewModifyButton, "Immunizations/Common/Helpers".tabListSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-VFC_DisplayedForLocation1") 
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Open Patient2's chart in location two, navigate to the page which contains the VFC component"
+		run "Immunizations/Setup".NavigateToImmunizationWorkflowViaMenu testData.Patient2.nameFullFormatted, common.menu, common.subMenu, setup.relationship
+		
+		Log "VERIFICATION: Ensure that the VFC Component is not displayed and the page contatining component loads correctly"
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible "VFC Status:", "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible common.vfcViewModifyButton,"Immunizations/Common/Helpers".tabListSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-VFC_NotDisplayedForLocation2") 
+		---------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber &"ACTION: Close powerchart."
+		run "Immunizations/Setup".CloseApplication global Cleanup
+		----------------------------------------------------------------------------------------------------------------	
+		EndTestCase "HLM-VR-Immunizations-VFC_Logical_Domain"
+		
+	Catch 
+		
+		LogError "Exception encountered" & newline & "Exception Reason:" && the exception.reason
+		captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+		
+	End try
+	
+	------------------------------------------------------PatientCleanup---------------------------------------------------------
+	
+	Log "Cleanup Patient 1 – 19 years ."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName1, firstName1
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName1
+	----------------------------------------------------------------------------------------------------------------
+	Log "Cleanup Patient 2 – 19 years ."
+	run "Immunizations/PatientCreation".searchPatient lastName2, firstName2
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName2
+	run "Util".CloseApplication 2
+	----------------------------------------------------------------------------------------------------------------
+Catch 
+	
+	LogError "Exception encountered" & newline & "Exception Reason:" && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End try
+
+run "Cleanup".ZeroStateCloseAllApps

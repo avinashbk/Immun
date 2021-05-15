@@ -1,0 +1,36 @@
+{
+	"SOLM64":{
+		"Patient1":{
+			"lastName":"HIB1P1",
+			"firstName":"Overdue",
+			"nameFullFormatted":"HIB1P1,Overdue",
+			"newLastName":"OldHIB1",
+			"dob":"Today - 15 months",
+			"sex":"Male"
+		},	
+	"User":"Maintenance, Health",
+	"vaccineName1":"Haemophilus Influenzae Type B",
+	"vaccineName2":"Hepatitis B",
+	"dateFormat":"Date",
+	"Product":"Comvax",
+	"vis":"Haemophilus influenzae type b (English)",
+	"Source":"Device"
+	},
+	"S18VX":{
+		"Patient1":{
+			"lastName":"HIB1P1",
+			"firstName":"Overdue",
+			"nameFullFormatted":"HIB1P1,Overdue",
+			"newLastName":"OldHIB1",
+			"dob":"Today - 15 months",
+			"sex":"Male"
+		},	
+	"User":"Maintenance, Health",
+	"vaccineName1":"Haemophilus Influenzae Type B",
+	"vaccineName2":"Hepatitis B",
+	"dateFormat":"Date",
+	"Product":"Comvax",
+	"vis":"Haemophilus influenzae type b (English)",
+	"Source":"Device"
+	}  
+}

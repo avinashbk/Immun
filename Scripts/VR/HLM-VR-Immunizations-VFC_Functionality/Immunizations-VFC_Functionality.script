@@ -1,0 +1,29 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+
+------------------------------------------------------------------------------------------------------------------------------
+#RQM Test case: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=62028
+------------------------------------------------------------------------------------------------------------------------------
+Params domain
+
+Log "Test running in domain"&&domain
+Set domain to "Immunizations/Util/Setup".domainRun(domain)
+
+Try
+	BeginTestCase "HLM-VR-Immunizations-VFC_Functionality/Patient1"
+	Run "VR/HLM-VR-Immunizations-VFC_Functionality/Patient1" domain
+	EndTestCase "HLM-VR-Immunizations-VFC_Functionality/Patient1"
+	
+	BeginTestCase "HLM-VR-Immunizations-VFC_Functionality/Patient2"
+	Run "VR/HLM-VR-Immunizations-VFC_Functionality/Patient2" domain
+	EndTestCase "HLM-VR-Immunizations-VFC_Functionality/Patient2"
+	
+Catch theException
+	LogError "Exception encountered" & newline & "Exception Reason:" && theException.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End try
+
+run "Cleanup".ZeroStateCloseAllApps

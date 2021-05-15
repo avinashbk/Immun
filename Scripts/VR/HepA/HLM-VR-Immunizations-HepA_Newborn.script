@@ -1,0 +1,227 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+------------------------------------------------RQM TEST CASE LINK--------------------------------------------------------
+
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=61910
+
+---------------------------------------Assigning Test Data to the Variables---------------------------------------
+params domain
+set format to "%b %d, %Y"
+set domain to "Immunizations/Util/setup".domainRun(domain)
+log "Test running in domain"&&domain
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set relationship to setup.relationship
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set doubleDashImage to common.doubleDashImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set minimum to fieldLabels.minimum
+set earliestRecommended to fieldLabels.earliestRecommended
+set latestRecommended to fieldLabels.latestRecommended
+set maximum to fieldLabels.maximum
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set notStarted to textStrings.notStarted
+set immunizationForecast to textStrings.immunizationForecast
+set notDueUntil to textStrings.notDueUntil
+
+set testData to JSONValue(file resourcePath("VR/HepatitisA_Vaccine_Forecast/testData.json")).(value of domain)
+set patientName to testData.Patient1_Newborn.nameFullFormatted
+set lastName to testData.Patient1_Newborn.lastName
+set firstName to testData.Patient1_Newborn.firstName
+set newLastName to testData.Patient1_Newborn.newLastName
+set dob to formattedTime(format, value(testData.Patient1_Newborn.dob)) 
+set sex to testData.Patient1_Newborn.sex
+set vis1 to testdata.vis1
+set vaccineName to testData.vaccineName
+
+
+try
+	------------------------------------------------------Patient setup---------------------------------------------------------
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) of 5 years for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	----------------------------------------------------------------------------------------------------------------------------------
+	try
+		------------------------------------------------------Test Steps---------------------------------------------------------
+		BeginTestCase "VR/HepA/HLM-VR-Immunizations-HepA_Newborn"
+		
+		Log "Util".stepNumber & "ACTION: Launch Powerchart.exe with User1. Search and select Patient1,  Select the Immunization Workflow MPage from the TOC and navigate to Immunization Section."
+		run "Immunizations/setup".loginAndLoadComponentViaMenu username, password, domain, patientName, menu, subMenu, relationship
+		
+		Log "VERIFICATION: Ensure Immunization Workflow displays without any errors." 
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName
+		
+		Log "VERIFICATION: Ensure columns for Status display with --." 
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure columns for , Doses Admin display with --."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure columns for Last Action display with --."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure columns for  Last Action Date display with --."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Verify Next Dose Recommended displays appropriate administration range based on patient's dob. E.g. Recommended 12months until 24 months + 4 weeks - 1 day from dob."
+		set nextRecommendedDate to "Immunizations/Util/Date".adjustDate(dob,format, ("Month":12)) && "-" && "Immunizations/Util/Date".adjustDate(dob,format, ("Month":24, "Week":4, "Day":-1))
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName,nextRecommendedDate
+		CaptureScreen(Name:"Step"&Global stepNumber&"-WorkFlowMPageValidation-Patient1")
+		--------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Hepatitis A row."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		Log "VERIFICATION: Ensure vaccine name displays (Hepatitis A) and the valid date range displays below the vaccine name.(i.e. 12 months until 24months + 4 weeks - 1 day from dob)"
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle()
+		set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName, sidePanelHeaderRectangle
+		run "Immunizations/WorkflowMPage/Sidepanel/Validations".verifyValidNextRecommendedDate nextRecommendedDate , sidePanelHeaderRectangle
+		
+		Log "VERIFICATION: Ensure No vaccine history to display is showing in the middle of the detail pane with the note icon."
+		run "Immunizations/Util/Validation".verifyimage "Immunizations/WorkflowMPage/SidePanel/NoVaccineHistory", sidePanelRectangle		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-SidePanelValidation-Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Select the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: Ensure Under CDC schedule column Hepatitis A display as 'Not Started' below vaccine group name."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName &return& notStarted, columnSearchRectangle  
+		
+		Log "VERIFICATION: Ensure a 2-dose series is displayed in the time line in the span of 12 months and 24months+4 weeks-1 day."
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("Month":12))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("Month":24, "Week":4, "Day":-1))
+		set alignment to ("Left","Right")
+		set (topOffset1,topOffset2,bottomOffset1,bottomOffset2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffset1,bottomOffset2)
+		run "Immunizations/Util/Validation".verifyText "2 Dose Series", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Verify 2 Dose series is displayed in the timeline to the right in the column from the age  12m and 2 years"
+		set startDateHeader to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".adjustDate(dob, format,("Month":12)))
+		set endDateHeader to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".adjustDate(dob, format,("Month":24, "Week":4, "Day":-1)))
+		set alignment to ("left","Right")
+		set (topOffset1,topOffset2,bottomOffset1,bottomOffset2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffset1,bottomOffset2)
+		run "Immunizations/Util/Validation".verifyText "2 Dose Series", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ForecasterValidation-Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click on the Hep A vaccine group from the first column."
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName
+		
+		Log "VERIFICATION: Ensure Dose 1 displays with Not Due Until status with Recommended from date i.e. 12 months from dob "
+		WaitFor 10, "Immunizations/Forecaster-Forecast/ExpandedView"
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers". expandedViewLeftPaneDoseSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText notDueUntil & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Month":12)), leftPaneSearchRectangle
+		
+		Log "VERIFICATION: Ensure Dose 2 displays with Not Due Until status with Recommended from date i.e. 18 months from dob "
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers". expandedViewLeftPaneDoseSearchRectangle("2")
+		run "Immunizations/Util/Validation".verifyText notDueUntil & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Month":18)), leftPaneSearchRectangle
+		
+		Log "VERIFICATION:In the right pane, Not Started – Hepatitis A at the top,Recommended from age(12 months) Recommended until(i.e. 24 months + 4 weeks -1 day) from dob is displayed below it, Vaccine Information Statement A link to Vaccine   Information Statement of Hepatitis A is displayed."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle
+		set rightPaneBodySearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneBodySearchRectangle 
+		run "Immunizations/Util/Validation".verifyText notStarted && "-" && vaccineName, rightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Recommended From" && "Immunizations/Util/Date".adjustDate(dob, "%m/%d/%y", ("Month":12)) && "-" && "Immunizations/Util/Date".adjustDate(dob, "%m/%d/%y", ("Month":24, "Week":4,    "Day":-1)), rightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText vis1, rightPaneBodySearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ExpandedView-Patient1")
+		---------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber & "ACTION: Click on Dose 1 in the expanded view."
+		Click text: "1", validWords:"*", searchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		
+		Log "VERIFICATION: In the right-hand pane, the following details are displayed. Dose 1 in the  Header."
+		run "Immunizations/Util/Validation".verifyText "Dose 1", rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Earliest: 12 months from dob."
+		set age to "Immunizations/Util/Date".ageCalculator (dob,"Immunizations/Util/Date".adjustDate(dob, format,("Month":12)), "false", "true")
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum,"Immunizations/Util/Date".adjustDate(dob, format,("Month":12))&& age
+		
+		Log "VERIFICATION: Recommended From: 12 months from dob."
+		set age to "Immunizations/Util/Date".ageCalculator (dob,"Immunizations/Util/Date".adjustDate(dob, format,("Month":12)), "false", "true")
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended ,"Immunizations/Util/Date".adjustDate(dob, format,("Month":12))&& age
+		
+		Log "VERIFICATION: Recommended Until: 24 months + 4 weeks - 1 day from dob."
+		set age to "Immunizations/Util/Date".ageCalculator (dob,"Immunizations/Util/Date".adjustDate(dob, format,("Month":24, "Week":4, "Day":-1)), "false", "true")
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended ,"Immunizations/Util/Date".adjustDate(dob, format,("Month":24, "Week":4, "Day":-1))&& age
+		
+		Log "VERIFICATION: Latest: 19 years - 1 day from dob."
+		set age to "Immunizations/Util/Date".ageCalculator (dob,"Immunizations/Util/Date".adjustDate(dob, format,("Year":19, "Day":-1)), "false", "true")
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField maximum,"Immunizations/Util/Date".adjustDate(dob, format,("Year":19, "Day":-1))&& age
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ExpandedViewDose1-Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Dose 2 in the expanded view."
+		Click text: "2", searchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		
+		Log "VERIFICATION: In the right-hand pane, the following details are displayed. Dose 2 in the  Header."
+		run "Immunizations/Util/Validation".verifyText "Dose 2", rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Earliest: 18 months from dob."
+		set age to "Immunizations/Util/Date".ageCalculator (dob,"Immunizations/Util/Date".adjustDate(dob, format,("Month":18)), "false", "true")
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum,"Immunizations/Util/Date".adjustDate(dob, format,("Month":18))&& age
+		
+		Log "VERIFICATION: Recommended From: 18 months from dob."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended,"Immunizations/Util/Date".adjustDate(dob, format,("Month":18))&& age
+		
+		Log "VERIFICATION: Recommended Until: 24 months + 4 weeks - 1 day from dob."
+		set age to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".adjustDate(dob, format,("Month":24, "Week":4, "Day":-1)), "false", "true")
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended,"Immunizations/Util/Date".adjustDate(dob, format, ("Month":24, "Week":4, "Day":-1))&& age
+		
+		Log "VERIFICATION: Latest: --."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewFieldImage Maximum, doubleDashImage
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ExpandedViewDose2-Patient1")
+		---------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber & "ACTION: Click anywhere outside the expanded view and then Click on List Button."
+		set topPaneRectangle to "Immunizations/Common/Helpers".tabListSearchrectangle
+		Click text:immunizationForecast, searchrectangle:topPaneRectangle
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews 
+		
+		Log "VERIFICATION: Verify No vaccine history to display displays in the middle of screen."
+		run "Immunizations/Forecaster-List/Validations".verifyNoVaccineHistory 
+		CaptureScreen(Name:"Step"&Global stepNumber&"-NoVaccineHistory-Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Close Application."
+		run "Immunizations/setup".closeApplication 
+		
+		EndTestCase "VR/HepA/HLM-VR-Immunizations-HepA_Newborn"
+		---------------------------------------------------------------------------------------------------------------
+	catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	end try
+	------------------------------------------------------Patient Cleanup----------------------------------------------
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+catch
+	LogError "Exception encountered" && the exception.reason
+	captureScreen"Exception"
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps	

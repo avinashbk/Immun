@@ -1,0 +1,408 @@
+﻿-----------------------------------------------------------------------Helper Suite Information-----------------------------------------------------------------------
+
+# https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+# https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# RQM TEST CASE LINK: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=107857
+
+params domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+log "Test running in domain"&&domain
+set format to "%b %d, %Y"
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set encounterOrg to setup.EncounterOrg
+set encounterType to setup.EncounterType
+set conversation to setup.Conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set testData to JSONValue(file resourcePath("VR/Reconcile-Filters/testData.json")).(text of domain)
+set filePathToCollectionAndEnvironment to testData.filePathToCollectionAndEnvironment
+set environmentName to testData.environmentName
+set collectionName to testData.collectionName
+set filePathToCsv to testData.filePathToCsv
+set csvFileName to testData.csvFileName
+
+set patientName to testData.Patient_MixedRecords.nameFullFormatted
+set newLastName to testFData.Patient_MixedRecords.newLastName
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set vaccineName3 to testData.vaccineName3
+set vaccineName4 to testData.vaccineName4
+set vaccineName1Admin1Date1 to formattedTime(format, value(testData.Patient_MixedRecords.vaccineName1Admin1Date1))
+set vaccineName1Admin2Date1 to formattedTime(format, value(testData.Patient_MixedRecords.vaccineName1Admin2Date1))
+set vaccineName2Admin1Date1 to formattedTime(format, value(testData.Patient_MixedRecords.vaccineName2Admin1Date1))
+set vaccineName2Admin2Date1 to formattedTime(format, value(testData.Patient_MixedRecords.vaccineName2Admin2Date1))
+set externalCountP1 to testData.externalCountP1
+set pedCountP1 to testData.pedCountP1
+set dateFormat1 to testData.dateFormat
+set jsonURL to testData.jsonUrl_MixedRecords
+
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+try
+	
+	//----------------------------------------------------------------- Patient Setup ---------------------------------------------------------------	
+	Log "Create patient_MixedRecords - more than 6 years old"	
+	set lastName to testData.Patient_MixedRecords.lastName
+	set firstName to testData.Patient_MixedRecords.firstName
+	set dob to formattedTime("%m/%d/%Y", value(testData.Patient_MixedRecords.dob)) 
+	set sex to testData.Patient_MixedRecords.sex
+	
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	wait 3
+	run "Util".closeApplication 2
+	
+	//Create/add PED Data
+	put (lastName) into lastNameList
+	put (jsonURL) into jsonUrlList 
+	set personnelId to setup.personnelId
+	run "DiscernVisualDeveloper/Task".generatePedData username, password, domain, lastNameList, personnelId, jsonUrlList
+	run "DiscernVisualDeveloper/Actions".closeDiscernVisualDeveloper
+	
+	//Create/add EXTERNAL Data
+	put (lastName) into lastNameList
+	set patientInfo to "DiscernVisualDeveloper/Actions".getPersonAndEncounterID(username, password, domain, lastNameList) 
+	//Retrieve Person and Encounter ID for test patient that need External data
+	put trimAll(item 1 of patientInfo) into personIDList	
+	run "DiscernVisualDeveloper/Actions".closeDiscernVisualDeveloper
+	
+	run "Postman/Setup".openPostMan
+	run "Postman/Actions".removeEnvironment 
+	run "Postman/Setup".importCollectionAndEnvironment filePathToCollectionAndEnvironment
+	//Modify and set necessary variables for postman
+	run "Postman/Actions".setEnvironmentVariables environmentName, "0patientId", item 1 of personIDList, "1patientId", item 1 of personIDList, "2patientId", item 1 of personIDList, "3patientId", item 1 of personIDList, "4patientId", item 1 of personIDList
+	//Run the collection
+	run "Postman/Collection_Runner/Task".runCollections collectionName , environmentName, filePathToCsv, csvFileName, externalCountP1
+	//Close postman
+	run "Util".closeApplication 2
+	//----------------------------------------------------------------- End Patient Setup ---------------------------------------------------------------
+	
+	try 
+		###################################################################
+		# TEST STEPS
+		BeginTestCase "VR/Reconciliation/HLM-VR-Immunizations-Reconcile-Table_Filters_MixedRecords"
+		
+		Log "Util".stepNumber &"ACTION: Open Patient_MixedRecords's chart and navigate to the Immunizations workflow mPage and click on 'View' within the Outside records available banner."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, cleanup, relationship
+		run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileBanners 
+		
+		Log "VERIFICATION: The Maximum Date Range filter is defaulted to 'All'."
+		set maxDateRangeFilterSearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".filterRectangle("Maximum Date Range")
+		run "Immunizations/Util/Validation".verifyText "All", maxDateRangeFilterSearchRectangle
+		
+		Log "VERIFICATION: The Records Displaying filter is defaulted to 'Pending'."
+		set recordsFilterSearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".filterRectangle("Records Displaying")
+		run "Immunizations/Util/Validation".verifyText "Pending", recordsFilterSearchRectangle
+		
+		Log "VERIFICATION: The Source filter is defaulted to 'External'."
+		set sourceFilterSearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".filterRectangle("Source")
+		run "Immunizations/Util/Validation".verifyText "External", sourceFilterSearchRectangle
+		
+		Log "VERIFICATION: Default sort is set to Administration Date column with oldest date on the top."
+		run "Immunizations/Util/Date".adminDateSorted false, vaccineName1, 2
+		run "Immunizations/Util/Date".adminDateSorted false, vaccineName3, 1
+		run "Immunizations/Util/Date".adminDateSorted false, vaccineName4, 2
+		
+		Log "VERIFICATION: 'Displaying" && externalCountP1 && " results' is displayed with a precise count of all external source type outside records and does NOT include any local records."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-35, 610, -10, 615)
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_X_Results", rectangle
+		run "Immunizations/Util/Validation".verifyText externalCountP1 && " results.", rectangle
+		
+		//vaccineName1 validations
+		Log "VERIFICATION:" && vaccineName1 && "is displayed in the outside record table."
+		set vaccine1Row1SearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineRowSearchRectangle(vaccineName1Admin1Date1, false, vaccineName1, 2)
+		run "Immunizations/Util/Validation".verifyText vaccineName1, vaccine1Row1SearchRectangle
+		
+		//vaccineName1Admin1Date1 validations
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1Admin1Date1, false, true)
+		Log "VERIFICATION:" && vaccineName1Admin1Date1 && "received from RSS with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName1, 1, vaccineName1Admin1Date1, age
+		
+		//vaccineName1Admin2Date1 validations
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1Admin2Date1, false, true)
+		Log "VERIFICATION:" && vaccineName1Admin2Date1 && "received from RSS with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName1, 1, vaccineName1Admin2Date1, age
+		
+		set outsideRecordsSearchRectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-35, 185, 535, 610)	
+		//vaccineName2Admin1Date1 not visible validations, as there is no external data for vaccineName2
+		Log "VERIFICATION:" && vaccineName2Admin1Date1 && "are hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName2Admin1Date1, outsideRecordsSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Initial Reconciliation (External) patient_MixedRecords")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on" && vaccineName1Admin1Date1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue false, vaccineName1, 2, vaccineName1Admin1Date1
+		
+		Log "VERIFICATION: Side panel is displayed with" && vaccineName1Admin1Date1 & "."
+		set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName1Admin1Date1 && age, sidePanelHeaderRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Side Panel (External) patient_MixedRecords")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Switch the Source filter to Patient (PED)."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Source/Header", "Patient"
+		
+		Log "VERIFICATION: Default sort is set to Administration Date column with oldest date on the top."
+		run "Immunizations/Util/Date".adminDateSorted false, vaccineName2, 2
+		
+		Log "VERIFICATION: 'Displaying" && pedCountP1 && " results' is displayed with a precise count of all PED source type outside records and does NOT include any local records."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-35, 610, -10, 615)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_X_Results", rectangle
+		run "Immunizations/Util/Validation".verifyText pedCountP1 && " results.", rectangle		
+		
+		//vaccineName2 validations
+		Log "VERIFICATION:" && vaccineName2 && "is displayed in the outside record table."
+		set vaccine2Row1SearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineRowSearchRectangle(vaccineName2Admin1Date1, false, vaccineName2, 2)
+		run "Immunizations/Util/Validation".verifyText vaccineName2, vaccine2Row1SearchRectangle
+		
+		//vaccineName2Admin1Date1 validations
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName2Admin1Date1, false, true)
+		Log "VERIFICATION:" && vaccineName2Admin1Date1 && "received from RSS with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName2 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName2, 2, vaccineName2Admin1Date1, age
+		
+		//vaccineName1Admin1Date1 and vaccineName1Admin2Date1 not visible validations, as there is no PED data for vaccineName1
+		Log "VERIFICATION:" && vaccineName1Admin1Date1 && vaccineName1Admin2Date1 && "are hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1Admin1Date1, outsideRecordsSearchRectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1Admin2Date1, outsideRecordsSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Initial Reconciliation (PED) patient_MixedRecords")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Switch the Maximum Date Range filter to Last 1 year."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Max_Date_Range/Header", "Last 1 year"
+		
+		Log "VERIFICATION: Default sort is set to Administration Date column with oldest date on the top."
+		run "Immunizations/Util/Date".adminDateSorted false, vaccineName2, 1
+		run "Immunizations/Util/Date".adminDateSorted false, vaccineName5, 1
+		
+		Log "VERIFICATION: 'Displaying" && pedCountP1 - 1 && " results' is displayed with a precise count of PED source type outside records that are equal to or less than dob + 1 year and does NOT include any local records."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-32, 632, 0, 638)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_X_Results", rectangle
+		run "Immunizations/Util/Validation".verifyText pedCountP1 - 1 && " results.", rectangle
+		
+		//vaccineName1Admin1Date1 not visible validations
+		Log "VERIFICATION:" && vaccineName1Admin1Date1 && vaccineName1Admin2Date1 && "are hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1Admin1Date1, outsideRecordsSearchRectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1Admin2Date1, outsideRecordsSearchRectangle
+		
+		//vaccineName2Admin1Date1 not visible validations
+		Log "VERIFICATION:" && vaccineName2Admin1Date1 && "are hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName2Admin1Date1, outsideRecordsSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Maximum Date Range Filter Last 1y (PED) patient_MixedRecords")
+		---------------------------------------------------------------------------------------------------------------		
+		
+		Log "Util".stepNumber &"ACTION: Switch the Maximum Date Range filter to Last 5 years."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Max_Date_Range/Header", "Last 5 years"
+		
+		Log "VERIFICATION: 'Displaying" && pedCountP1 - 1 && " results' is displayed with a precise count of PED source type outside records that are equal to or less than dob + 5 years and does NOT include any local records."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-32, 632, 0, 638)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_X_Results", rectangle
+		run "Immunizations/Util/Validation".verifyText pedCountP1 - 1 && " results.", rectangle
+		
+		//vaccineName2Admin1Date1 not visible validations
+		Log "VERIFICATION:" && vaccineName2Admin1Date1 && "is hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName2Admin1Date1, outsideRecordsSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Maximum Date Range Filter Last 5yrs (PED) patient_MixedRecords")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Switch the Source filter to External."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Source/Header", "External"
+		
+		Log "VERIFICATION: 'Displaying" && externalCountP1 - 1 && "results' is displayed with a precise count of external source type outside records that are equal to or less than dob + 5 years and does NOT include any local records."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-32, 632, 0, 638)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_X_Results", rectangle
+		run "Immunizations/Util/Validation".verifyText externalCountP1 - 1 && "results.", rectangle
+		
+		//vaccineName1 validations
+		Log "VERIFICATION:" && vaccineName1 && "is displayed in the outside record table."
+		set vaccine1Row2SearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineRowSearchRectangle(vaccineName1Admin2Date1, false, vaccineName1, 2)
+		run "Immunizations/Util/Validation".verifyText vaccineName1, vaccine1Row2SearchRectangle
+		
+		//vaccineName1Admin2Date1 validations
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1Admin2Date1, false, true)
+		Log "VERIFICATION:" && vaccineName1Admin2Date1 && "received from RSS with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName1, 1, vaccineName1Admin2Date1, age
+		
+		//vaccineName2Admin1Date1 not visible validations
+		Log "VERIFICATION:" && vaccineName2Admin1Date1 && "are hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName2Admin1Date1, outsideRecordsSearchRectangle
+		
+		//vaccineName1Admin1Date1 not visible validations
+		Log "VERIFICATION:" && vaccineName1Admin1Date1 && "is hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1Admin1Date1, outsideRecordsSearchRectangle	
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Maximum Date Range Filter Last 5yrs (External) patient_MixedRecords")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Switch the Maximum Date Range filter to Last 1 year."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Max_Date_Range/Header", "Last 1 year"
+		
+		Log "VERIFICATION: 'Displaying" && externalCountP1 - 1 && "results' is displayed with a precise count of external source type outside records that are equal to or less than dob + 5 years and does NOT include any local records."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-32, 632, 0, 638)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_X_Results", rectangle
+		run "Immunizations/Util/Validation".verifyText externalCountP1 - 1 && "results.", rectangle
+		
+		//vaccineName1 validations
+		Log "VERIFICATION:" && vaccineName1 && "is displayed in the outside record table."
+		set vaccine1Row2SearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineRowSearchRectangle(vaccineName1Admin2Date1, false, vaccineName1, 2)
+		run "Immunizations/Util/Validation".verifyText vaccineName1, vaccine1Row2SearchRectangle
+		
+		//vaccineName1Admin2Date1 validations
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1Admin2Date1, false, true)
+		Log "VERIFICATION:" && vaccineName1Admin2Date1 && "received from RSS with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName1, 1, vaccineName1Admin2Date1, age
+		
+		//vaccineName1Admin1Date1 not visible validations
+		Log "VERIFICATION:" && vaccineName1Admin1Date1 && "is hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1Admin1Date1, outsideRecordsSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Maximum Date Range Filter Last 1y (External) patient_MixedRecords")
+		---------------------------------------------------------------------------------------------------------------		
+		
+		Log "Util".stepNumber &"ACTION: Switch the Records Displaying filter to Rejected."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Records_Displaying/Header", "Rejected"
+		
+		Log "VERIFICATION: 'Displaying 0 results' is displayed."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-30, 635, 0, 635)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_0_Results", rectangle
+		
+		Log "VERIFICATION: 'No results match your filter criteria' with a line break and 'Try changing your filter criteria to see results' is displayed in place of both tables."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Filters/Source/Header") + (-25, 252, 295, 290)
+		run "Immunizations/Util/Validation".VerifyText "No results match your filter criteria", rectangle
+		run "Immunizations/Util/Validation".VerifyText "Try changing your filter criteria to see more results", rectangle
+		
+		//vaccineName1Admin1Date1 and vaccineName1Admin2Date1 not visible validations
+		Log "VERIFICATION:" && vaccineName1Admin1Date1 && vaccineName1Admin2Date1 && "are hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1Admin1Date1, outsideRecordsSearchRectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1Admin2Date1, outsideRecordsSearchRectangle
+		
+		//vaccineName2Admin1Date1 not visible validations
+		Log "VERIFICATION:" && vaccineName2Admin1Date1 && "are hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName2Admin1Date1, outsideRecordsSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Rejected and Maximum Date Range Filters Last 5yrs (External) After Modify patient_MixedRecords")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Switch the Records Displaying filter to Pending and reject" && vaccineName1Admin2Date1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Records_Displaying/Header", "Pending"
+		
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue false, vaccineName1, 1, vaccineName1Admin2Date1
+		set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelHeaderRectangle
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Actions".addRejectUndo "reject"
+		click ImageLocation( "Immunizations/WorkflowMPage/Reconciliation/SidePanel/X_button")
+		
+		Log "VERIFICATION: 'Displaying" && externalCountP1 - 1 && "results' is displayed with a precise count of external source type outside records that are equal to or less than dob + 5 years and does NOT include any local or rejected records."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-32, 632, 0, 638)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_X_Results", rectangle
+		run "Immunizations/Util/Validation".verifyText externalCountP1 - 1 && "results.", rectangle		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Maximum Date Range Filter Last 5yrs (External) After Reject patient_MixedRecords")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Switch the Records Displaying filter to Rejected."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Records_Displaying/Header", "Rejected"
+		
+		Log "VERIFICATION: 'Displaying 1 result' is displayed."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-32, 632, 0, 638)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_X_Results", rectangle
+		run "Immunizations/Util/Validation".verifyText "1 result.", rectangle
+		
+		//vaccineName1 validations
+		Log "VERIFICATION:" && vaccineName1 && "is displayed in the outside record table."
+		set vaccine1Row2SearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineRowSearchRectangle(vaccineName1Admin2Date1, false, vaccineName1, 2)
+		run "Immunizations/Util/Validation".verifyText vaccineName1, vaccine1Row2SearchRectangle
+		
+		//vaccineName1Admin2Date1 validations
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1Admin2Date1, false, true)
+		Log "VERIFICATION:" && vaccineName1Admin2Date1 && "received from RSS with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside records table for" && vaccineName1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName1, 1, vaccineName1Admin2Date1, age
+		
+		//vaccineName1Admin1Date1 not visible validations
+		Log "VERIFICATION:" && vaccineName1Admin1Date1 && "is hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1Admin1Date1, outsideRecordsSearchRectangle
+		
+		//vaccineName2Admin1Date1 not visible validations
+		Log "VERIFICATION:" && vaccineName2Admin1Date1 && "are hidden (not visible)."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName2Admin1Date1, outsideRecordsSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Admin Date Filter 5yrs (External) After Modify patient_MixedRecord")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Switch the Records Displaying filter to Pending."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Records_Displaying/Header", "Pending"
+		
+		Log "VERIFICATION: 'Displaying" && externalCountP1 - 2 && "results' is displayed with a precise count of external source type outside records that are equal to or less than dob + 5 years and does NOT include any local or rejected records."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-32, 632, 0, 638)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_X_Results", rectangle
+		run "Immunizations/Util/Validation".verifyText externalCountP1 - 2 && "results.", rectangle		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Pending Reconciliation After Reject patient_MixedRecords")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Switch the Records Displaying filter to All and switch the Maximum Date Range filter to All."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Records_Displaying/Header", "All"
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Max_Date_Range/Header", "All"
+		
+		Log "VERIFICATION: 'Displaying" && externalCountP1 - 1 && "results' is displayed with a precise count of external source type outside records and does NOT include any local or rejected records."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-32, 632, 0, 638)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_X_Results", rectangle
+		run "Immunizations/Util/Validation".verifyText externalCountP1 - 1 && "results.", rectangle
+		
+		//vaccineName1 validations
+		Log "VERIFICATION:" && vaccineName1 && "is displayed in the outside record table."
+		set vaccine1Row1SearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineRowSearchRectangle(vaccineName1Admin1Date1, false, vaccineName1, 2)
+		run "Immunizations/Util/Validation".verifyText vaccineName1, vaccine1Row1SearchRectangle
+		
+		//vaccineName1Admin1Date1 validations
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1Admin1Date1, false, true)
+		Log "VERIFICATION:" && vaccineName1Admin1Date1 && "received from RSS with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName1, 2, vaccineName1Admin1Date1, age
+		
+		//vaccineName1Admin2Date1 validations
+		Log "VERIFICATION:" && vaccineName1Admin2Date1 && "displays in the outside records table within the subsection for" && vaccineName1 & "."
+		set vaccine1Row2SearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineRowSearchRectangle(vaccineName1Admin2Date1, false, vaccineName1, 2)
+		run "Immunizations/Util/Validation".verifyText vaccineName1, vaccine1Row2SearchRectangle
+		
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1Admin2Date1, false, true)
+		Log "VERIFICATION:" && vaccineName1Admin2Date1 && "received from RSS with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside records table for" && vaccineName1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName1, 2, vaccineName1Admin2Date1, age
+		
+		//vaccineName2Admin1Date1 not visible validations
+		Log "VERIFICATION:" && vaccineName2Admin1Date1 && "are hidden (not visible)."
+		set outsideRecordsSearchRectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-35, 185, 535, 610)
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName2Admin1Date1, outsideRecordsSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Maximum Date Range Filter All (External) After Modify patient_MixedRecords")
+		---------------------------------------------------------------------------------------------------------------
+		EndTestCase "VR/Reconciliation/HLM-VR-Immunizations-Reconcile-Table_Filters_MixedRecords"
+		###################################################################
+		
+	catch exception
+		logError "Exception encountered in Workflow Steps" && exception.reason
+		log "Exception Location:" && exception.location
+		captureScreen"Exception" && "at" & Global stepNumber 
+	end try
+	
+	log "Util".stepNumber & "Close Patient_MixedRecords’s chart."
+	run "Immunizations/Setup".closeApplication global cleanup
+	
+	Log "Cleanup patient1."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2 
+	
+catch exception
+	logError "Exception encountered during patient setup or cleanup due to" && exception.reason
+	log "Exception Location:" && exception.location
+	captureScreen"Exception" && "at" & Global stepNumber 
+end try
+
+run "Cleanup".ZeroStateCloseAllApps

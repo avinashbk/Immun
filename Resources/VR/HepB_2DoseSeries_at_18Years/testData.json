@@ -1,0 +1,48 @@
+{
+	"SOLM64": {
+		"Patient_Overdue": {
+			"lastName": "HepB18yrsOverdue",
+			"firstName": "Patient1",
+			"nameFullFormatted": "HepB18yrsOverdue,Patient1",
+			"newLastName": "OldHepB18yrsOverdue",
+			"dob": "Today - 18 years - 2 months",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HepB19yrsAgedOut",
+			"firstName": "Patient2",
+			"nameFullFormatted": "HepB19yrsAgedOut,Patient2",
+			"newLastName": "OldHepB19yrsAgedOut",
+			"dob": "Today - 19 years",
+			"sex": "Male"
+		},
+		"vaccineName": "Hepatitis B",
+		"product": "HepB-CpG",
+		"user": "Maintenance, Health",
+		"Source": "Clinician",
+		"vis": "Hepatitis B (English)"
+	},
+	"S18VX": {
+		"Patient_Overdue": {
+			"lastName": "HepB18yrsOverdue",
+			"firstName": "Patient1",
+			"nameFullFormatted": "HepB18yrsOverdue,Patient1",
+			"newLastName": "OldHepB18yrsOverdue",
+			"dob": "Today - 18 years - 2 months",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HepB19yrsAgedOut",
+			"firstName": "Patient2",
+			"nameFullFormatted": "HepB19yrsAgedOut,Patient2",
+			"newLastName": "OldHepB19yrsAgedOut",
+			"dob": "Today - 19 years",
+			"sex": "Male"
+		},
+		"vaccineName": "Hepatitis B",
+		"product": "HepB-CpG",
+		"user": "Maintenance, Health",
+		"Source": "Clinician",
+		"vis": "Hepatitis B (English)"
+	}
+}

@@ -1,0 +1,386 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=109821
+
+*)
+params domain 
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+Log "commonData:" && setup
+set format to "%b %d, %Y"
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set viewingOutsideRecordsBannerImage to common.viewingOutsideRecordsBannerImage
+set refineSearchWindowImage to common.refineSearchWindowImage
+set refineButtonWhiteImage to common.refineButtonWhiteImage
+set refineButtonBlueImage to common.refineButtonBlueImage
+set refineButtonDisabledImage to common.refineButtonDisabledImage
+set fiftyCharactersErrorImage to common.fiftyCharactersErrorImage
+set twoCharactersErrorImage to common.twoCharactersErrorImage
+set hundredCharactersErrorImage to common.hundredCharactersErrorImage
+set twoHundredCharactersErrorImage to common.twoHundredCharactersErrorImage
+set twentyCharactersErrorImage to common.twentyCharactersErrorImage
+set fiftyCharactersCountImage to common.fiftyCharactersCountImage
+set twoHundredCharactersCountImage to common.twoHundredCharactersCountImage
+set twoCharactersCountImage to common.twoCharactersCountImage
+set hundredCharactersCountmage to common.hundredCharactersCountmage
+set twentyCharactersCountImage to common.twentyCharactersCountImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set firstNameField to fieldLabels.firstNameField
+set lastNameField to fieldLabels.lastNameField
+set middleNameField to fieldLabels.middleNameField
+set dobField to fieldLabels.dobField
+set birthOrderField to fieldLabels.birthOrderField
+set motherMaidenNameField to fieldLabels.motherMaidenNameField
+set motherFirstNameField to fieldLabels.motherFirstNameField
+set motherMiddleNameField to fieldLabels.motherMiddleNameField
+set phoneNumberField to fieldLabels.phoneNumberField
+set emailAddressField to fieldLabels.emailAddressField
+set addressLine1Field to fieldLabels.addressLine1Field
+set addressLine2Field to fieldLabels.addressLine2Field
+set cityField to fieldLabels.cityField
+set stateField to fieldLabels.stateField
+set zipCodeField to fieldLabels.zipCodeField
+set countryField to fieldLabels.countryField
+
+set testData to JSONValue(file ResourcePath("VR/Reconcile_Refine_Workflow/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file resourcePath("VR/Reconcile_Refine_Workflow/testData.json")).(text of domain)
+set lastName to testData.Patient_Allowable_Field_Input.lastName
+set firstName to testData.Patient_Allowable_Field_Input.firstName
+set patientName to testData.Patient_Allowable_Field_Input.nameFullFormatted
+set newLastName to testData.Patient_Allowable_Field_Input.newLastName
+set sex to  testData.Patient_Allowable_Field_Input.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Allowable_Field_Input.dob)) 
+
+put 11 into twoCharacters 
+put "heresastringof50characters12345ToBeValidated!@#$$%" into fiftyCharacters
+put "12234567886342efe321" into twentyCharacters
+put "here isthestringof100CHaracters12344...#@$$2143#$tobevalidated123ewsddewqqweqrrqrqrqrqqw2134rfdwe32w" into hundredCharacters
+put "here isthestringof200CHaracters12344...#@$$2143#$tobevalidatedhere isthestringof200CHaracters12344...#@$$2143#$tobevalidatedhere isthestringof200CHaracters12344#@$$2143#$tobevalidatedhere isthestringO" into twoHundredCharacters
+
+
+Try
+	
+	BeginTestCase "VR/Reconciliation/HLM-VR-Immunizations-Reconcile_Refine_Workflow_Allowable_Field_Input"
+	
+	log "Util".stepNumber & "ACTION: Navigate to Patient's chart then click on the 'View' button within the reconciliation banner."
+	run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+	
+	log "VERIFICATION: Ensure the reconciliation banner displays on the top of the table with the message 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, rectangle
+	
+	Log "VERIFICATION: A refine button displays within the warning banner."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	run "Immunizations/Util/Validation".verifyImage refineButtonWhiteImage, rectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Initial Reconciliation View P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Click on the refine button and Type "& fiftyCharacters &" into the first name field with 50 characters." //50 characters with english letters, numbers, and special characters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".openDialog
+	set refineDialogRectangle to "Immunizations/WorkflowMPage/Reconciliation/Refine/Helpers".RefineDialogRectangle
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput firstNameField, fiftyCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- First Name Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the first name field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage firstNameField, refineDialogRectangle, fiftyCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage firstNameField, refineDialogRectangle, fiftyCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- First Name Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& fiftyCharacters &" into the last name field." //50 characters with non english letters, numbers, and special characters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput lastNameField, fiftyCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, refineDialogRectangle
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the last name field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage lastNameField, refineDialogRectangle, fiftyCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage lastNameField, refineDialogRectangle, fiftyCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- Last Name Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& fiftyCharacters &" into the middle name field." //51 characters with non english letters, numbers, and special characters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput middleNameField, fiftyCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Middle Name Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the middle name field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage middleNameField, refineDialogRectangle, fiftyCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage middleNameField, refineDialogRectangle, fiftyCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- Middle Name Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Type "& twoCharacters &" into the birth order field." //3 numbers 
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput birthOrderField, twoCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Birth Order Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the birth order field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 2 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage birthOrderField, refineDialogRectangle, twoCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage birthOrderField, refineDialogRectangle, twoCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- Birth Order Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& fiftyCharacters &" into the Mother's maiden name field." //51 characters with non english letters, numbers, and special characters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput motherMaidenNameField, fiftyCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Mother's maiden Name Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the Mother's maiden name field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage motherMaidenNameField, refineDialogRectangle, fiftyCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage motherMaidenNameField, refineDialogRectangle, fiftyCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- Mother's maiden Name Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& fiftyCharacters &" into the Mother's first name field." //51 characters with non english letters, numbers, and special characters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput motherFirstNameField, fiftyCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Mother's First Name Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the Mother's first name field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage motherFirstNameField, refineDialogRectangle, fiftyCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage motherFirstNameField, refineDialogRectangle, fiftyCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- Mother's first Name Field Limit P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& fiftyCharacters &" into the Mother's middle name field." //51 characters with non english letters, numbers, and special characters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput motherMiddleNameField,fiftyCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Mother's Middle Name Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more characterinto the Mother's middle name field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage motherMiddleNameField, refineDialogRectangle, fiftyCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage motherMiddleNameField, refineDialogRectangle, fiftyCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"-Mother's Middle Name Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& twentyCharacters &" into the Phone Number field." //20 characters with non english letters, numbers, and special characters
+	
+	set refineDialogRectangle to "Immunizations/WorkflowMPage/Reconciliation/Refine/Helpers".RefineDialogRectangle
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput phoneNumberField, twentyCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Phone Number Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the Phone Number field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage phoneNumberField, refineDialogRectangle, twentyCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage phoneNumberField, refineDialogRectangle, twentyCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- Phone Number Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& hundredCharacters &" into the email field." //101 characters with non english letters, numbers, and special characters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput emailAddressField, hundredCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Email address Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the email field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage emailAddressField, refineDialogRectangle, hundredCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage emailAddressField, refineDialogRectangle, hundredCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage ,refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- email Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& twoHundredCharacters &" into the street address1 field."  //201 characters with non english letters, numbers, and special characters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput addressLine1Field, twoHundredCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- street address1 Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the street address1 field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage addressLine1Field, refineDialogRectangle, twoHundredCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage addressLine1Field, refineDialogRectangle, twoHundredCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- Street address1 Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& twoHundredCharacters &" into the street address2 field."  //201 characters with non english letters, numbers, and special characters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput addressLine2Field, twoHundredCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- street address2 Field Enter P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the street address2 field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage addressLine2Field, refineDialogRectangle, twoHundredCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage addressLine2Field, refineDialogRectangle, twoHundredCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- Street address2 Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& fiftyCharacters &" into the city field." //51 characters with non english letters, numbers, and special characters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput cityField, fiftyCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage ,refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- City Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the city field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage cityField, refineDialogRectangle, fiftyCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage cityField, refineDialogRectangle, fiftyCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- City Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& fiftyCharacters &" into the state field." //51 characters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput stateField, fiftyCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage ,refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- State Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the state field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage stateField, refineDialogRectangle, fiftyCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage stateField, refineDialogRectangle, fiftyCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImageImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- State Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Type "& fiftyCharacters &" into the zip code field." //51 characters numbers and letters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineSingleFieldInput zipCodeField, fiftyCharacters
+	
+	Log "VERIFICATION: The refine button is still enabled."
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage ,refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Zip Code Field Enter")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Add 1 more character into the zip code field."
+	TypeText "1"
+	
+	Log "VERIFICATION: Verify that the following error message displays 'Enter fewer than 50 characters' and  refine button is disabled."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage zipCodeField, refineDialogRectangle, fiftyCharactersErrorImage
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineErrorMessage zipCodeField, refineDialogRectangle, fiftyCharactersCountImage
+	run "Immunizations/Util/Validation".verifyImage refineButtonDisabledImage, refineDialogRectangle
+	Typetext backspace
+	capturescreen (Name:"Step"&Global stepNumber&"- Zip Code Field Limit")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Click on the cancel button." //51 characters numbers and letters
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".clickCancelRefine
+	
+	Log "VERIFICATION: The Refine window no longer displays. "
+	run "Immunizations/Util/Validation".verifyImageNotVisible refineSearchWindowImage, refineDialogRectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Refine Window Disappear")
+	----------------------------------------------------------------------------------------------------------------
+	EndTestCase  "VR/Reconciliation/HLM-VR-Immunizations-Reconcile_Refine_Workflow_Allowable_Field_Input"
+	
+catch exception
+	logError "Exception encountered" && exception.reason
+	log "Exception Location:" && exception.location	
+	captureScreen"Exception" && "at" & Global stepNumber
+end try
+---------------------------------------------------------------------------------------------------------------
+
+log "Util".stepNumber & "ACTION: Close the application."
+run "Immunizations/setup".closeApplication 
+
+---------------------------------------------------------------------------------------------------------------
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

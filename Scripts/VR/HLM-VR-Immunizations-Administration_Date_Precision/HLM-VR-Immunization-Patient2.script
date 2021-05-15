@@ -1,0 +1,144 @@
+﻿params domain 
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+Log "Common data:" && setup
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set testData to JSONValue(file ResourcePath("VR/Administration_Date_Precision/testData.json")).(value of domain)
+set patientName to testData.Patient2.nameFullFormatted
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set vaccineName4 to testData.vaccineName4
+set source to testData.Source
+
+-------------------------------------------------------------------------------------------------------------
+
+Try
+	Log "Util".stepNumber &"ACTION: Open Patient 2's chart, navigate to the immunization component and Chart 5 events for Vaccine 1 with admin date on first, second, third, fourth and fifth week of the month having 31 days with 'week of' precision"
+	Run "Immunizations/setup".NavigateToImmunizationWorkflowViaMenu patientName, menu, subMenu, relationship
+	waitfor 150, Image: "Immunizations/Setup/Button_ViewForecast"
+	set adminDate to year of (Today - 1 Year) &"-01-03"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Week of",adminDate, source,"Submit"
+	set adminDate to year of (Today - 1 Year) &"-01-12"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Week of",adminDate, source,"Submit"
+	set adminDate to year of (Today - 1 Year) &"-01-17"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Week of",adminDate, source,"Submit"
+	set adminDate to year of (Today - 1 Year) &"-01-24"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Week of",adminDate, source,"Submit"
+	set adminDate to year of (Today - 1 Year) &"-01-31"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Week of",adminDate, source,"Submit"
+	
+	Log "VERIFICATION: Ensure the charted immunizations displays the administration date as the 1st, 8th, 15th, 22nd and 29th day of the month respectively with 'Week of' precision in the side panel"
+	Run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName VaccineName1
+	Set SidePanelHeader to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle
+	Run "Immunizations/Util/Validation".VerifyText vaccineName1, SidePanelHeader
+	set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+	set adminDate to year of (Today - 1 Year) &"-01-29"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", adminDate)
+	set adminDate to year of (Today - 1 Year) &"-01-22"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "2", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", adminDate)
+	set adminDate to year of (Today - 1 Year) &"-01-15"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", adminDate)
+	repeat 5 times
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollDownArrow
+	end repeat
+	set adminDate to year of (Today - 1 Year) &"-01-08"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "2", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", adminDate)
+	set adminDate to year of (Today - 1 Year) &"-01-01"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", adminDate)
+	repeat 5 times
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollUpArrow
+	end repeat
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"WeekOf in Month with 31days-Patient2")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION:  Chart 5 events for Vaccine 2 with admin date on first, second, third, fourth and fifth week of the month having 30 days with 'week of' precision"
+	set adminDate to year of (Today - 1 Year) &"-04-03"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName2, "Week of",adminDate, source,"Submit"
+	set adminDate to year of (Today - 1 Year) &"-04-12"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName2, "Week of",adminDate, source,"Submit"
+	set adminDate to year of (Today - 1 Year) &"-04-17"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName2, "Week of",adminDate, source,"Submit"
+	set adminDate to year of (Today - 1 Year) &"-04-24"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName2, "Week of",adminDate, source,"Submit"
+	set adminDate to year of (Today - 1 Year) &"-04-30"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName2, "Week of",adminDate, source,"Submit"
+	
+	Log "VERIFICATION: Ensure the charted immunizations displays the administration date as the 1st, 8th, 15th, 22nd and 29th day of the month respectively with 'Week of' precision in the side panel"
+	Run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName VaccineName2
+	Set SidePanelHeader to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle
+	Run "Immunizations/Util/Validation".VerifyText vaccineName2, SidePanelHeader
+	Set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+	set adminDate to year of (Today - 1 Year) &"-04-29"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", adminDate)
+	set adminDate to year of (Today - 1 Year) &"-04-22"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "2", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", adminDate)
+	set adminDate to year of (Today - 1 Year) &"-04-15"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", adminDate)
+	repeat 5 times
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollDownArrow
+	end repeat
+	set adminDate to year of (Today - 1 Year) &"-04-08"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "2", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", adminDate)
+	set adminDate to year of (Today - 1 Year) &"-04-01"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", adminDate)
+	repeat 5 times
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollUpArrow
+	end repeat
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"WeekOf in Month with 30days-Patient2")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Chart an immunization for Vaccine 4 on 29th February of a leap year with Week of precision"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName4, "Week of","02/29/2016", source,"Submit"
+	waitfor 30, Image: "Immunizations/Setup/Button_ViewForecast"
+	
+	Log "VERIFICATION: Ensure the charted immunization displays the administration date as 29th February with Week of precision"
+	Run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName VaccineName4
+	Set SidePanelHeader to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle
+	Run "Immunizations/Util/Validation".VerifyText vaccineName4, SidePanelHeader
+	set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", "02/29/2016")
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"Leap year with WeekOf-Patient2")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Modify the charted immunization for Vaccine1 with administration date as last day of the month with week of precision"
+	Run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+	set adminDate to year of (Today - 1 Year) &"-01-15"
+	run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickModify formattedTime("%b %d, %Y", adminDate),"1"
+	run "Immunizations/WorkFlowMPage/SidePanel/Actions".modifyAdminDate "Year",Date //Changing the format to year becasue the selected value is not read
+	set adminDate to year of (Today - 1 Year) &"-01-31"
+	run "Immunizations/WorkFlowMPage/SidePanel/Actions".modifyAdminDate "Week Of", adminDate
+	run "Immunizations/WorkflowMPage/SidePanel/Actions".ClickSave
+	wait 5
+	
+	Log "VERIFICATION: Ensure the modified administration date is saved with the selected date precision"
+	Run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName VaccineName1
+	Set SidePanelHeader to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle
+	Run "Immunizations/Util/Validation".VerifyText vaccineName1, SidePanelHeader
+	set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+	set adminDate to year of (Today - 1 Year) &"-01-29"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", "Documented By", sidePanelRectangle, "Week Of"&&formattedTime("%b %d, %Y", adminDate)
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"Modified event with Week of-Patient2")
+	---------------------------------------------------------------------------------------------------------------
+	
+catch theException
+	logError "Exception encountered" && theException.reason
+	captureScreen "Error" & formattedTime("_%m%d%Y%H%M%S", the time)
+end try
+
+---------------------------------------------------------------------------------------------------------------
+
+Log "Util".stepNumber &"ACTION: Close patient 2's chart."
+run "Immunizations/setup".closeChartViaX
+

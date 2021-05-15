@@ -1,0 +1,163 @@
+﻿params domain
+
+log "Test running in domain"&&domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set immunizationForecast to fieldLabels.immunizationForecast
+set immunizationHistory to fieldLabels.immunizationHistory
+set vaccine to fieldLabels.vaccine
+set earliestDate to fieldLabels.earliestDate
+set recommendedDate to fieldLabels.recommendedDate
+set overdueDate to fieldLabels.overdueDate
+set latestDate to fieldLabels.latestDate
+set dose to fieldLabels.dose
+set status to fieldLabels.status
+set validDose to fieldLabels.validDose
+set adminDate to fieldLabels.adminDate
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set testData to JSONValue(file resourcePathResourcePath("VR/ReconcileRegistryForecast/testData.json")).(value of domain)
+set patientName to testData.Patient1.nameFullFormatted
+set registry1 to testData.registry1
+set registry2 to testData.registry2
+set registry3 to testData.registry3
+set reconcileBannerMessage to testData.reconcileBannerMessage
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+try
+	Log "Util".stepNumber & "ACTION: Open Powerchart.exe with user1 and open Patient1's chart and navigate to the Immunizations workflow mPage."
+	run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, relationship
+	
+	Log "VERIFICATION: Ensure the reconciliation banner displays on the top of the table with the message 'Outside Records. Reconciliation has not been completed on this encounter.'' along with a 'Reconcile' button."
+	run "Immunizations/Util/Validation".verifyText,reconcileBannerMessage, "Immunizations/Common/Helpers".tabListSearchRectangle
+	run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Table/ReconcileButton","Immunizations/Common/Helpers".tabListSearchRectangle
+	
+	Capturescreen (Name:"Step"&Global stepNumber&"- Base Component")
+	----------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on the 'Reconcile' button within the reconciliation banner."	
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileBanners
+	
+	Log "VERIFICATION: Ensure 'View outside records' window loads without any errors"
+	waitfor 50, Image:"Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text"
+	run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header","Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	
+	Log "VERIFICATION: Validating 'View Registry forecast' button(bottom left corner)." 
+	run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Button_ViewRegistryForecast", "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".reconcileModalFooterSearchRectangle
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-ViewRegistryForecastAndCloseButton_Validation")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on View Registry Forecast button."
+	click "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Button_ViewRegistryForecast"
+	
+	Log "VERIFICATION: Validating 'X' Closing registry forecast (top right side) and Back button(lower left side) "
+	run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/Common/Button_Close", "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".reconcileModalHeaderSearchRectangle
+	run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Button_Back","Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".reconcileModalFooterSearchRectangle
+	
+	Log "VERIFICATION: Validating Registry tabs , are displayed according to type of implementation" & registry1 & registry2 & registry3
+	run "Immunizations/Util/Validation".verifyText,registry1 & newline & registry2 & newline &registry3, "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".registryForecastRegistriesTabStripSearchRectangle()
+	
+	Log "VERIFICATION: Review the following immunization forecast colums  under registry name: 1.Immnization Forecast, 2.Immunization History"
+	run "Immunizations/Util/Validation".verifyText immunizationForecast, "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".registryforecastwindowSearchRectangle()
+	run "Immunizations/Util/Validation".verifyText immunizationHistory, "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".registryforecastwindowSearchRectangle()
+	
+	Log "VERIFICATION: Verify Immnization Forecast column displays the total number of forecast records face-up. (e.g. Immunization Forecast (3))"
+	put  "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Label_ImmunizationForecaster" into immunizationForecastLabel 
+	run "Immunizations/Util/Validation".verifyText,"(3)", "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".registrySectionLabelSearchRectangle(immunizationForecastLabel)
+	
+	Log "VERIFICATION: Verify Immnization History column displays the total number of history records face-up. (e.g. Immunization history (5))"
+	put  "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Label_ImmunizationHistory" into immunizationHistoryLabel 
+	run "Immunizations/Util/Validation".verifyText,"(5)", "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".registrySectionLabelSearchRectangle(immunizationHistoryLabel)
+	
+	Log "VERIFICATION: Validate the following columns under Immunization forecast section: 1. Vaccine, 2. Earliest Date, 3. Recommended date, 4. Overdue Date, 5. Latest Date."
+	run "Immunizations/Util/Validation".verifyText,vaccine & newline & earliestDate & newline & recommendedDate & newline & overdueDate & newline & latestDate, "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".columnHeaderSearchRectangle("Immunization Forecast")
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Registry1-Forecast Window")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Expand the Immunization Histroy section ."
+	click "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Label_ImmunizationHistory" 
+	
+	Log "VERIFICATION: Validate the following : 1. Vaccine, 2. Dose, 3. Status, 4. Valid Dose 5. Admin Date."
+	run "Immunizations/Util/Validation".verifyText,vaccine & newline & dose & newline & status & newline & validDose & newline & adminDate, "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".columnHeaderSearchRectangle("Immunization History")
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-ValidatingColumnHeaders-ImmunizationHistory")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on Back button(lower left side) within the registry import window"
+	click "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Button_Back"
+	
+	Log "VERIFICATION: Ensure the user is return back to reconciliation window"
+	waitfor 50, Image:"Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text"
+	run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header","Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Reconciliation window")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on View Registry Forecast button and Click on " & registry2
+	click "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Button_ViewRegistryForecast"
+	set registriesForecastTabStripRectangle to "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".registryForecastRegistriesTabStripSearchRectangle()
+	click (text : registry2,SearchRectangle:registriesForecastTabStripRectangle)
+	
+	Log "VERIFICATION: Validating 'X' Closing registry forecast (top right side) and Back button(lower left side) "
+	run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/Common/Button_Close", "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".reconcileModalHeaderSearchRectangle
+	run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Button_Back","Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".reconcileModalFooterSearchRectangle
+	
+	Log "VERIFICATION: Validating Registry tabs , are displayed according to type of implementation" & registry1 & registry2 & registry3
+	run "Immunizations/Util/Validation".verifyText,registry1 & newline & registry2 & newline &registry3, "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".registryForecastRegistriesTabStripSearchRectangle()
+	
+	Log "VERIFICATION: Review the following immunization forecast colums  under registry name: 1.Immnization Forecast, 2.Immunization History"
+	put  "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Label_ImmunizationForecaster" into immunizationForecastLabel 
+	run "Immunizations/Util/Validation".verifyText,"(3)", "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".registrySectionLabelSearchRectangle(immunizationForecastLabel)
+	
+	Log "VERIFICATION: Verify Immnization History column displays the total number of history records face-up. (e.g. Immunization history (5))"
+	put  "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Label_ImmunizationHistory" into immunizationHistoryLabel 
+	run "Immunizations/Util/Validation".verifyText,"(5)", "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".registrySectionLabelSearchRectangle(immunizationHistoryLabel)
+	
+	Log "VERIFICATION: Validate the following columns under Immunization forecast section: 1. Vaccine, 2. Earliest Date, 3. Recommended date, 4. Overdue Date, 5. Latest Date."
+	run "Immunizations/Util/Validation".verifyText,vaccine & newline & earliestDate & newline & recommendedDate & newline & overdueDate & newline & latestDate, "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".columnHeaderSearchRectangle("Immunization Forecast")
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Registry2-Forecast Window")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Expand the Immunization Histroy section ."
+	click "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Label_ImmunizationHistory" 
+	
+	Log "VERIFICATION: Validate the following : 1. Vaccine, 2. Dose, 3. Status, 4. Valid Dose 5. Admin Date."
+	run "Immunizations/Util/Validation".verifyText,vaccine & newline & dose & newline & status & newline & validDose & newline & adminDate, "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".columnHeaderSearchRectangle("Immunization History")
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-ValidatingColumnHeaders-ImmunizationHistory")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on " & registry3
+	set registriesForecastTabStripRectangle to "Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".registryForecastRegistriesTabStripSearchRectangle()
+	click (text : registry2,SearchRectangle:registriesForecastTabStripRectangle)
+	
+	Log "VERIFICATION: Ensure the system will display 'No forecasting avaliable' message"
+	run  "Immunizations/Util/Validation".verifyText, "No forecast available","Immunizations/WorkflowMPage/Reconciliation/RegistryForecast/Common/Helpers".alertBannerSearchRectangle()
+	CaptureScreen(Name:"Step"&Global stepNumber&"-No forecasting avaliable")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on 'X' Closing registry forecast (top right side)."
+	click "Immunizations/WorkflowMPage/Reconciliation/Common/Button_Close"
+	
+	Log "VERIFICATION: Ensure the user is return back to reconciliation window"
+	waitfor 50, Image:"Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text"
+	run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header","Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Reconciliation window")
+	---------------------------------------------------------------------------------------------------------------
+catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	run "CommonModules".zeroStateScript	
+end try
+---------------------------------------------------------------------------------------------------------------	
+Log "Util".stepNumber &"ACTION: Close Application."
+run "Immunizations/setup".closeChartViaX
+--------------------------------------------------------------------------------------------------------------- 	

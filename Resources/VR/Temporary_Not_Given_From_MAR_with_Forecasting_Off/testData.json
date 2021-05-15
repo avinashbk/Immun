@@ -1,0 +1,82 @@
+{
+	"SOLM64":{
+		"Patient1":{
+			"lastName":"marnotgiven1",
+			"firstName":"Bob",
+			"nameFullFormatted":"marnotgiven1,Bob",
+			"newLastName":"oldmarnotgiven1",
+			"sex":"Male",
+			"dob":"Today - 9 months - 2 weeks",
+			"source":"Device",
+			"age":"9m 2w",
+			"User":"Maintenance, Health",
+			"notGivenType":"Refused",
+			"notGivenReason":"Parent or Guardian Refuses",
+			"notGivenAction":"Cancel series and stop forecasting",
+			"comment":"he refuses!\nno",
+			"adminCount":"--",
+                                           },
+	"vaccineName":"Varicella",
+	"lastAction":"Not Given"
+      },
+	"S18VX":{
+		"Patient1":{
+			"lastName":"marnotgiven1",
+			"firstName":"Bob",
+			"nameFullFormatted":"marnotgiven1,Bob",
+			"newLastName":"oldmarnotgiven1",
+			"sex":"Male",
+			"dob":"Today - 9 months - 2 weeks",
+			"source":"Device",
+			"age":"9m 2w",
+			"User":"Maintenance, Health",
+			"notGivenType":"Refused",
+			"notGivenReason":"Parent or Guardian Refuses",
+			"notGivenAction":"Cancel series and stop forecasting",
+			"comment":"he refuses!\nno",
+			"adminCount":"--",
+                                           },
+	"vaccineName":"Varicella",
+	"lastAction":"Not Given"
+      },
+	"INTGM":{
+		"Patient1":{
+			"lastName":"marnotgiven1",
+			"firstName":"Bob",
+			"nameFullFormatted":"marnotgiven1,Bob",
+			"newLastName":"oldmarnotgiven1",
+			"sex":"Male",
+			"dob":"Today - 9 months - 2 weeks",
+			"source":"Device",
+			"age":"9m 2w",
+			"User":"Maintenance, Health",
+			"notGivenType":"Refused",
+			"notGivenReason":"Parent or Guardian Refuses",
+			"notGivenAction":"Cancel series and stop forecasting",
+			"comment":"he refuses!\nno",
+			"adminCount":"--",
+                                           },
+	"vaccineName":"Varicella",
+	"lastAction":"Not Given"
+      },
+	"ENG18":{
+		"Patient1":{
+			"lastName":"marnotgiven1",
+			"firstName":"Bob",
+			"nameFullFormatted":"marnotgiven1,Bob",
+			"newLastName":"oldmarnotgiven1",
+			"sex":"Male",
+			"dob":"Today - 9 months - 2 weeks",
+			"source":"Device",
+			"age":"9m 2w",
+			"User":"Maintenance, Health",
+			"notGivenType":"Refused",
+			"notGivenReason":"Parent or Guardian Refuses",
+			"notGivenAction":"Cancel series and stop forecasting",
+			"comment":"he refuses!\nno",
+			"adminCount":"--",
+                                           },
+	"vaccineName":"Varicella",
+	"lastAction":"Not Given"
+      }
+}

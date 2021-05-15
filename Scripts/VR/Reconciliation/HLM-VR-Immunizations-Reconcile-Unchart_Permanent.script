@@ -1,0 +1,514 @@
+﻿-----------------------------------------------------------------------Helper Suite Information-----------------------------------------------------------------------
+
+# https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+# https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# RQM TEST CASE LINK: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=106853
+
+params domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+log "Test running in domain"&&domain
+set format to "%b %d, %Y"
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set encounterOrg to setup.EncounterOrg
+set encounterType to setup.EncounterType
+set conversation to setup.Conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewpoint to common.viewpoint
+set doubleDashImage to common.doubleDashImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set notGivenTypeField to fieldLabels.notGivenTypeField
+set notGivenReasonField to fieldLabels.notGivenReasonField
+set notGivenDateField to fieldLabels.notGivenDateField
+set rescheduleDateField to fieldLabels.rescheduleDateField
+set reasonField to fieldLabels.reasonField
+set authorizedByField to fieldLabels.authorizedByField
+set sourceField to fieldLabels.sourceField
+set documentedByField to fieldLabels.documentedByField
+set notGiven to fieldLabels.notGiven
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set notStarted to textStrings.notStarted
+set uncharted to textStrings.uncharted
+set immunizationForecast to textStrings.immunizationForecast
+
+set testData to JSONValue(file resourcePath("VR/Reconcile_Unchart_NotGiven/testData.json")).(text of domain)
+set filePathToCollectionAndEnvironment to testData.filePathToCollectionAndEnvironment
+set environmentName to testData.environmentName
+set collectionName to testData.collectionName
+set filePathToCsv to testData.filePathToCsv
+set csvFileName to testData.csvFileNamePerm
+set hmUser to testData.user
+set patientName to testData.Patient_perm.nameFullFormatted
+set vaccineName3 to testData.vaccineName3
+set vaccineName4 to testData.vaccineName4
+set vaccineName5 to testData.vaccineName5
+set vaccineName3Admin1Date1 to formattedTime(format, value(testData.Patient_perm.vaccineName3AdminDate1))
+set vaccineName3NotGivenDate1 to formattedTime(format, value(testData.Patient_perm.vaccineName3NotGivenDate1))
+set vaccineName4NotGivenDate1 to formattedTime(format, value(testData.Patient_perm.vaccineName4NotGivenDate1))
+set vaccineName5NotGivenDate1 to formattedTime(format, value(testData.Patient_perm.vaccineName5NotGivenDate1))
+set vaccineName3OrigSource1 to testData.Patient_perm.vaccineName3OrigSource1
+set vaccineName4OrigSource1 to testData.Patient_perm.vaccineName4OrigSource1
+set vaccineName3NotGivenOrigSource1 to testData.polioNotGivenSource1
+set vaccineName4NotGivenOrigSource1 to testData.typhNotGivenSource1
+set vaccineName3NotGivenType1 to testData.Patient_perm.vaccineName3NotGivenType1
+set vaccineName4NotGivenType1 to testData.notGivenType1
+set vaccineName5NotGivenType1 to testData.notGivenType2
+set vaccineName3NotGivenReason1 to testData.Patient_perm.vaccineName3NotGivenReason1
+set vaccineName4NotGivenReason1 to testData.notGivenReason1
+set vaccineName5NotGivenReason1 to testData.notGivenReason1
+set vaccineName3NotGivenSource1 to testData.notGivenSource1
+set vaccineName4NotGivenSource1 to testData.notGivenSource1
+set vaccineName3NotGivenComment1 to testData.Patient_perm.vaccineName3NotGivenComment1
+set vaccineName3CommentDate1 to testData.vaccineName3CommentDate1
+set vaccineName3NotGivenDate1DocumentedBy to testData.Patient_perm.vaccineName3NotGivenDate1DocumentedBy
+set vaccineName4NotGivenDate1DocumentedBy to testData.user
+set user to testData.user
+set systemUser to testData.systemUser
+set vaccineName3NotGivenOrigSource1Date to testData.Patient_perm.vaccineName3NotGivenSourceDate1
+set vaccineName4NotGivenOrigSource1Date to testData.Patient_perm.vaccineName4NotGivenSourceDate1
+set permNotGivenAction to testData.permNotGivenAction
+set unchartComment1 to testData.unchartComment1
+set unchartComment2 to testData.unchartComment2
+
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+try
+	// ----------------------------------------------- Patient Setup -----------------------------------------------------------------
+	log "patient_perm - 7 years old."	
+	set lastName to testData.Patient_perm.lastName
+	set firstName to testData.Patient_perm.firstName
+	set newLastName to testData.Patient_perm.newLastName
+	set dob to formattedTime(format, value(testData.Patient_perm.dob)) 
+	set sex to testData.Patient_perm.sex
+	
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, format, dob, encounterType
+	wait 3
+	run "Util".CloseApplication 2
+	
+	//Create/add EXTERNAL Data, along with provenance data
+	put (lastName) into lastNameList
+	set patientInfo to "DiscernVisualDeveloper/Actions".getPersonAndEncounterID(username, password, domain, lastNameList) 
+	//Retrieving Person and Encounter ID's for all patients that need External data
+	put trimAll(item 1 of patientInfo) into personIDList
+	run "DiscernVisualDeveloper/Actions".closeDiscernVisualDeveloper
+	
+	run "Postman/Setup".openPostMan
+	run "Postman/Actions".removeEnvironment 
+	run "Postman/Setup".importCollectionAndEnvironment filePathToCollectionAndEnvironment
+	//Modify and set necessary variables for postman
+	run "Postman/Actions".setEnvironmentVariables environmentName, "0patientId", item 1 of personIDList, "1patientId", item 1 of personIDList, "2patientId", item 1 of personIDList, "3patientId", item 1 of personIDList, "4patientId", item 1 of personIDList
+	//Run the collection
+	run "Postman/Collection_Runner/Task".runCollections collectionName , environmentName, filePathToCsv, csvFileName, 5
+	//Close postman
+	run "Util".closeApplication 2	
+	// ----------------------------------------------- End Patient Setup -----------------------------------------------------------------
+	
+	try
+		###################################################################
+		# TEST STEPS
+		BeginTestCase "VR/Reconciliation/HLM-VR-Immunizations-Reconcile-Unchart-Permanent"
+		
+		Log "Util".stepNumber &"ACTION: Open Patient1's chart and navigate to the Immunizations workflow mPage and chart a permanent not given for" && vaccineName5 & "."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, cleanup, relationship		
+		set vaccineName5NotGivenDate1 to today
+		run "Immunizations/Common/ChartNotGiven/Task".chartWithAuthorizedDate vaccineName5, vaccineName5NotGivenType1, permNotGivenAction, vaccineName5NotGivenReason1, vaccineName5NotGivenDate1, "submit"
+		
+		Log "VERIFICATION:" && vaccineName5 && "displays in the historical section with a status of 'Series" && vaccineName5NotGivenType1 & "'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName5
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName5, vaccineName5NotGivenType1
+		set vaccineName5OriginalStatus to "Series" && vaccineName5NotGivenType1
+		
+		Log "VERIFICATION: The Administrations column displays with '--' for" && vaccineName5 & "."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName5, 0, false
+		
+		Log "VERIFICATION: The Next Recommended column displays with '--' for" && vaccineName5 & "."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName5, "--"
+		
+		Log "VERIFICATION: The Last Action column displays with 'Not Given' for" && vaccineName5 & "."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName5, notGiven
+		
+		Log "VERIFICATION: The Last Action Date column displays with today's date for" && vaccineName5 & "."
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName5NotGivenDate1, false, true)
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionDateColumn vaccineName5, "Immunizations/Util/Date".todaysDate(format), age
+		CaptureScreen(Name:"Step"&Global stepNumber&"-mPage Table Patient_perm")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on 'View' within the Outside records available banner."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileBanners 
+		
+		//vaccineName3 validations
+		Log "VERIFICATION:" && vaccineName3NotGivenDate1 && "displays in the outside records table within the subsection for" && vaccineName3 & "."
+		set vaccine3Row2SearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineRowSearchRectangle(vaccineName3NotGivenDate1, false, vaccineName3, 3)
+		run "Immunizations/Util/Validation".verifyText vaccineName3, vaccine3Row2SearchRectangle
+		
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName3NotGivenDate1, false, true)
+		Log "VERIFICATION:" && vaccineName3NotGivenDate1 && "received from RSS and patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName3 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName3, 3, vaccineName3NotGivenDate1, age
+		
+		Log "VERIFICATION:" && vaccineName3OrigSource1 && "received from RSS displays in the Source column within the outside record table for" && vaccineName3NotGivenDate1 & "."
+		run  "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifySourceColumn vaccineName3NotGivenDate1, vaccineName3, 2,  vaccineName3OrigSource1
+		
+		Log "VERIFICATION:" && "'" & vaccineName3 && "- Not Given' displays in the Details column within the outside record table for the permanent not given charted for" && vaccineName3NotGivenDate1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyDetailsColumn vaccineName3NotGivenDate1, vaccineName3, 2, false, vaccineName3 && "- Not Given", true
+		
+		Log "VERIFICATION:" && notGiven && "displays in the Updates column within the outside record table for" && vaccineName3NotGivenDate1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyUpdatesColumn vaccineName3NotGivenDate1, vaccineName3, 2, "Not Given"
+		
+		Log "VERIFICATION: The Add (without a drop down arrow) button is displayed (but dithered) in the Action column within the outside record table for" && vaccineName3NotGivenDate1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName3NotGivenDate1, vaccineName3, 2, false, false, true
+		
+		Log "VERIFICATION: The Reject button is displayed in the Action column within the outside record table for" && vaccineName3NotGivenDate1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName3NotGivenDate1, vaccineName3, 2, false, false, true
+		
+		//vaccineName4 validations
+		Log "VERIFICATION:" && vaccineName4NotGivenDate1 && "displays in the outside records table within the subsection for" && vaccineName4 & "."
+		set vaccine4Row1SearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineRowSearchRectangle(vaccineName4NotGivenDate1, false, vaccineName4, 3)
+		run "Immunizations/Util/Validation".verifyText vaccineName4, vaccine4Row1SearchRectangle
+		
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName4NotGivenDate1, false, true)
+		Log "VERIFICATION:" && vaccineName4NotGivenDate1 && "received from RSS and patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName4 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName4, 2, vaccineName4NotGivenDate1, age
+		
+		Log "VERIFICATION:" && vaccineName4OrigSource1 && "received from RSS displays in the Source column within the outside record table for" && vaccineName4NotGivenDate1 & "."
+		run  "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifySourceColumn vaccineName4NotGivenDate1, vaccineName4, 2,  vaccineName4OrigSource1
+		
+		Log "VERIFICATION:" && "'" & vaccineName4 && "- Not Given' displays in the Details column within the outside record table for the permanent not given charted for" && vaccineName4NotGivenDate1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyDetailsColumn vaccineName4NotGivenDate1, vaccineName4, 2, false, vaccineName4 && "- Not Given", true
+		
+		Log "VERIFICATION:" && notGiven && "displays in the Updates column within the outside record table for" && vaccineName4NotGivenDate1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyUpdatesColumn vaccineName4NotGivenDate1, vaccineName4, 2, "Not Given"
+		
+		Log "VERIFICATION: The Add (without a drop down arrow) button is displayed (and enabled) in the Action column within the outside record table for" && vaccineName4NotGivenDate1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName4NotGivenDate1, vaccineName4, 2, false, false, true
+		
+		Log "VERIFICATION: The Reject button is displayed in the Action column within the outside record table for" && vaccineName4NotGivenDate1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName4NotGivenDate1, vaccineName4, 2, false, false, true
+		
+		//vaccineName5 Validations
+		Log "VERIFICATION:" && vaccineName5NotGivenDate1 && "displays in the local record table within the subsection for" && vaccineName5 & "."
+		set vaccine5Row1SearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineRowSearchRectangle(vaccineName5NotGivenDate1, true, vaccineName5, 2)
+		run "Immunizations/Util/Validation".verifyText vaccineName5NotGivenDate1, vaccine5Row1SearchRectangle
+		
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName5NotGivenDate1, false, true)
+		Log "VERIFICATION: Today's date and patient's current age (e.g." && age & ") displays in the Administration Date column within the local record table for" && vaccineName5 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn true, vaccineName5, 2, vaccineName5NotGivenDate1, age
+		
+		Log "VERIFICATION:" && "'" & vaccineName5 && "- Not Given' displays in the Details column within the local record table for the permanent not given charted for" && vaccineName5NotGivenDate1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyDetailsColumn vaccineName5NotGivenDate1, vaccineName5, 2, true, vaccineName5 && "- Not Given", true
+		
+		Log "VERIFICATION: An ellipsis button displays in the Action column within the local record table for" && vaccineName5NotGivenDate1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName5NotGivenDate1, vaccineName5, 2, true, false, true
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Initial Reconciliation Display Patient_perm")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on" && vaccineName3NotGivenDate1 && "within the outside records table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue false, vaccineName3, 2, vaccineName3NotGivenDate1
+		
+		Log "VERIFICATION: Add button is displayed and is disabled."
+		set sidePanelTopHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelTopHeaderRectangle
+		set rectangle to sidePanelTopHeaderRectangle +  ((0, 70), (-20, 50))
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Outside_Record_Table/Action_Column/Add_Button_Dithered", rectangle
+		
+		Log "VERIFICATION: Reject button is displayed and is enabled."
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Outside_Record_Table/Action_Column/Reject_Button", rectangle
+		
+		Log "VERIFICATION:" && vaccineName3 && "is displayed."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName3, sidePanelRectangle
+		
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName3NotGivenDate1, false, true)
+		Log "VERIFICATION:" && vaccineName3NotGivenDate1 && age && "-" && notGiven && "is displayed."
+		run "Immunizations/Util/Validation".verifyText vaccineName3NotGivenDate1 && age && "-" && notGiven, sidePanelRectangle
+		
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+		Log "VERIFICATION:" && vaccineName3NotGivenDate1DocumentedBy && "is displayed within the Documented By field."
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Validations".fieldValidation 2, documentedByField, sidePanelRectangle, vaccineName3NotGivenDate1DocumentedBy 
+		
+		Log "VERIFICATION:" && vaccineName3NotGivenSource1 && "is displayed within the Source field."
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Validations".fieldValidation 2, sourceField, sidePanelRectangle, vaccineName3NotGivenSource1 
+		
+		Log "VERIFICATION:" && vaccineName3NotGivenType1 && "is displayed within the Not Given Type field."
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Validations".fieldValidation 2, notGivenTypeField, sidePanelRectangle, vaccineName3NotGivenType1 
+		
+		Log "VERIFICATION:" && vaccineName3NotGivenReason1 && "is displayed within the Not Given Reason field."
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Validations".fieldValidation 2, notGivenReasonField, sidePanelRectangle, vaccineName3NotGivenReason1 
+		
+		Log "VERIFICATION:" && vaccineName3NotGivenComment1 && "is displayed within the Comments field with the system user for the domain (e.g." && systemUser && ") and the not given comment date (e.g." && vaccineName3CommentDate1 && ")."
+		set commentSidePanelRectangle to sidePanelRectangle + (0, 335, 0,-70)
+		run "Immunizations/Util/Validation".verifyText "Comments", commentSidePanelRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName3NotGivenComment1, commentSidePanelRectangle
+		run "Immunizations/Util/Validation".verifyText "Unknown Author", commentSidePanelRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName3CommentDate1, commentSidePanelRectangle
+		
+		Log "VERIFICATION:" && vaccineName3NotGivenOrigSource1 && "is displayed within the Originating Source field."
+		set provDataSidePanelRectangle to  sidePanelRectangle + (0, 60, 0,-300)
+		run "Immunizations/Util/Validation".verifyText "Originating Source", provDataSidePanelRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName3NotGivenOrigSource1, provDataSidePanelRectangle
+		
+		Log "VERIFICATION:" && vaccineName3NotGivenOrigSource1Date && "is displayed within the Originating Date field."
+		run "Immunizations/Util/Validation".verifyText "Originating Date", provDataSidePanelRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName3NotGivenOrigSource1Date, provDataSidePanelRectangle
+		
+		Log "VERIFICATION: No sources are displayed within the 'Related Outside Records' section."
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Related Outside Records", sidePanelRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Initial Side Panel" && vaccineName3NotGivenDate1 && "patient_perm")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on" && vaccineName4NotGivenDate1 && "within the outside records table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue false, vaccineName4, 2, vaccineName4NotGivenDate1
+		
+		Log "VERIFICATION: Add button is displayed (without drop down arraw) and is enabled."
+		set sidePanelTopHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelTopHeaderRectangle
+		set rectangle to sidePanelTopHeaderRectangle +  ((0, 0), (-20, 10))
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Outside_Record_Table/Action_Column/Add_Button", rectangle
+		
+		Log "VERIFICATION: Reject button is displayed and is enabled."
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Outside_Record_Table/Action_Column/Reject_Button", rectangle
+		
+		Log "VERIFICATION:" && vaccineName4 && "is displayed."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName4, sidePanelRectangle
+		
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName4NotGivenDate1, false, true)
+		Log "VERIFICATION:" && vaccineName4NotGivenDate1 && age && "-" && notGiven && "is displayed."
+		run "Immunizations/Util/Validation".verifyText vaccineName4NotGivenDate1 && age && "-" && notGiven, sidePanelRectangle
+		
+		Log "VERIFICATION:" && vaccineName4NotGivenDate1DocumentedBy && "is displayed within the Documented By field."
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Validations".fieldValidation "second", documentedByField, sidePanelRectangle, hmUser 
+		
+		Log "VERIFICATION:" && vaccineName4NotGivenSource1 && "is displayed within the Source field."
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Validations".fieldValidation "second", sourceField, sidePanelRectangle, vaccineName4NotGivenSource1
+		
+		Log "VERIFICATION:" && vaccineName4NotGivenType1 && "is displayed within the Not Given Type field."
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Validations".fieldValidation 2, notGivenTypeField, sidePanelRectangle, vaccineName4NotGivenType1 
+		
+		Log "VERIFICATION:" && vaccineName4NotGivenReason1 && "is displayed within the Not Given Reason field."
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Validations".fieldValidation 2, notGivenReasonField, sidePanelRectangle, vaccineName4NotGivenReason1 
+		
+		Log "VERIFICATION: Comments field label is not displayed."
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Comments", sidePanelRectangle
+		
+		Log "VERIFICATION:" && vaccineName4NotGivenOrigSource1 && "is displayed within the Originating Source field."
+		run "Immunizations/Util/Validation".verifyText "Originating Source", provDataSidePanelRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName4NotGivenOrigSource1, provDataSidePanelRectangle
+		
+		Log "VERIFICATION:" && vaccineName4NotGivenOrigSource1Date && "is displayed within the Originating Date field."
+		run "Immunizations/Util/Validation".verifyText "Originating Date", provDataSidePanelRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName4NotGivenOrigSource1Date, provDataSidePanelRectangle
+		
+		Log "VERIFICATION: No sources are displayed within the 'Related Outside Records' section."
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Related Outside Records", sidePanelRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Initial Side Panel" && vaccineName4NotGivenDate1 && "patient_perm")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on" && vaccineName4NotGivenDate1 && "within the outside records table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue false, vaccineName4, 2, vaccineName4NotGivenDate1
+		
+		Log "VERIFICATION: Side panel is closed."
+		run "Immunizations/Util/Validation".VerifyimageNotVisible "Immunizations/WorkflowMPage/Reconciliation/SidePanel/X_button", sidePanelTopHeaderRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Side Panel Closed Clicking" && vaccineName4NotGivenDate1 && "patient_perm")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Close Reconciliation via the X button."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header") + (1750, -3, 1605, 3)
+		click image:"Immunizations/WorkflowMPage/Reconciliation/Headers/X_Button", searchRectangle : rectangle
+		
+		Log "Util".stepNumber &"ACTION: Click on 'View Forecast'."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		//vaccineName5 validations
+		Log "VERIFICATION: The first column for" && vaccineName5 && "displays" && vaccineName5OriginalStatus && "."
+		set vaccineName5RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName5)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName5OriginalStatus, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: The column dated with" && vaccineName5NotGivenDate1 && "displays the not given type and the not given date below it."
+		set startDateHeader to vaccineName5NotGivenDate1
+		set endDateHeader to vaccineName5NotGivenDate1
+		Set alignment to ("Left", "Right")
+		Set (topOffset1, topOffset2, bottomOffSet1, bottomOffSet2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1, bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText vaccineName5NotGivenType1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText vaccineName5NotGivenDate1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The column aged with" && vaccineName5NotGivenDate1 && "displays the not given type and the not given date below it."
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName5NotGivenDate1, false, false)
+		set startDateHeader to age
+		set endDateHeader to age
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1, bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText vaccineName5NotGivenType1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText vaccineName5NotGivenDate1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Forecast View for patient_perm")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on" && vaccineName5 && "within the first column and click on" && vaccineName5NotGivenDate1 && "in expanded view."
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName(vaccineName5)
+		set expandedViewLeftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneSearchRectangle()
+		click text:vaccineName5NotGivenDate1, searchrectangle:expandedViewLeftPaneSearchRectangle
+		
+		Log "VERIFICATION: In the right pane header" && vaccineName5NotGivenType1 && "'On" && vaccineName5NotGivenDate1 && "-" && vaccineName5NotGivenReason1 & "' is displayed and the body contains the details filled out while charting for the Not Given Date, Reschedule Date (double dash), Reason, and Auhtorized By fields."
+		//Expanded view header validation
+		Set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName5NotGivenType1 && vaccineName5NotGivenDate1 && "-" && vaccineName5NotGivenReason1, rightPaneHeaderSearchRectangle
+		//Expanded view body validation
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField notGivenDateField, vaccineName5NotGivenDate1
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewFieldImage RescheduleDateField, doubleDashImage
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField ReasonField, vaccineName5NotGivenReason1
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField AuthorizedByField, user
+		//Meeting Topic:  Will this be the user reconciling or the originating author?  Right now have it as current user as that's what reg import does today but don't have reconciliation setup for my patient so just wanted to confirm as we are combining the two.
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Expanded View" && vaccineName5NotGivenDate1 && "Details patient_perm")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click outside expanded view and click the List button."
+		Set topPaneRectangle to "Immunizations/Common/Helpers".tabListSearchrectangle
+		click text:immunizationForecast, searchrectangle:topPaneRectangle
+		run "Immunizations/Forecaster-Common/Actions" .clickFlipViews
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName5NotGivenDate1, false, true)
+		
+		Log "VERIFICATION: The first column for" && vaccineName5 && "displays" && vaccineName5OriginalStatus && "."
+		set vaccineName5RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName5)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName5OriginalStatus, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: The not given for" && vaccineName5NotGivenDate1 && "is displayed in the 1st Action column"
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText vaccineName5NotGivenType1 & return & vaccineName5NotGivenDate1 && age, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, columnSearchRectangle)		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-List View Local Administrations patient_perm")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Navigate back to the mPage and click on 'View' within the Outside records available banner."
+		run "Immunizations/Common/actions".clickMPagesView viewPoint
+		run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileBanners 
+		
+		Log "Util".stepNumber &"ACTION: Unchart" && vaccineName5NotGivenDate1 & " and leave the following unchart comment:" && unchartComment1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue true, vaccineName5, 1, vaccineName5NotGivenDate1
+		run "Immunizations/WorkflowMPage/SidePanel/Actions".clickUnchart today,"1", unchartComment1
+		run "Immunizations/WorkflowMPage/SidePanel/Actions".clickSave
+		
+		//vaccineName5 validations
+		Log "VERIFICATION:" && vaccineName5NotGivenDate1 && "is not displayed in the outside records or local record table."
+		set outsideRecordsSearchRectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-35, 185, 535, 610)
+		set localRecordsSearchRectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Local_Record_Header") + (0, 90, 485, 540) 
+		run "Immunizations/Util/Validation".verifyText vaccineName5NotGivenDate1, outsideRecordsSearchRectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName5NotGivenDate1, localRecordsSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Reconciliation Table All Filter" && vaccineName5NotGivenDate1 && "Uncharted")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Close Reconciliation via the X button."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header") + (1750, -3, 1605, 3)
+		click image:"Immunizations/WorkflowMPage/Reconciliation/Headers/X_Button", searchRectangle : rectangle
+		
+		//vaccineName5 validations
+		Log "VERIFICATION: The Status column displays with the original vaccine group status" && vaccineName5OriginalStatus && "for" && vaccineName5 && "."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName5, vaccineName5OriginalStatus
+		CaptureScreen(Name:"Step"&Global stepNumber&"-mPage" && vaccineName3Admin1Date1 && vaccineName4NotGivenDate1 && "Uncharted")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click 'View Forecast'."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		//vaccineName5 validations
+		Log "VERIFICATION: The first column for" && vaccineName5 && "displays '" && notStarted & "'."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName5 & return & notStarted, columnSearchRectangle 
+		
+		Log "VERIFICATION: The uncharted reconciled not given for" && vaccineName5 && "is displayed in the column dated with previous not given date with Uncharted and" && vaccineName5NotGivenDate1 & "."
+		set startDateHeader to vaccineName5NotGivenDate1
+		set endDateHeader to vaccineName5NotGivenDate1
+		set vaccineName5RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName5)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1, bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText uncharted, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText vaccineName5NotGivenDate1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The uncharted local not given for" && vaccineName5 && "is displayed in the column aged with previous not given date with Uncharted and" && vaccineName5NotGivenDate1 & "."
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName5NotGivenDate1, false, false)
+		set startDateHeader to age
+		set endDateHeader to age
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1, bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText uncharted, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText vaccineName5NotGivenDate1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Forecast View" && vaccineName5NotGivenDate1 && "Uncharted")
+		
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on" && vaccineName5 && "within the first column and click on" && vaccineName5NotGivenDate1 && "in expanded view."
+		click text:immunizationForecast, searchrectangle:topPaneRectangle
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName(vaccineName5)
+		set expandedViewLeftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneSearchRectangle()
+		click text:vaccineName4NotGivenDate1, searchrectangle:expandedViewLeftPaneSearchRectangle
+		
+		Log "VERIFICATION: In the right pane header" && uncharted && "'On < today's date > is displayed and the body contains the details filled out while charting for the Not Given Date, Reason, Authorized By fields, and a double dash for the Reschedule Date along with the comment made while uncharting with current logged in user as the Source."
+		//Expanded view header validation
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText uncharted && "On" && "Immunizations/Util/Date".todaysDate(format), rightPaneHeaderSearchRectangle
+		//Expanded view body validation
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField notGivenDateField, vaccineName5NotGivenDate1
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField RescheduleDateField, doubleDashImage
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField ReasonField, vaccineName5NotGivenReason1
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField AuthorizedByField, user
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField SourceField, user
+		//Meeting Topic:  Will this be the user reconciling or the originating author?  Right now have it as current user as that's what reg import does today but don't have reconciliation setup for my patient so just wanted to confirm as we are combining the two.
+		set rightPaneBodySearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneBodySearchRectangle()
+		run "Immunizations/Util/Validation".verifyText unchartComment2, rightPaneBodySearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Expanded View" && vaccineName5NotGivenDate1 && "Details patient_perm")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click outside expanded view and click the List button."
+		click text:immunizationForecast, searchrectangle:topPaneRectangle
+		run "Immunizations/Forecaster-Common/Actions" .clickFlipViews
+		set age to "Immunizations/Util/Date".ageCalculator(dob, today, false, true)
+		
+		Log "VERIFICATION: The first column for" && vaccineName5 && "displays" && notStarted
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers". largeFirstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName5 & return & notStarted
+		
+		Log "VERIFICATION: The uncharted not given for" && vaccineName5NotGivenDate1 && "is displayed in the 1st Action column with" && uncharted && "today's date underneath with current age."
+		set vaccineName5RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName5)
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText uncharted & return & today && age, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName5RowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-List View" && vaccineName5NotGivenDate1 && "Details patient_perm")
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/Reconciliation/HLM-VR-Immunizations-Reconcile-Unchart_Permanent"
+		###################################################################
+		
+	catch exception
+		logError "Exception encountered in Workflow Steps" && exception.reason
+		log "Exception Location:" && exception.location
+		captureScreen"Exception" && "at" & Global stepNumber 
+	end try
+	
+	Log "Util".stepNumber & "Close Patient_perm’s chart."
+	run "Immunizations/Setup".closeApplication global cleaning
+	
+	Log "Cleanup patient_perm."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	
+catch exception
+	logError "Exception encountered during patient setup or cleanup due to" && exception.reason
+	log "Exception Location:" && exception.location
+	captureScreen"Exception"
+end try
+
+run "Cleanup".ZeroStateCloseAllApps

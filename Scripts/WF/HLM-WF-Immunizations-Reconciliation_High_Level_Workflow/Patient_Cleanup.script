@@ -1,0 +1,19 @@
+﻿params domain 
+Log "Test running in domain"&&domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set testData to JSONValue(file ResourcePath()).(value of domain)
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set newLastName to testData.Patient1.newLastName
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set conversation to setup.conversation
+
+Log "Util".stepNumber &"ACTION: Cleanup Patient1"
+run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+run "Immunizations/PatientCreation".openConversationContinuous conversation
+run "Immunizations/PatientCreation".searchPatient lastName,firstName
+run "Immunizations/PatientCreation".renamePatientSearched newLastName
+run "Util".closeApplication 2

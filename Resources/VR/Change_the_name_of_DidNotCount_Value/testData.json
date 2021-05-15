@@ -1,0 +1,52 @@
+{  
+   "SOLM64":{  
+      "Patient1":{  
+         "lastName":"DidNotCount",
+         "firstName":"Pat1",
+         "nameFullFormatted":"DidNotCount,Pat1",
+         "newLastName":"Old2D2",
+         "sex":"Male",
+         "DOB":"Today - 11 years"
+      },
+      "application":"corecodebuilder",
+      "vaccineName":"Meningococcal",
+      "productName":"meningococcal conjugate vaccine",
+      "source":"Clinician",
+      "codeSet":"4640009",
+      "defaultDisplayText":"Did Not Count",
+      "newDisplayText":"NewDNC",
+      "codeValueList":"Unknown,Extraneous,Did Not Count",
+      "didNotCountFootNote":"Denotes the administered dose",
+      "puttyUsername":"root",
+      "puttyPassword":",2@72@",
+      "puttyLocation":"C:\\Program Files\\PuTTY\\putty.exe",
+      "puttyLog":"C:\\Temp\\putty.log",
+      "crmtestCommand":"crmtest 6024 4640009",
+      "nodeName":"ipsolmastr64"
+   },
+   "SOLGM":{  
+      "Patient1":{  
+         "lastName":"DidNotCount",
+         "firstName":"Pat1",
+         "nameFullFormatted":"DidNotCount,Pat1",
+         "newLastName":"Old2D2",
+         "sex":"Male",
+         "DOB":"Today - 11 years"
+      },
+      "application":"corecodebuilder",
+      "vaccineName":"Meningococcal",
+      "productName":"meningococcal conjugate vaccine",
+      "source":"Clinician",
+      "codeSet":"4640009",
+      "defaultDisplayText":"Did Not Count",
+      "newDisplayText":"NewDNC",
+      "codeValueList":"Did Not Count,Extraneous,Unknown",
+      "didNotCountFootNote":"Denotes the administered dose",
+      "puttyUsername":"root",
+      "puttyPassword":",2@72@",
+      "puttyLocation":"C:\\Program Files\\PuTTY\\putty.exe",
+      "puttyLog":"C:\\Temp\\putty.log",
+      "crmtestCommand":"crmtest 6024 4640009",
+      "nodeName":"ipsolmastr64"
+   }
+}

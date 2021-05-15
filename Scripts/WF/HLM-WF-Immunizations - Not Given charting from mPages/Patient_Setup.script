@@ -1,0 +1,23 @@
+﻿params domain 
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set format to "%m/%d/%Y"
+Set testData to JSONValue(file ResourcePath("HR/HLM-WF-Immunizations - Not Given charting from mPages/NotGivenChartingFromMpages.json")).(value of domain)
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set dob to formattedTime(format, value(testData.Patient1.dob)) 
+set sex to testData.Patient1.sex
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+log password
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set conversation to setup.conversation
+
+Log "Create patient 1 (6 months) for the test"
+run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+run "Immunizations/PatientCreation".openConversationContinuous conversation
+run "Immunizations/PatientCreation".searchPatient lastName, firstName
+run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, format, dob, encounterType
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

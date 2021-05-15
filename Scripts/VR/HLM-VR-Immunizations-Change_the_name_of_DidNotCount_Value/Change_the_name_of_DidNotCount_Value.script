@@ -1,0 +1,42 @@
+﻿------------------------------------------------Helper Suite Information---------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-MillenniumFoundations
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-HealthMaintenanceTools
+
+------------------------------------------------Helper Suite Information---------------------------------------------
+
+params domain
+
+try
+	
+	log "Test running in domain"&&domain
+	set domain to "Immunizations/Util/Setup".domainRun(domain)
+	
+	BeginTestCase "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/Patient_Setup"
+	run "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/Patient_Setup"domain
+	EndTestCase "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/Patient_Setup"
+	
+	BeginTestCase "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/DidNotCount_WorkFlowForecastListViewValidations"
+	run "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/DidNotCount_WorkFlowForecastListViewValidations"domain
+	EndTestCase "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/DidNotCount_WorkFlowForecastListViewValidations"
+	
+	BeginTestCase "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/DidNotCount_AfterModifyingValuesInCodeset"
+	run "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/DidNotCount_AfterModifyingValuesInCodeset"domain
+	EndTestCase "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/DidNotCount_AfterModifyingValuesInCodeset"
+	
+	BeginTestCase "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/DidNotCount_AfterInactivatingCodeset"
+	run "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/DidNotCount_AfterInactivatingCodeset"domain
+	EndTestCase "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/DidNotCount_AfterInactivatingCodeset"
+	
+	BeginTestCase "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/Patient_Cleanup"
+	Run "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/Patient_Cleanup"domain
+	EndTestCase "VR/HLM-VR-Immunizations-Change_the_name_of_DidNotCount_Value/Patient_Cleanup"
+	
+catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+end try
+
+run "Cleanup".ZeroStateCloseAllApps

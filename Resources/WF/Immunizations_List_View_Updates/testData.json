@@ -1,0 +1,52 @@
+{
+	"DEFAULT": {
+		"Patient1": {
+			"lastName": "List",
+			"firstName": "P1",
+			"nameFullFormatted": "List, P1",
+			"newLastName": "oldList, P1",
+			"dob": "Today - 4 years",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "View",
+			"firstName": "P2",
+			"nameFullFormatted": "View, P2",
+			"dob": "Today - 4 years",
+			"sex": "Male"
+		},
+		"user": "Maintenance, Health",
+		"vaccineName": "Diphtheria, Tetanus, and Pertussis",
+		"source": "Device",
+		"product": "Daptacel(DTaP)",
+		"product1": "diphtheria/pertussis, acel/tetanus pediatric 2.5 units-18.5 mcg-5 units/0.5 mL intramuscular suspens",
+		"product2": "Kinrix",
+		"didNotCount": "Did Not Count",
+		"defaultProduct": "diphtheria-tetanus toxoids (DT) ped",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"permNotGivenReason": "Vaccine Storage",
+		"tempNotGivenAction": "Reschedule Date",
+		"tempNotGivenReason": "Temporary contraindication - reschedule",
+		"permNotGivenType1": "Refused",
+		"documentHistory": "Document History",
+		"chartNotGiven": "Chart Not Given"
+	},
+	"S18VX": {
+		"node": "ips18vx01"
+	},
+	"S18VA": {
+		"node": "ips18va01"
+	},
+	"S18VB": {
+		"node": "ips18vb"
+	},
+	"S18VC": {
+		"node": "ips18vc"
+	},
+	"S18VD": {
+		"node": "ips18vd"
+	},
+	"S18VF": {
+		"node": "ips18vf"
+	}
+}

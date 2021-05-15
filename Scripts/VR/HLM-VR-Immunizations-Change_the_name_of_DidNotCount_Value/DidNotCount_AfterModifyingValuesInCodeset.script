@@ -1,0 +1,177 @@
+﻿---------------------------------------Assigning Test Data to the Variables---------------------------------------
+params domain
+log "Test running in domain"&&domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set didNotCountImage to common.didNotCountImage
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set printRecord to textStrings.printRecord
+set viewForecast to textStrings.viewForecast
+
+set testData to JSONValue(file resourcePath("VR/Change_the_name_of_DidNotCount_Value/testData.json")).(value of domain)
+set patientName to testData.Patient1.nameFullFormatted
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient1.dob))
+set vaccineName to testData.vaccineName
+set productName to testData.productName
+set defaultDisplayText to testData.defaultDisplayText
+set newDisplayText to testData.newDisplayText
+set didNotCountFootNote to testData.didNotCountFootNote
+set codeSet to testData.codeSet
+set application to testData.application
+set format to "%b %d, %Y"
+set puttyLocation to testData.puttyLocation
+set nodename to testData.nodename
+set puttylog to testData.puttylog
+set puttyUsername to testData.puttyUsername
+set puttyPassword to decodeText(testdata.("puttyPassword").trimAll, "HLM")
+set crmtestCommand to testData.crmtestCommand
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+------------------------------------------------------Test Steps---------------------------------------------------------
+try
+	
+	Log "Util".stepNumber & "ACTION: Login to CoreCodeBuilder with User 1, search for code set 4640009 and edit the display text for the code values ."
+	run "open_Application".run application
+	run "millennium_Login_window".LogIntoMillenniumApps username,password,domain
+	run "coreCodeBuilder".searchCodeSet codeSet
+	run "Immunizations/Common/editDisplayTextInCorecodeBuilder".editDisplayTextInCorecodeBuilder defaultDisplayText, newDisplayText
+	typeText AltKey,F4
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Display Text Edited") 
+	
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Login to putty with User 1, do the code set refresh for codeset 4640009 (crmtest 6024 4640009)."
+	wait 5
+	run "PuttyUtils".launchPuttySession puttylocation, nodename, puttylog, puttyUsername, puttyPassword, domain
+	TypeText crmtestCommand, returnkey
+	wait 2
+	run "MFTCommonUtils".millenniumConsoleBasedLogin username, domain, password
+	CaptureScreen(Name:"Step"&Global stepNumber&"-codeset refresh") 
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Exit putty and Relaunch Powerchart with User 1, search and select patient, from TOC select Immunization workflow MPage and navigate to Immunization Section."
+	Repeat 2 times
+		typetext "exit", returnkey	
+	End Repeat
+	run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, global cleanup,relationship
+	
+	Log "VERIFICATION: Ensure the Immunization Workflow MPage displays."
+	run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+	
+	Log "VERIFICATION: Ensure the administration charted for 8 weeks from Dose 1 does not count towards the series and administrations displays with '2' along with the did not count icon Ensure the last action displays as 'Administered - 'newDisplayText'. Ensure the status is '--'."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2",true
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName,"Administered - " && newDisplayText
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, "--"
+	CaptureScreen(Name:"Step"&Global stepNumber&"-MPage-newDisplayText validation") 
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Select Meningococcal Vaccine."
+	run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+	
+	Log "VERIFICATION: Ensure the vaccine name in the side panel and system shall display the new display text associated with the 'did not count' dose defined in codeset 4640009 including blank as a tool tip "
+	set dose1AdminDate to  "Immunizations/Util/Date".adjustDate(dob, format, ("Year":10))
+	set dose2AdminDate to  "Immunizations/Util/Date".adjustDate(dose1AdminDate, format, ("Week":8))
+	set age to "Immunizations/Util/Date".ageCalculator(dob, dose2AdminDate, false, true)
+	set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle()
+	set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelTopHeaderRectangle()
+	run "Immunizations/Util/Validation".verifyText vaccineName, sidePanelHeaderRectangle
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndexLineBreak "1", "Documented", sidePanelRectangle,dose2AdminDate && age && "-" && "Administered -" && newDisplayText
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyDidNotCountImage "1", "Documented By",sidePanelRectangle
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Side panel-newDisplayText Validation") 
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Close side panel and Click on Immunization Forecaster."
+	set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+	run "Immunizations/WorkFlowMPage/SidePanel/Actions".closeSidePanel sidePanelRectangle, vaccineName
+	run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast (viewForecast)
+	
+	Log "VERIFICATION: Ensure Dose 2 charted for the patient displays in the timeline with 'Did not count' icon along with the product name and Administration date on the Meningococcal row in the column for age 8 weeks from Dose 1. "
+	set startDateHeader to dose2AdminDate
+	set endDateHeader to dose2AdminDate
+	set vaccineNameRowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+	set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,"-160", "-30", "100","100")
+	run "Immunizations/Util/Validation".verifyText productName &return& dose2AdminDate ,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineNameRowSearchRectangle,columnSearchRectangle)
+	run "Immunizations/Util/Validation".verifyImage didNotCountImage,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNameRowSearchRectangle,columnSearchRectangle)
+	
+	Log "VERIFICATION: Ensure upon hovering the did not count icon the system shall display  modified dispaly value defined in code set 4640009 including blank as a tool tip."
+	run "Immunizations/Util/Validation".verifyText newDisplayText ,"Immunizations/Forecaster-Common/Helpers".didNotCountSearchRectangle()
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Forecast- newDisplayText validation ") 
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on Dose 1 in the timeline to open the expanded view of the vaccine."
+	set startDateHeader to dose1AdminDate
+	set endDateHeader to dose1AdminDate
+	set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader,"-140", "-30", "50","100")
+	Click text: "Dose 1",searchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNameRowSearchRectangle,columnSearchrectangle)
+	
+	Log "VERIFICATION: Ensure upon hovering the did not count icon the system shall display new display text for 'Did Not Count' value or any other display value defined in code set 4640009 including blank as a tool tip."
+	run "Immunizations/Util/Validation".verifyText newDisplayText ,"Immunizations/Forecaster-Common/Helpers".didNotCountSearchRectangle()
+	
+	Log "VERIFICATION: select second admisitration In the left hand pane, ensure the second administration displays with the did not count icon."
+	click Image:"Immunizations/Common/DidNotCount", searchrectangle:"Immunizations/Forecaster-Forecast/Helpers".expandedViewDidNotCountIconSearchRectangle() 
+	set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+	run "Immunizations/Util/Validation".Verifyimage didNotCountImage, leftPaneSearchRectangle
+	
+	Log "VERIFICATION: In the right hand pane, 'Administered on <charted Date> ('newDisplayText') - product Name' displays."
+	set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+	run "Immunizations/Util/Validation".verifyText "Administered On" && dose2AdminDate && "(" & newDisplayText & ")" && "-" && productName, rightPaneHeaderSearchRectangle
+	Capturescreen (Name:"Step"&Global stepNumber&"-Expanded View-newDisplayText Validation")
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click outside the expanded view and navigate to the list view."
+	set topPaneRectangle to "Immunizations/Common/Helpers".tabListSearchrectangle
+	Click text:"Immunization Forecast", searchrectangle:topPaneRectangle
+	run "Immunizations/Forecaster-Common/Actions".clickFlipViews
+	
+	Log "VERIFICATION: Ensure under the vaccine column, Meningococcal displays with a status of 'Last Admin: charted date ."
+	set age to "Immunizations/Util/Date".ageCalculator(dob, dose2AdminDate, false, true)
+	set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+	set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".largeFirstColumnSearchRectangle()
+	run "Immunizations/Util/Validation".verifyText vaccineName, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+	run "Immunizations/Util/Validation".verifyText "Last Admin:" & dose2AdminDate & age, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+	
+	Log "VERIFICATION: Action column displays charted dose with product or default event set name on top and administrations date with age in parenthesis below it" 
+	set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+	set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle(2)
+	run "Immunizations/Util/Validation".verifyText productName, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+	run "Immunizations/Util/Validation".verifyText productName & return & dose2AdminDate & age, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+	
+	Log "VERIFICATION: Ensure upon hovering the did not count icon the system shall display modified value defined in code set 4640009 including blank as a tool tip."
+	run "Immunizations/Util/Validation".verifyText newDisplayText ,"Immunizations/Forecaster-Common/Helpers".didNotCountSearchRectangle()
+	CaptureScreen(Name:"Step"&Global stepNumber&"-List-newDisplayText Validation") 
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber & "ACTION: Click on Print Button."
+	run "Immunizations/Common/Print/Actions".clickPrintRecord(printRecord)
+	
+	Log "VERIFICATION: Meningococcal is displayed with in the Vaccine column"
+	run "Immunizations/Util/Validation".verifyText vaccineName, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("true",1)
+	
+	Log "VERIFICATION: The administration for 11 years from DOB displays in the row for Meningococcal in the Date Given column."
+	run "Immunizations/Util/Validation".verifyText dose1AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true",1,1)
+	
+	Log "VERIFICATION: The administration for 8 weeks from dose 1 displays with a Did Not Count icon in the Date Given column."
+	run "Immunizations/Util/Validation".verifyText dose2AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true",1,2)
+	run "Immunizations/Util/Validation".verifyImage didNotCountImage, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true",1,2)
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Report Body validation") 
+	
+	Log "VERIFICATION: Navigate to footnote at the bottom of the print report and ensure a 'did not count' icon is displayed along with 'Denotes the administered dose did not count' based on the defined text in code set 4640009, including blank ."
+	run "Immunizations/Util/Validation".verifyText didNotCountFootNote & newDisplayText, "Immunizations/Common/Print/Helpers".reportFootNoteSearchRectangle()
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Report foot note newDisplayText validation") 
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber & "ACTION: Close the DiscernReportViewer and Close Patient-1's chart"
+	run "Immunizations/Common/Print/Actions".closePrintRecord
+	run "Util".CloseApplication 2
+	---------------------------------------------------------------------------------------------------------------
+	
+catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	run "Cleanup".ZeroStateCloseAllApps	
+end try
+
+

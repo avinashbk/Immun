@@ -1,0 +1,28 @@
+{
+	"DEFAULT": {
+		"Patient1": {
+			"lastName": "Forecaster",
+			"firstName": "Pat1",
+			"nameFullFormatted": "Forecaster, Pat1",
+			"newLastName": "oldForecaster",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"vaccineName": "Haemophilus Influenzae",
+		"product": "ActHIB",
+		"source": "Device",
+		"vaccineName1": "Measles, Mumps, Rubella",
+		"vaccineName2": "Varicella",
+		"vaccineName3": "Hepatitis A",
+		"vaccineName4": "Hepatitis B",
+		"vaccineName5": "Human Papillomavirus",
+		"vaccineName6": "Meningococcal",
+		"product3": "Havrix",
+		"product4":"HepB-CpG"
+		"user": "Maintenance,Health",
+		"childhoodImmunizationSchedule": "https://www.cdc.gov/vaccines/schedules/hcp/imz/child-adolescent.html",
+		"dateFormat": "Date",
+		"submit": "Submit",
+		"forwardUser": "System,System"
+}
+}

@@ -1,0 +1,267 @@
+{
+	"SOLM64":{
+		"Influenza_CVX161_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX1",
+			"nameFullFormatted":"Flu1,CVX1",
+			"newLastName":"OldFlu1",
+			"dob":"Today - 3 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX144and166_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX2",
+			"nameFullFormatted":"Flu1,CVX2",
+			"newLastName":"OldFlu2",
+			"dob":"Today - 65 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX111and149_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX3",
+			"nameFullFormatted":"Flu1,CVX3",
+			"newLastName":"OldFlu3",
+			"dob":"Today - 50 years",
+			"sex":"Male"
+		},
+	"vaccineName":"Influenza",
+	"vaccineName2": "Hepatitis B",
+	"source":"Device",
+	"product1":"Fluzone Preservative-Free Pediatric Quadrivalent 2014-2015",
+	"product2":"Fluzone Intradermal 2014-2015",
+	"product3":"Fluzone Quad Intradermal",
+	"product4":"FluMist 2012-2013 nasal spray",
+	"product5":"FluMist 2013-2014",
+	"waitFor":"20",
+	"user":"maintenance, health",
+	"unchartedReason":"Test",
+	"dateFormat":"Date"
+	},
+	"S18VX":{
+		"Influenza_CVX161_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX1",
+			"nameFullFormatted":"Flu1,CVX1",
+			"newLastName":"OldFlu1",
+			"dob":"Today - 3 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX144and166_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX2",
+			"nameFullFormatted":"Flu1,CVX2",
+			"newLastName":"OldFlu2",
+			"dob":"Today - 65 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX111and149_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX3",
+			"nameFullFormatted":"Flu1,CVX3",
+			"newLastName":"OldFlu3",
+			"dob":"Today - 50 years",
+			"sex":"Male"
+		},
+	"vaccineName":"Influenza",
+	"vaccineName2": "Hepatitis B",
+	"source":"Device",
+	"product1":"Fluzone Preservative-Free Pediatric Quadrivalent 2017-2018",
+	"product2":"Fluzone intradermal",
+	"product3":"Fluzone Quadrivalent Intradermal 2017-2018",
+	"product4":"FluMist nasal spray",
+	"product5":"FluMist 2016-2017",
+	"product6":"Fluarix Quadrivalent  2016-2017",
+	"waitFor":"20",
+	"user":"maintenance, health",
+	"unchartedReason":"Test",
+	"dateFormat":"Date"
+	},
+	"S18VA":{
+		"Influenza_CVX161_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX1",
+			"nameFullFormatted":"Flu1,CVX1",
+			"newLastName":"OldFlu1",
+			"dob":"Today - 3 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX144and166_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX2",
+			"nameFullFormatted":"Flu1,CVX2",
+			"newLastName":"OldFlu2",
+			"dob":"Today - 65 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX111and149_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX3",
+			"nameFullFormatted":"Flu1,CVX3",
+			"newLastName":"OldFlu3",
+			"dob":"Today - 50 years",
+			"sex":"Male"
+		},
+	"vaccineName":"Influenza",
+	"vaccineName2": "Hepatitis B",
+	"source":"Device",
+	"product1":"Fluzone Preservative-Free Pediatric Quadrivalent 2017-2018",
+	"product2":"Fluzone intradermal",
+	"product3":"Fluzone Quadrivalent Intradermal 2017-2018",
+	"product4":"FluMist nasal spray",
+	"product5":"FluMist 2016-2017",
+	"product6":"Fluarix 2010-2011",
+	"waitFor":"20",
+	"user":"maintenance, health",
+	"unchartedReason":"Test",
+	"dateFormat":"Date"
+	},
+	"ENG18":{
+		"Influenza_CVX161_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX1",
+			"nameFullFormatted":"Flu1,CVX1",
+			"newLastName":"OldFlu1",
+			"dob":"Today - 3 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX144and166_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX2",
+			"nameFullFormatted":"Flu1,CVX2",
+			"newLastName":"OldFlu2",
+			"dob":"Today - 65 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX111and149_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX3",
+			"nameFullFormatted":"Flu1,CVX3",
+			"newLastName":"OldFlu3",
+			"dob":"Today - 50 years",
+			"sex":"Male"
+		},
+	"vaccineName":"Influenza",
+	"source":"Technician",
+	"product1":"Fluzone Quadrivalent, peds",
+	"product2":"Fluzone Intradermal",
+	"product3":"Fluzone Quad intradermal",
+	"product4":"FluMist",
+	"product5":"Flumist Quadrivalent",
+	"product6":"FluMist",
+	"user":"maintenance, health",
+	"unchartedReason":"Test",
+	"dateFormat":"Date"
+	},
+	"S18VE":{
+		"Influenza_CVX161_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX1",
+			"nameFullFormatted":"Flu1,CVX1",
+			"newLastName":"OldFlu1",
+			"dob":"Today - 3 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX144and166_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX2",
+			"nameFullFormatted":"Flu1,CVX2",
+			"newLastName":"OldFlu2",
+			"dob":"Today - 65 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX111and149_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX3",
+			"nameFullFormatted":"Flu1,CVX3",
+			"newLastName":"OldFlu3",
+			"dob":"Today - 50 years",
+			"sex":"Male"
+		},
+	"vaccineName":"Influenza",
+	"source":"Technician",
+	"product1":"Fluzone Quadrivalent, peds",
+	"product2":"Fluzone Intradermal",
+	"product3":"Fluzone Quad intradermal",
+	"product4":"FluMist",
+	"product5":"Flumist Quadrivalent",
+	"product6":"FluMist",
+	"user":"maintenance, health",
+	"unchartedReason":"Test",
+	"dateFormat":"Date"
+	},
+	"S18BX":{
+		"Influenza_CVX161_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX1",
+			"nameFullFormatted":"Flu1,CVX1",
+			"newLastName":"OldFlu1",
+			"dob":"Today - 3 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX144and166_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX2",
+			"nameFullFormatted":"Flu1,CVX2",
+			"newLastName":"OldFlu2",
+			"dob":"Today - 65 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX111and149_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX3",
+			"nameFullFormatted":"Flu1,CVX3",
+			"newLastName":"OldFlu3",
+			"dob":"Today - 50 years",
+			"sex":"Male"
+		},
+	"vaccineName":"Influenza",
+	"source":"Technician",
+	"product1":"Fluzone Quadrivalent, peds",
+	"product2":"Fluzone Intradermal",
+	"product3":"Fluzone Quad intradermal",
+	"product4":"FluMist",
+	"product5":"Flumist Quadrivalent",
+	"product6":"FluMist",
+	"user":"maintenance, health",
+	"unchartedReason":"Test",
+	"dateFormat":"Date"
+	},
+	"INTGM":{
+		"Influenza_CVX161_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX1",
+			"nameFullFormatted":"Flu1,CVX1",
+			"newLastName":"OldFlu1",
+			"dob":"Today - 3 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX144and166_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX2",
+			"nameFullFormatted":"Flu1,CVX2",
+			"newLastName":"OldFlu2",
+			"dob":"Today - 65 years",
+			"sex":"Male"
+		},
+		"Influenza_CVX111and149_Patient":{
+			"lastName":"Flu1",
+			"firstName":"CVX3",
+			"nameFullFormatted":"Flu1,CVX3",
+			"newLastName":"OldFlu3",
+			"dob":"Today - 50 years",
+			"sex":"Male"
+		},
+	"vaccineName":"Influenza",
+	"source":"Device",
+	"product1":"Fluzone Preservative-Free Pediatric Quadrivalent 2014-2015",
+	"product2":"Fluzone Intradermal 2014-2015",
+	"product3":"Fluzone Quad Intradermal",
+	"product4":"FluMist",
+	"product5":"FluMist 2014-2015 quadrivalent nasal spray",
+	"product6":"Fluarix 2013-2014",
+	"waitFor":"20",
+	"user":"maintenance, health",
+	"unchartedReason":"Test",
+	"dateFormat":"Date"
+	}
+}

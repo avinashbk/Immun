@@ -1,0 +1,213 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=115297
+
+*)
+params domain
+Log "Test running in domain" && domain
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+Set encounterOrg to setup.encounterOrg
+Set encounterType to setup.encounterType
+Set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set doubleDashImage to common.doubleDashImage
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set inRange to textStrings.inRange
+set notStarted to textStrings.notStarted
+set administeredDidNotCount to textStrings.administeredDidNotCount
+set administered to textStrings.administered
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set documentedByField to fieldLabels.documentedByField
+set mpageSourceField to fieldLabels.mpageSourceField
+set productField to fieldLabels.productField
+
+set testData to JSONValue(file ResourcePath("VR/Influenza_Vaccine_Forecast/testData.json")).(value of domain)
+Set lastName to testData.Patient_Live_Virus.lastName
+Set firstName to testData.Patient_Live_Virus.firstName
+Set patientName to testData.Patient_Live_Virus.nameFullFormatted
+Set newLastName to testData.Patient_Live_Virus.newLastName
+Set sex to testData.Patient_Live_Virus.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Live_Virus.dob))
+set user to testData.User
+set vaccineName to testData.vaccineName
+set product1 to testData.product1
+set product2 to testData.product2
+set source to testData.source
+set unchartedReason to testData.unchartedReason
+set format to "%b %d, %Y"
+set fluSeasonEnd to item 2 of "Immunizations/Util/Date".fluSeasonDateCalc(format)
+set dateFormat to testData.dateFormat
+
+
+
+Try
+	#PATIENT RESET
+	run "Immunizations/PatientCreation".resetPatientToZeroState username, password, domain, lastName, firstName, dob
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/HLM-VR-Immunizations-Influenza_Live_Virus"
+		
+		Log "Util".stepNumber & "ACTION: Open Powerchart.exe with User1, search for and open the chart for Patient4, and open the Immunizations Workflow component."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		Log "VERIFICATION: Ensure Status displays as 'In Range'."
+		Click text: "status", searchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("status") //Influenza needs to appear above Hib
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, inRange
+		
+		Log "VERIFICATION: Ensure the Next recommended administration is 'Today - <End of Flu Season>'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "Today" && "-" && fluSeasonEnd
+		
+		Log "VERIFICATION: Ensure Administrations displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, doubleDashImage, false
+		
+		Log "VERIFICATION: Ensure  Last action displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure Last action date displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName, doubleDashImage
+		capturescreen(Name: "Step" & Global stepNumber & "-MPage Review")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Navigate to the forecaster"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: In the CDC Schedule column, ensure Influenza displays with a status of 'Not Started' below it."
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName & return & notStarted, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure '2 Dose Series' displays in the Today column."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "2 Dose Series", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangleToday)
+		capturescreen(Name: "Step" & Global stepNumber & "-Forecaster review")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart 2 doses of Influenza at 6 months and 6 months + 24 days from DOB using a live virus product."
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6)), source, product2, "Submit"	
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6, "day": 24)), source, product2, "Submit"	
+		
+		//This will change when running the test when the flu season ends for current season and will recommend for the next season.
+		Log "VERIFICATION: Ensure dose 1 displays in the today column."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "2 Dose Series", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangleToday)
+		
+		Log "VERIFICATION: Ensure the first dose is shown in the forecaster with the vaccine name and administration date in the cell Dated for <DOB + 6 months>."	
+		set startDateHeader to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6)), false, false)
+		set endDateHeader to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6)), false, false)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-90", "-30", "75", "100")
+		run "Immunizations/Util/Validation".verifyText product2 & return & "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure the first dose is shown in the forecaster with the vaccine name and administration date in the cell aged for <DOB + 6 months>."	
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-90", "-30", "75", "100")
+		run "Immunizations/Util/Validation".verifyText product2 & return & "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure the first dose is shown in the forecaster with the vaccine name and administration date in the cell dated for <DOB + 6 months + 24 days>."	
+		set startDateHeader to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6, "day": 24)), false, false)
+		set endDateHeader to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6, "day": 24)), false, false)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-90", "-30", "75", "100")
+		run "Immunizations/Util/Validation".verifyText product2 & return & "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6, "day": 24)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure the first dose is shown in the forecaster with the vaccine name and administration date in the cell aged for <DOB + 6 months + 24 days>."	
+		click imageLocation("Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarRightArrow")
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6, "day": 24))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6, "day": 24))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-90", "-30", "75", "100")
+		run "Immunizations/Util/Validation".verifyText product2 & return & "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6, "day": 24)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		capturescreen(Name: "Step" & Global stepNumber & "-Forecaster Live Virus Interval")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Navigate to the workflow MPage, unchart the most recent administration, and modify the first administration such that it is 6 months - 5 days from DOB."
+		run "Immunizations/Common/actions".clickMPagesView viewPoint
+		Click text: "status", searchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Status") //Influenza needs to appear above Hib
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".unchart "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6, "day": 24)), 1, uncharterReason
+		Click text: "status", searchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Status") //Influenza needs to appear above Hib
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6)), 1, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6, "day": -5))
+		
+		Log "VERIFICATION: Ensure the status column displays with 'in Range'."
+		Click text: "status", searchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Status") //Influenza needs to appear above Hib
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, inRange
+		
+		Log "VERIFICATION: Ensure the Administrations column displays with 1 and the did not count icon. '."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "1", true
+		
+		Log "VERIFICATION: Ensure the last action displays with 'Administered - Did Not Count."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administeredDidNotCount
+		capturescreen(Name: "Step" & Global stepNumber & "-Administration1 Did Not Count")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart a dose at 4 weeks - 4 days from dose 1 with a non live virus product."
+		set admin1date to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6, "day": -5))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, "Immunizations/Util/Date".adjustDate(admin1date, format, ("week": 4, "day": -4)), source, product1, "Submit"	
+		
+		Log "VERIFICATION: Ensure the last action now displays with 'Administered'."
+		Click text: "status", searchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Status") //Influenza needs to appear above Hib
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administered
+		capturescreen(Name: "Step" & Global stepNumber & "-Administration2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on Influenza."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		Log "VERIFICATION: Ensure the most recent administration displays with a status of administered. Ensure all of the adminstration details displays."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle()
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", documentedByField, sidePanelRectangle, "Immunizations/Util/Date".adjustDate(admin1date, format, ("week": 4, "day": -4)) 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", documentedByField, sidePanelRectangle, administered
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", mpageSourceField, sidePanelRectangle, source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", productField, sidePanelRectangle, product1
+		
+		Log "VERIFICATION: Ensure the first administration displays with a status of administered - Did Not Count. Ensure all of the adminstration details displays."
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "2", documentedByField, sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6, "day": -5))
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "2", documentedByField, sidePanelRectangle, administeredDidNotCount
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", mpageSourceField, sidePanelRectangle, source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", productField, sidePanelRectangle, product2
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyDidNotCountImage "2", documentedByField, sidePanelRectangle
+		capturescreen(Name: "Step" & Global stepNumber & "-WFMPage SidePanel")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient 4's chart."
+		Run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/HLM-VR-Immunizations-Influenza_Live_Virus"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+#SUT Cleanup
+run "Cleanup".ZeroStateCloseAllApps

@@ -1,0 +1,224 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=116213
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set doubleDashImage to common.doubleDashImage
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set overdue to textStrings.overdue
+set viewForecast to textStrings.viewForecast
+set complete to textStrings.complete
+set rescheduledFor to textStrings.rescheduledFor
+set forecastRescheduled to textStrings.forecastRescheduled
+
+set testData to JSONValue(file ResourcePath("VR/HIB-PRP_3DoseSeries/testData.json")).(value of domain)
+set lastName to testData.Patient_Temp_Not_Given.lastName
+set firstName to testData.Patient_Temp_Not_Given.firstName
+set patientName to testData.Patient_Temp_Not_Given.nameFullFormatted
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Temp_Not_Given.dob))
+set vaccineName to testData.vaccineName
+set Product1 to testData.Product1
+set Product2 to testData.Product2
+set notGivenType2 to testData.notGivenType2
+set tempNotGivenAction to testData.tempNotGivenAction
+set notGivenReason2 to testData.notGivenReason2
+set Source to testData.Source
+set format to "%b %d, %Y"
+set rescheduleDate to formattedTime(format, value(testData.rescheduleDate)) 
+
+
+
+try
+	#PATIENT RESET
+	run "Immunizations/PatientCreation".resetPatientToZeroState username, password, domain, lastName, firstName, dob
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/HIB/HLM-VR-Immunizations-HIB_PRP_3DoseSeries_Temp_Not_Given"
+		
+		Log "Util".stepNumber & "ACTION: Open patient 2's chart, navigate to the immunization component and review the MPage."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		Log "VERIFICATION: Ensure HIB displays in the vaccine Column."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName
+		
+		Log "VERIFICATION: Ensure Status displays as 'Overdue'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, overdue
+		
+		Log "VERIFICATION: Ensure the Next recommended administration is 'Today'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "Today"
+		
+		Log "VERIFICATION: Ensure Administrations displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, doubleDashImage, false
+		
+		Log "VERIFICATION: Ensure Last action displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure Last action Date displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName, doubleDashImage
+		capturescreen (Name: "Step" & Global stepNumber & "-MPage Review P2")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Open the forecaster and Chart a dose at <DOB + 7 months> using PRP-OMP."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("month": 7)), source, product1, "submit"
+		
+		Log "VERIFICATION: Ensure dose 1 displays in the forecaster with the product name along with Dose 1 and <DOB + 7 months>. "
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 7))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 7))
+		set vaccineNamerowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-110", "-30", "100", "100")
+		run "Immunizations/Util/Validation".verifyText product1 & return & "Dose 1 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("month": 7)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangle)
+		
+		set startDateHeader to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 7)), false, false)
+		set endDateHeader to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 7)), false, false)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-115", "-30", "115", "100")
+		run "Immunizations/Util/Validation".verifyText product1 & return & "Dose 1 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("month": 7)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangle)
+		capturescreen (Name: "Step" & Global stepNumber & "-Dose1 Charted Forecaster P2")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber & "ACTION: Chart a dose at <DOB + 12 months + 8 weeks> using an allowable or preferable product for the start at 7 months 3-dose series that is not allowable for the PRP-OMP series."
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "week": 8)), source, product2, "submit"
+		
+		Log "VERIFICATION: Ensure dose 2 displays in the forecaster with the product name along with Dose 1 and <DOB + 12 months + 8 weeks>. "
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "week": 8))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "week": 8))
+		set vaccineNamerowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-120", "-30", "100", "100")
+		run "Immunizations/Util/Validation".verifyText product2 & return & "Dose 2 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "week": 8)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangle)
+		
+		set startDateHeader to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "week": 8)), false, false)
+		set endDateHeader to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "week": 8)), false, false)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleWithIndex ("1", startDateHeader, "1", endDateHeader, "-120", "-30", "115", "100")
+		run "Immunizations/Util/Validation".verifyText product2 & return & "Dose 2 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "week": 8)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose 3 now displays in the forecaster for Today" 
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Dose 3", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangleToday)
+		capturescreen (Name: "Step" & Global stepNumber & "-PRP switch to 3dose series P2")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber & "ACTION: Navigate to the workflow MPage and modify the dose at <DOB + 7 months> to <DOB + 12 months>"
+		run "Immunizations/Common/Actions".clickMPagesView viewpoint
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("month": 7)), "1", "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12))
+		
+		Log "VERIFICATION: Ensure HIB displays in the historical section with a status of complete."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, complete
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName
+		
+		Log "VERIFICATION: Ensure the next recommended section with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, doubleDashImage
+		capturescreen (Name: "Step" & Global stepNumber & "-PRP switch to 2dose series P2")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber & "ACTION: Open the side panel and modify the dose at <DOB + 12 months> to <DOB + 2 months>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12)), "1", "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("month": 2))
+		
+		Log "VERIFICATION: Ensure HIB moves out of the historical section with a status of '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameAboveHistorySection vaccineName
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, overdue
+		
+		Log "VERIFICATION: Ensure the next recommended section with <Today>" 
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "Today"
+		capturescreen (Name: "Step" & Global stepNumber & "-PRP switch to 4dose series P2")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber & "ACTION: Chart a temporary not given."
+		run "Immunizations/Common/ChartNotGiven/Task".chartWithRescheduleDate vaccineName, notGivenType2, tempNotGivenAction, notGivenReason2, rescheduleDate, "submit"
+		
+		Log "VERIFICATION: Ensure HIB displays in the above historical section with a status of <Not given type>."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameAboveHistorySection vaccineName
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, "Contraindicated"
+		
+		Log "VERIFICATION: Ensure the next recommended section with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure the Last action column displays with 'Not Given'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Not Given"
+		
+		Log "VERIFICATION: Ensure the Last action Date column displays with <Today's Date> (15m)."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName, "Immunizations/Util/Date".todaysDate(format), "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".todaysDate(format), false, false)
+		capturescreen (Name: "Step" & Global stepNumber & "-Workflow mPage Temporary not given P2")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber & "ACTION: Click on the Forecaster"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: In the CDC Schedule column, ensure HIB displays with a status of 'Contraindicated'. "
+		set vaccineNamerowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText rescheduledFor && rescheduleDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNameRowSearchRectangle, firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure 'Contraindicated' & <Today's Date>' displays in the today column."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Contraindicated" & return & "Immunizations/Util/Date".todaysDate(format), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangleToday)
+		
+		Log "VERIFICATION: Ensure 'Series Refused' displays for the remainder of the timeline."
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-100", "-30", "1200", "100")
+		run "Immunizations/Util/Validation".verifyText forecastRescheduled, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangle)
+		capturescreen (Name: "Step" & Global stepNumber & "-Forecaster Temporary not given P2")
+		----------------------------------------------------------------------------------------------------------------		
+		
+		Log "Util".stepNumber & "ACTION: Click on List View."
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews
+		
+		Log "VERIFICATION: Ensure HIB displays in the vaccine column with a strikethrough and Rescheduled for <Reschedule Date>"
+		set vaccineNamerowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".largeFirstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText "Rescheduled for " & rescheduleDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure HIB displays in the fourth Action column with Series Refused and <Today's Date> (2 years)"
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("3")
+		run "Immunizations/Util/Validation".verifyText "Contraindicated" & return & "Immunizations/Util/Date".todaysDate(format), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangle)
+		set age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".todaysDate(format), false, true)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern age, "Immunizations/Util/Date".setPattern(age), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineNamerowSearchRectangle, columnSearchRectangle)		
+		capturescreen (Name: "Step" & Global stepNumber & "-List View Temporary not given P2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient 2's chart."
+		run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/HIB/HLM-VR-Immunizations-HIB_PRP_3DoseSeries_Temp_Not_Given"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

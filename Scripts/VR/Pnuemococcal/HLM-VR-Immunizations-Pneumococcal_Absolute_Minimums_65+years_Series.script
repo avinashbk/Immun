@@ -1,0 +1,184 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+------------------------------------------------RQM TEST CASE LINK--------------------------------------------------------
+
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=119995
+
+---------------------------------------Assigning Test Data to the Variables---------------------------------------
+
+params domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+log "Test running in domain"&&domain
+set format to "%b %d, %Y"
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set conversation to setup.conversation
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set administeredDidNotCount to textStrings.administeredDidNotCount
+
+set testData to JSONValue(file resourcePath("VR/Pneumococcal_7_Months/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file resourcePath("VR/Pneumococcal_Absolute_Minimums/testData.json")).(value of domain)
+set patientName to testData.Patient3_65_Years_Series.nameFullFormatted
+set firstName to testData.Patient3_65_Years_Series.firstName
+set lastName to testData.Patient3_65_Years_Series.lastName
+set sex to testData.Patient3_65_Years_Series.sex
+set newLastName to testData.Patient3_65_Years_Series.newLastName
+set dob to formattedTime(format, value(testData.Patient3_65_Years_Series.dob)) 
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set source to testData.source
+set product1 to testData.product1
+set product3 to testData.product3
+
+
+
+try
+	------------------------------------------------------Patient Setup---------------------------------------------------------
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) of 66 years for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	----------------------------------------------------------------------------------------------------------------------------------
+	try
+		------------------------------------------------------Test Steps---------------------------------------------------------
+		BeginTestCase "VR/Pnuemococcal/HLM-VR-Immunizations-Pneumococcal_Absolute_Minimums_65+years_Series"
+		
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1935"
+		
+		(* ####  NOTE: Commenting out Test Script because of JIRA Issue: IMMUN-1935
+		
+		Log "Util".stepNumber &"ACTION: Open Patient5's chart and navigate to the Immunizations workflow mPage and chart an administration for Pneumococcal Conjugate with PCV13 at DOB + 19 years - 1 day."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		set dose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-1))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, dose1AdminDate, source, product1, "Submit"
+		
+		Log "VERIFICATION: The administrations column displays '1' with the did not count icon for Pneumococcal Conjugate"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "1", "true"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered - Did Not Count' for Pneumococcal Conjugate."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, administeredDidNotCount
+		CaptureScreen(Name:"Step"&Global stepNumber&"-PCV13 Dose 1 Less Than Abs Min Age Patient3")
+		---------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber &"ACTION: Open the side panel for Pneumococcal Conjugate and modify the admin date from DOB + 19 years - 1 day to DOB + 19 years."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		set modifiedDose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19))  
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate  dose1AdminDate, "1", dateFormat, modifiedDose1AdminDate
+		
+		Log "VERIFICATION: The administrations column displays '1' without the did not count icon for Pneumococcal Conjugate"
+		run "Immunizations/Util/Validation".validationJiraComment "MPAGESCORE-45507"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "1", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for Pneumococcal Conjugate."
+		run "Immunizations/Util/Validation".validationJiraComment "MPAGESCORE-45507"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-PCV13 Dose 1 Equal to Abs Min Age Patient3")
+		---------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber &"ACTION: Chart an administration for Pneumococcal Polysaccharide with PPSV23 for DOB + 65 years - 1 day."
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName2, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":65, "Day":-1)), source, product3, "Submit"
+		
+		Log "VERIFICATION: The administrations column displays '1' with the did not count icon for Pneumococcal Polysaccharide"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName2, "1", "true"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered - Did Not Count' for Pneumococcal Polysaccharide."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName2, administeredDidNotCount
+		CaptureScreen(Name:"Step"&Global stepNumber&"-PPSV23 Dose 1 Less Than Abs Min Age Patient3")
+		---------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber &"ACTION: Open the side panel for Pneumococcal Polysaccharide and modify the admin date from DOB + 65 years - 1 day to DOB + 65 years."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName2
+		wait 15
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate  "Immunizations/Util/Date".adjustDate(dob, format, ("Year":65, "Day":-1)), "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":65))  
+		
+		Log "VERIFICATION: The administrations column displays '1' without the did not count icon for Pneumococcal Polysaccharide"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName2, "1", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for Pneumococcal Polysaccharide."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName2, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-PPSV23 Dose 1 Equal to Abs Min Age Patient3")
+		---------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber &"ACTION: Modify Dose 1 of Pneumococcal Conjugate (DOB + 19 years) to DOB + 65 years."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate  modifiedDose1AdminDate , "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":65))  
+		
+		Log "VERIFICATION: The administrations column displays '1' without the did not count icon for Pneumococcal Conjugate"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "1", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for Pneumococcal Conjugate."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, "Administered"
+		
+		Log "VERIFICATION: The administrations column displays '1' without the did not count icon for Pneumococcal Polysaccharide"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName2, "1", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for Pneumococcal Polysaccharide."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName2, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-0 Day Abs Min Interval Patient3")
+		---------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber &"ACTION: Modify Dose 1 of Pneumococcal Polysaccharide (DOB + 65 years) to DOB + 65 years + 1 day."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName2
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate  "Immunizations/Util/Date".adjustDate(dob, format, ("Year":65)), "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":65, "Day":1))  
+		
+		Log "VERIFICATION: The administrations column displays '1' without the did not count icon for Pneumococcal Polysaccharide"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName2, "1", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for Pneumococcal Polysaccharide."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName2, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-PCV13-PPSV23 Abs Min Interval Patient3")
+		---------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber &"ACTION: Modify Dose 1 of Pneumococcal Conjugate (DOB + 65 years) to DOB + 65 years + 2 days."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate  "Immunizations/Util/Date".adjustDate(dob, format, ("Year":65)), "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":65, "Day":2))  
+		
+		Log "VERIFICATION: The administrations column displays '1' without the did not count icon for Pneumococcal Conjugate"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "1", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for Pneumococcal Conjugate."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-PPSV23-PCV13 Abs Min Interval Patient3")
+		---------------------------------------------------------------------------------------------------------------				
+		Log "Util".stepNumber &"ACTION: Close Application."
+		run "Immunizations/setup".closeApplication 
+
+*)
+		
+		EndTestCase "VR/Pnuemococcal/HLM-VR-Immunizations-Pneumococcal_Absolute_Minimums_65+years_Series"
+		---------------------------------------------------------------------------------------------------------------
+	catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	end try
+	------------------------------------------------------Patient Cleanup----------------------------------------------
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+catch
+	LogError "Exception encountered" && the exception.reason
+	captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps	

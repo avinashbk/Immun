@@ -1,0 +1,126 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=116375
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+Set encounterOrg to setup.encounterOrg
+Set encounterType to setup.encounterType
+Set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set agedOut to textStrings.agedOut
+set viewForecast to textStrings.viewForecast
+set immunizationForecast to textStrings.immunizationForecast
+
+set testData to JSONValue(file resourcePath("VR/HepB_2DoseSeries_at_18Years/testData.json")).(value of domain)
+Set lastName to testData.Patient_Aged_Out.lastName
+Set firstName to testData.Patient_Aged_Out.firstName
+Set patientName to testData.Patient_Aged_Out.nameFullFormatted
+Set newLastName to testData.Patient_Aged_Out.newLastName
+Set sex to testData.Patient_Aged_Out.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Aged_Out.dob))
+set vaccineName to testData.vaccineName
+
+
+
+Try
+	---------------------------------------------------------------------------------------------------------------
+	# PATIENT SETUP
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	Run "Util".closeApplication 2
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		BeginTestCase "VR/HepB/HLM-VR-Immunizations-HepB_2DoseSeries_at_18Years_Aged_Out"
+		
+		Log "Util".stepNumber & "ACTION: Open Patient2's chart to Immunization workflow."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, relationship
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Review Hepatitis B row in Workflow view."
+		Log "VERIFICATION: Verify Hepatitis B displays under History section."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName
+		
+		Log "VERIFICATION: Ensure the status for Hepatitis B displays as Aged out."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, agedOut
+		CaptureScreen(Name:"Step" & Global stepNumber & "-Aged Out WorkFlow MPage P2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click Immunization Forecaster Link. Review Hepatitis B row."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster view displays with no errors."
+		Run "Immunizations/Util/Validation".verifyText immunizationForecast, "Immunizations/Common/Helpers".TabListSearchRectangle()
+		
+		Log "VERIFICATION: Ensure the status for Hepatitis B displays as Aged out."
+		Set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		Set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage("Immunizations/Forecaster-Common/HepBStrikeThrough")
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Forecaster-Common/HepBStrikeThrough", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText agedOut, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name:"Step" & Global stepNumber & "-Aged Out Forecaster Validation P2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on List view."
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews 
+		
+		Log "VERIFICATION: Verify no Aged-out vaccines display under List View."
+		run "Immunizations/Forecaster-List/Validations".verifyNoVaccineHistory 
+		CaptureScreen(Name:"Step" & Global stepNumber & "-No Vaccine History P2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient 2's chart."
+		Run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/HepB/HLM-VR-Immunizations-HepB_2DoseSeries_at_18Years_Aged_Out"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+	#################################################################################
+	# PATIENT CLEANUP
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	Run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	Run "Immunizations/PatientCreation".openConversationContinuous conversation
+	Run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	Run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	Run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

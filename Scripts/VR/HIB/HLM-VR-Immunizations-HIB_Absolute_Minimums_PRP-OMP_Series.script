@@ -1,0 +1,143 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=115425
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set administeredDidNotCount to textStrings.administeredDidNotCount
+
+set testData to JSONValue(file ResourcePath("VR/HIB_Absolute_Minimums/testData.json")).(value of domain)
+Set lastName to testData.patient4.lastName
+Set firstName to testData.patient4.firstName
+Set patientName to testData.patient4.nameFullFormatted
+set dob to formattedTime("%m/%d/%Y", value(testData.patient4.dob))
+set vaccineName to testData.vaccineName
+set source to testData.source
+set product2 to testData.product2
+
+set format to "%b %d, %Y"
+
+
+Try
+	#PATIENT RESET
+	run "Immunizations/PatientCreation".resetPatientToZeroState username, password, domain, lastName, firstName, dob
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/HLM-VR-HIB_Absolute_Minimums_PRP-OMP_Series"
+		
+		Log "Util".stepNumber &"ACTION: Open patient 4's chart, navigate to the immunization component and chart dose 1 of PRP-OMP at <DOB + 6 weeks - 5 days> ."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("week":6, "day": -5)), source, product2, "Submit"
+		
+		Log "VERIFICATION: The administrations column displays '1' with the did not count icon for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "1", "true"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered - Did Not Count' for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered - Did Not Count"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose1 Less Than Abs Min Age patient4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 1's admin date from <DOB + 6 weeks - 5 days> to  <DOB + 6 weeks - 4 days>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("week":6, "day": -5)), "1", "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("week":6, "day": -4))
+		
+		Log "VERIFICATION: The administrations column displays '1' without the did not count icon for HIB"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "1", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose1 Equal to Abs Min Age Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Chart Dose 2 at <DOB + 10 weeks - 5 days>."
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, "Date","Immunizations/Util/Date".adjustDate(dob, format, ("Week": 10, "day": -5)) , source, product2, "Submit"
+		
+		Log "VERIFICATION: The administrations column displays '2' with the did not count icon for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "true"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered - Did Not Count' for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administeredDidNotCount
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Less Than Abs Min Age patient4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 2 such that it is <DOB + 10 weeks - 4 days>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 10, "day": -5)) ,"1", "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 10, "day": -4)) 
+		
+		Log "VERIFICATION: The administrations column displays '2' without the did not count icon for HIB"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Equal to Abs Min Age patient4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Modify Dose 1 to <DOB + 6 weeks + 1 day>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("week":6, "day": -4)), "1", "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("week":6, "Day": 1))
+		
+		Log "VERIFICATION: The administrations column displays '2' with the did not count icon for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "true"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered - Did Not Count' for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administeredDidNotCount
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Less Than Abs Min Interval patient4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 2's admin date from <Dose1 Admin Date + 4 weeks - 5 days> to <Dose1 Admin Date + 4 weeks - 4 days>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		set dose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("week":6, "day": 1))
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate  "Immunizations/Util/Date".adjustDate(dose1AdminDate, format, ("week":4, "day": -5)), "1", "Date",  "Immunizations/Util/Date".adjustDate(dose1AdminDate, format, ("week":4, "day": -4)) 
+		
+		Log "VERIFICATION: The administrations column displays '2' without the did not count icon for HIB"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Equal to Abs Min Interval patient4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient 4's chart."
+		Run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/HLM-VR-HIB_Absolute_Minimums_PRP-OMP_Series"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

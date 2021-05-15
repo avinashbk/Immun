@@ -1,0 +1,60 @@
+﻿(* 
+
+HELPER SUITE INFO:
+________________
+
+
+# https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https://github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+*)
+
+params domain
+
+try
+	log "Test running in domain"&&domain
+	set domain to "Immunizations/Util/Setup".domainRun(domain)
+	
+	BeginTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/Patient_Setup"
+	Run "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/Patient_Setup" domain
+	EndTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/Patient_Setup"
+	
+	BeginTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P1"
+	Run "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P1" domain
+	EndTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P1"
+	
+	BeginTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P2"
+	Run "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P2" domain
+	EndTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P2"
+	
+	BeginTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P3"
+	Run "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P3" domain
+	EndTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P3"
+	
+	BeginTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P4"
+	Run "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P4" domain
+	EndTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P4"
+	
+	BeginTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P5"
+	Run "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P5" domain
+	EndTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P5"
+	
+	BeginTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P6"
+	Run "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P6" domain
+	EndTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P6"
+	
+	BeginTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P7"
+	Run "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P7" domain
+	EndTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/HLM-VR-TdapVaccineConditionalForecast_P7"
+	
+	BeginTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/Patient_Cleanup"
+	Run "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/Patient_Cleanup" domain
+	EndTestCase "VR/TDaP/HLM-VR-Immunizations-Tdap_Vaccine_Conditional_Forecast/Patient_Cleanup"
+	
+catch
+	LogError "Exception encountered: " && the exception.reason
+	CaptureScreen "Exception" & formattedTime("_%m%d%Y%H%M%S", the time)
+end try
+
+run "cleanup".ZeroStateCloseAllApps

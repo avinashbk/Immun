@@ -1,0 +1,80 @@
+﻿-------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+------------------------------------------------------------------------------------------------------------------------------
+
+#RQM TEST CASE LINK: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=116646
+
+params domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+Log "Common data:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set noResultsImage to common.noResultsImage
+set reject0RemainingImage to common.reject0RemainingImage
+set outsideRecordsBannerImage to common.outsideRecordsBannerImage
+
+set testData to JSONValue(file ResourcePath("VR/Reconcile_Workflow/testData.json")).(text of domain)
+set patientName to testData.Patient_No_Data.nameFullFormatted
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_No_Data.dob)) 
+set vaccineName1 to testData.vaccineName1
+set source1 to testData.source1
+set product1 to testData.product1
+
+set testData to JSONValue(file ResourcePath("VR/Reconcile_Workflow/testData.json"))
+set dateFormat to testData.dateFormat
+
+
+
+try
+	log "Util".stepNumber & "ACTION: Navigate to Patient's chart."
+	run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+	
+	log "VERIFICATION: Ensure the Reconcile banner does not display"
+	run "Immunizations/Util/Validation".verifyImageNotVisible outsideRecordsBannerImage
+	capturescreen (Name:"Step"&Global stepNumber&"- Outside Records No Data")
+	----------------------------------------------------------------------------------------------------------------	
+	
+	log "Util".stepNumber & "ACTION: Click on the 'View outside records' link below the Immunizations table."
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+	
+	log "VERIFICATION: Ensure 'No Results' displays in the reconcilation dialog where the table previously existed."
+	run "Immunizations/Util/Validation".verifyImage noResultsImage
+	
+	log "VERIFICATION: Ensure the reject remaining button is disabled with a count of '0' suffixed in the button."
+	run "Immunizations/Util/Validation".verifyImage reject0RemainingImage
+	capturescreen (Name:"Step"&Global stepNumber&"- No Results Displayed")
+	----------------------------------------------------------------------------------------------------------------	
+	
+	log "Util".stepNumber & "ACTION: Click on the 'X' in the top right corner of the Reconcilation Dialog and chart an adminsitration for "& vaccineName1 &" then click on the 'View outside records' link below the Immunizations table."
+	click item 1 of EveryImageLocation("Immunizations/WorkflowMPage/Reconciliation/Headers/X_Button")
+	run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, dob, source1, product1, "submit"
+	click "Immunizations/WorkflowMPage/Table/View_Outside_Records_Hyperlink"
+	
+	log "VERIFICATION: Ensure 'No Results match your filter critera. Try changing your filter criteria to see results.' displays in the reconcilation dialog where the outside records table previously existed."
+	run "Immunizations/Util/Validation".verifyImage noResultsImage 
+	
+	log "VERIFICATION: Ensure the reject remaining button is disabled with a count of '0' suffixed in the button."
+	run "Immunizations/Util/Validation".verifyImage reject0RemainingImage
+	capturescreen (Name:"Step"&Global stepNumber&"- No Results with Local Admin")
+	----------------------------------------------------------------------------------------------------------------
+catch exception
+	logError "Exception encountered" && exception.reason
+	log "Exception Location:" && exception.location	
+	captureScreen"Exception"	
+end try
+---------------------------------------------------------------------------------------------------------------	
+Log "Util".stepNumber &"ACTION: Close Application."
+run "Immunizations/setup".closeApplication 
+---------------------------------------------------------------------------------------------------------------
+run "Cleanup".ZeroStateCloseAllApps		

@@ -1,0 +1,78 @@
+﻿
+try
+	log "Util".stepNumber & "ACTION: Open Powerchart and navigate to Patient 1's chart."
+	
+	log "VERIFICATION: Ensure the reconciliation banner displays on the top of the table with the message 'Outside records available. Reconciliation has not been completed on this encounter.' along with a 'View' button."
+	capturescreen (Name:"Step"&Global stepNumber&"- Base Component P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber & "ACTION: Click on the 'View Outside Records' link."
+	
+	log "VERIFICATION: Ensure "& vaccineName1AdminDate1 &" displays in the outside table within the subsection of "& vaccineName1 &"."
+	log "VERIFICATION: Ensure "& vaccineName1AdminDate2 &" displays in the outside table within the subsection of "& vaccineName1 &"."
+	log "VERIFICATION: Ensure "& vaccineName2NotGivenDate1 &" displays in the outside table within the subsection of "& vaccineName2 &"."
+	capturescreen (Name:"Step"&Global stepNumber&"- Outside Records P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber & "ACTION: Click on 'Add' for "& vaccineName1AdminDate1 &"."
+	
+	log "VERIFICATION: Ensure the Action column displays as 'Added' along with a green check mark."
+	log "VERIFICATION: Ensure the administration now displays in the local record table."
+	log "VERIFICATION: Ensure the comment icon displays under the details column in the local records table."
+	capturescreen (Name:"Step"&Global stepNumber&"- "& vaccineName1AdminDate1 &" Added P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber & "ACTION: Click on 'Add' for "& vaccineName2NotGivenDate1 &"."
+	
+	log "VERIFICATION: Ensure the Action column displays as 'Added' along with a green check mark."
+	log "VERIFICATION: Ensure the administration now displays in the local record table."
+	log "VERIFICATION: Ensure the comment icon displays under the details column in the local records table."
+	capturescreen (Name:"Step"&Global stepNumber&"-  "& vaccineName2 &" Added P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber & "ACTION: Click on the 'X' button to close the reconciliation dialog."
+	
+	log "VERIFICATION: Ensure "& vaccineName1 &" displays with administrations as '1', last action as 'Administered' and last action date as "& dose1AdminDate &"."
+	log "VERIFICATION: Ensure "& vaccineName2 &" displays with administrations as 1 and last action as 'Not Given'."
+	capturescreen (Name:"Step"&Global stepNumber&"-  Base Component P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber & "ACTION: Click on 'View Forecast' button."
+	
+	log "VERIFICATION: Ensure  "& vaccineName1AdminDate1 &" displays in the CDC schedule column with a last action of 'Administered'." 
+	log "VERIFICATION: Ensure  "& vaccineName2NotGivenDate1 &" displays in the CDC schedule column with a last action of 'Series Refused'." 
+	log "VERIFICATION: Ensure dose 1 displays charted in the forecaster with 'Dose 1' and " & vaccineName1AdminDate1 & " in the cell."
+	log "VERIFICATION: Ensure " & vaccineName2 & " displays with 'Series Refused' in the forecaster cell with the date and age for  "& vaccineName2NotGivenDate1 &"."
+	capturescreen (Name:"Step"&Global stepNumber&"- Forecaster Base Component P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber & "ACTION: Click on 'List View' button."
+	
+	log "VERIFICATION: Ensure "& vaccineName1 &" displays in the vaccine column with a last action of 'Administered'." 
+	log "VERIFICATION: Ensure "& vaccineName2 &" displays in the vaccine column with a last action of 'Series Refused'." 
+	log "VERIFICATION: Ensure "& vaccineName1 &" displays charted in action column 1 with 'Dose 1' with date and age for "& vaccineName1AdminDate1 &"."
+	log "VERIFICATION: Ensure "& vaccineName2 &" displays with 'Series Refused' in in action column 1 along with the date and age for "& vaccineName2NotGivenDate1 &"."
+	capturescreen (Name:"Step"&Global stepNumber&"- List View Base Component P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber & "ACTION: Click on workflow mPage then 'View Outside Records'."
+	
+	log "VERIFICATION: Ensure  "& vaccineName1AdminDate1 &" displays in the local record table under the subsection for "& vaccineName1 &"." 
+	log "VERIFICATION: Ensure  "& vaccineName2NotGivenDate1 &" displays in the local record under the subsection for "& vaccineName2 &"." 	
+	log "VERIFICATION: Ensure "& vaccineName1AdminDate2 &" displays in the outside record table under the subsection for "& vaccineName1 &"."
+	capturescreen (Name:"Step"&Global stepNumber&"- Reconcile View Reopened P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber & "ACTION: Click on the 'Records Displaying' filter above the outside records table and select 'All' from the dropdown."
+	
+	log "VERIFICATION: Ensure  "& vaccineName1AdminDate1 &" displays in the outside record table under the subsection for "& vaccineName1 &" with a status of 'Added'." 
+	log "VERIFICATION: Ensure  "& vaccineName2NotGivenDate1 &" displays in the outside record under the subsection for "& vaccineName2 &" 'Added'." 	
+	capturescreen (Name:"Step"&Global stepNumber&"- RecordsDisplaying Set to All P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber & "ACTION: Close Patient 1's chart."
+	----------------------------------------------------------------------------------------------------------------
+catch exception
+	logError "Exception encountered" && exception.reason
+	captureScreen"Exception"
+end try

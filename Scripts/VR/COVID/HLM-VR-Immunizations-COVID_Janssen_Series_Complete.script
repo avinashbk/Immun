@@ -1,0 +1,453 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https://github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+# https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=134338
+
+*)
+params domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set testData to JSONValue(file (ResourcePath("VR/COVID/testData.json")))
+set dateFormat to testData.dateFormat
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set relationship to setup.relationship
+set conversation to setup.Conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set doubleDashImage to common.doubleDashImage
+set noVaccineHistoryImage to common.noVaccineHistoryImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set minimum to fieldLabels.minimum
+set earliestRecommended to fieldLabels.earliestRecommended
+set latestRecommended to fieldLabels.latestRecommended
+set maximum to fieldLabels.maximum
+set performedDateField to fieldLabels.performedDateField
+set userField to fieldLabels.userField
+set sourceField to fieldLabels.sourceField
+set mpageSourceField to fieldLabels.mpageSourceField
+set documentedByField to fieldLabels.documentedByField
+set productField to fieldLabels.productField
+set documentedDateField to fieldLabels.documentedDateField
+set productNameField to fieldLabels.productNameField
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set overdue to textStrings.overdue
+set viewForecast to textStrings.viewForecast
+set notStarted to textStrings.notStarted
+set forecastSuspended to textStrings.forecastSuspended
+set notYetRecommended to textStrings.notYetRecommended
+set administeredOn to textStrings.administeredOn
+set complete to textStrings.complete
+set inRangeToday to textStrings.inRangeToday
+set onCatchUpSchedule to textStrings.onCatchUpSchedule
+
+set testData to "UTIL_Json".initializeResourceData(JSONValue(file ResourcePath("VR/COVID/testData.json")), domain)
+set lastName to testData.Patient4.lastName
+set firstName to testData.Patient4.firstName
+set patientName to testData.Patient4.nameFullFormatted
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient4.dob))
+set user to testData.User
+set sex to testData.Patient4.sex
+set vaccineName1 to testData.vaccineName
+set Product1 to testData.Product1
+set Product2 to testData.Product4
+set Source to testData.Source
+
+set format to "%b %d, %Y"
+
+set dose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format)
+
+try
+	# PATIENT SETUP
+	log "PATIENT CREATION: Open PmLaunch and create a patient (18 years old) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	Run "Util".closeApplication 2
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/COVID/HLM-VR-Immunizations-COVID_Janssen_Series_Complete"
+		
+		Log "Util".stepNumber & "ACTION: open Patient's chart for Immunization workflow MPage and navigate to Immunization section"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		log "VERIFICATION: Ensure COVID-19 displays in the vaccine Column."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName1
+		
+		log "VERIFICATION: Ensure Status displays as 'Overdue'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName1, overdue
+		
+		log "VERIFICATION:Ensure the Next recommended administration is 'Today'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, "Today"
+		
+		log "VERIFICATION: Ensure Administrations displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, doubleDashImage
+		
+		log "VERIFICATION: Ensure Last action displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, doubleDashImage
+		
+		log "VERIFICATION: Ensure Last action Date displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName1, doubleDashImage
+		capturescreen (Name:"Step" & Global stepNumber & "-MPage Review")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on COVID-19 to open the side panel."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		
+		log "VERIFICATION: Ensure in the header of the side panel, COVID-19 displays with a status of 'Overdue - Today'."
+		set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1, sidePanelHeaderRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyValidNextRecommendedDate overdue && "-" && "Today", sidePanelHeaderRectangle
+		
+		log "VERIFICATION: Ensure 'No vaccine history to display' is shown in the body of the Side Panel."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle()
+		run "Immunizations/Util/Validation".verifyimage noVaccineHistoryImage, sidePanelRectangle
+		capturescreen (Name:"Step" & Global stepNumber & "-MPage Side Panel")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on the View Forecast button."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		log "VERIFICATION: In the CDC Schedule column, ensure COVID-19 displays with a status of 'Not Started'."
+		run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		set vaccineName1rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1 & return & notStarted, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, firstColumnSearchRectangle)
+		
+		log "VERIFICATION: Ensure Dose 1 displays in the today column."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Dose 1", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangleToday)
+		
+		log "VERIFICATION: that 'forecast suspended' displays in the today + 1 column and spans across all future columns."
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format) + 1 day
+		set endDateHeader to "Immunizations/Util/Date".todaysDate(format) + 1 day
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,-20, -30, 1200,100)
+		run "Immunizations/Util/Validation".verifyText forecastSuspended,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		capturescreen (Name:"Step" & Global stepNumber & "-Forecaster review")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on COVID-19."
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName1
+		
+		log "VERIFICATION: Ensure the doses are sorted in ascending order. "
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewSorting 
+		
+		log "VERIFICATION: In the left hand pane header, Ensure COVID-19 displays in blue with a status of 'Not Started'. "
+		set leftPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName1 & return & notStarted, leftPaneHeaderSearchRectangle
+		
+		log "VERIFICATION: In the right hand pane header, ensure 'Dose 1 Overdue - COVID-19', 'On Catch Up Schedule' and 'In Range Today' displays. "
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Dose 1" & overdue && "-" && vaccineName1 & return & inRangeToday, rightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText onCatchUpSchedule, rightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText inRangeToday, rightPaneHeaderSearchRectangle
+		
+		log "VERIFICATION: In the left hand pane, ensure dose 1 displays with a status of 'overdue' and the recommended until date <DOB + 16 years> is shown below it."
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers". expandedViewLeftPaneDoseSearchRectangle(1)
+		run "Immunizations/Util/Validation".verifyText overdue & return & "Immunizations/Util/Date".adjustDate(dob, format, ("year":16)), leftPaneSearchRectangle
+		capturescreen (Name: "Step" & Global stepNumber & "-Forecaster Expanded View")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on Dose 1."
+		Click text: 1, SearchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		
+		log "VERIFICATION: In the right hand pane, ensure dose 1 displays in the header."
+		set expandedViewRightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText "Dose 1", expandedViewRightPaneHeaderSearchRectangle
+		
+		log "VERIFICATION: Earliest: 16 years from DOB."
+		set dose1MinimumDate to "Immunizations/Util/Date".adjustDate(dob, format, ("year":16))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum, dose1MinimumDate
+		set dose1MinimumAge to "Immunizations/Util/Date".ageCalculator(dob, dose1MinimumDate, false, false)
+		Set rightPaneBodySearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneBodySearchRectangle()
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1MinimumAge, "Immunizations/Util/Date".setPattern(dose1MinimumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(minimum, rightPaneBodySearchRectangle)
+		
+		log "VERIFICATION: Recommended From: 16 years from DOB."
+		set dose1EarliestRecommendedDate to "Immunizations/Util/Date".adjustDate(dob, format, ("year": 16))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended, dose1EarliestRecommendedDate
+		set dose1EarliestRecommendedAge to "Immunizations/Util/Date".ageCalculator(dob, dose1EarliestRecommendedDate, false, false)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1EarliestRecommendedAge, "Immunizations/Util/Date".setPattern(dose1EarliestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(earliestRecommended, rightPaneBodySearchRectangle)
+		
+		log "VERIFICATION: Recommended Until: 16 years from DOB."
+		set dose1LatestRecommendedDate to "Immunizations/Util/Date".adjustDate(dob, format, ("year": 16))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended, dose1LatestRecommendedDate
+		set dose1LatestRecommendedAge to "Immunizations/Util/Date".ageCalculator(dob, dose1LatestRecommendedDate, false, false)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1LatestRecommendedAge, "Immunizations/Util/Date".setPattern(dose1LatestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(latestRecommended, rightPaneBodySearchRectangle)
+		
+		log "VERIFICATION: Latest: '--'."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField maximum, "--"
+		
+		log "VERIFICATION: Ensure dose 2 displays with a status of 'Not Yet Recommended'."
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers". expandedViewLeftPaneDoseSearchRectangle(2)
+		run "Immunizations/Util/Validation".verifyText notYetRecommended, leftPaneSearchRectangle
+		capturescreen (Name:"Step" & Global stepNumber & "-Forecaster Expanded View Dose 1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on Dose 2."
+		Click text: 2, SearchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		
+		log "VERIFICATION: In the right hand pane, ensure dose 2 displays in the header."
+		set expandedViewRightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText "Dose 2", expandedViewRightPaneHeaderSearchRectangle
+		
+		log "VERIFICATION: Earliest: 21 days from dose 1."
+		set dose2MinimumDate to "Immunizations/Util/Date".adjustDate(dob, format, ("year":16, "day": 21))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum, dose2MinimumDate
+		set dose2MinimumAge to "Immunizations/Util/Date".ageCalculator(dob, dose2MinimumDate, false, false)
+		Set rightPaneBodySearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneBodySearchRectangle()
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose2MinimumAge, "Immunizations/Util/Date".setPattern(dose2MinimumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(minimum, rightPaneBodySearchRectangle)
+		
+		log "VERIFICATION: Recommended From: 21 days from dose 1."
+		set dose2EarliestRecommendedDate to "Immunizations/Util/Date".adjustDate(dob, format, ("year":16, "day": 21))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended, dose2EarliestRecommendedDate
+		set dose2EarliestRecommendedAge to "Immunizations/Util/Date".ageCalculator(dob, dose2EarliestRecommendedDate, false, false)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose2EarliestRecommendedAge, "Immunizations/Util/Date".setPattern(dose2EarliestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(earliestRecommended, rightPaneBodySearchRectangle)
+		
+		log "VERIFICATION: Recommended Until: 41 days from dose 1."
+		set dose2LatestRecommendedDate to "Immunizations/Util/Date".adjustDate(dob, format, ("year":16, "day": 41))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended, dose2LatestRecommendedDate
+		set dose2LatestRecommendedAge to "Immunizations/Util/Date".ageCalculator(dob, dose2LatestRecommendedDate, false, false)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose2LatestRecommendedAge, "Immunizations/Util/Date".setPattern(dose2LatestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(latestRecommended, rightPaneBodySearchRectangle)
+		
+		log "VERIFICATION: Latest: '--'."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField maximum, "--"
+		capturescreen (Name:"Step" & Global stepNumber & "-Forecaster Expanded View Dose 2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION:Click out of the expanded view and Chart a dose at <DOB> using product CVX 212 (Janssen COVID Vaccine)."
+		Click text:"Print", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, dose1AdminDate, source, Product2, "Submit"
+		
+		log "VERIFICATION: Ensure COVID-19 displays with a status of Complete in the CDC Schedule column."
+		set vaccineName1rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1 & return & complete, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, firstColumnSearchRectangle)
+		
+		log "VERIFICATION: Ensure dose 1 displays charted in the with the product name, 'Dose 1' and date of administration in the cell."
+		set startDateHeader to dose1AdminDate
+		set endDateHeader to dose1AdminDate
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-180", "-30", "50","100")
+		run "Immunizations/Util/Validation".verifyText Product2 &return& "Dose 1" && "-" && dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1rowSearchRectangle,columnSearchRectangle)
+		
+		log "VERIFICATION: Ensure no more doses are forecasted."
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set endDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-110", "-30", "50", "1000")
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Dose", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		capturescreen (Name:"Step" & Global stepNumber & "-Forecaster Dose1 charted")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on dose 1."
+		set startDateHeader to dose1AdminDate
+		set endDateHeader to dose1AdminDate
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader,"-130", "-30", "50","100")
+		click text:"Dose", SearchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		
+		log "VERIFICATION: Ensure Product name along with date of administration displays in the left hand pane"
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers". expandedViewLeftPaneDoseSearchRectangle(1)
+		run "Immunizations/Util/Validation".verifyText Product2 & return & dose1AdminDate, leftPaneSearchRectangle
+		set dose1AdminAge to "Immunizations/Util/Date".ageCalculator(dob, dose1AdminDate, false, false)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1AdminAge, "Immunizations/Util/Date".setPattern(dose1AdminAge), leftPaneSearchRectangle
+		
+		log "VERIFICATION: In the header of the right hand pane ensure 'Administered on <DOB> - Janssen COVID Vaccine displays."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText administeredOn && dose1AdminDate && "-" && Product2, rightPaneHeaderSearchRectangle
+		
+		log "VERIFICATION: In the body of the right hand pane, Dose 1 Admin date is shown in the performed date field."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, dose1AdminDate
+		
+		log "VERIFICATION: In the body of the right hand pane, the user is displayed in the user field."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField userField, user
+		
+		log "VERIFICATION: In the body of the right hand pane, source is displayed in the source field."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField sourceField, Source
+		
+		log "VERIFICATION: In the body of the right hand pane, the documented date is shown in the documented date field"
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField documentedDateField, "Immunizations/Util/Date".todaysDate(format)
+		
+		log "VERIFICATION: In the body of the right hand pane, the product displays in the product field."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField ProductNameField, Product2
+		
+		log "VERIFICATION: Ensure only 2 doses is now shown in the expanded view."
+		run "Immunizations/Util/Validation".verifyTextNotVisible 3, "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		capturescreen (Name:"Step" & Global stepNumber & "-Expanded View dose1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Navigate back to the workflow mPage, unchart dose 1, then chart a dose @ DOB using the Pfizer vaccine (CVX 208) && a second dose on the same day using the Janssen product (CVX 212) Then go back to the forecaster"
+		Click text:"Print", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run  "Immunizations/Common/Actions".clickMPagesView viewpoint
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".unchart dose1AdminDate,1,unchartReason
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, dose1AdminDate, source, product1, "submit"
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, dose1AdminDate, source, product2, "submit"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast "View Forecast"
+		
+		log "VERIFICATION: Ensure COVID-19 displays with a status of Complete in the CDC Schedule column."
+		set vaccineName1rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1 & return & complete, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, firstColumnSearchRectangle)
+		
+		log "VERIFICATION: Ensure dose 1 displays charted with the product name, '3 items documented'."
+		set startDateHeader to dose1AdminDate
+		set endDateHeader to dose1AdminDate
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-180", "-30", "50","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "3 Items Documented", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		
+		log "VERIFICATION: Ensure no more doses are forecasted."
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set endDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-110", "-30", "1000", "100")
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Dose", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		capturescreen (Name:"Step" & Global stepNumber & "-Series Complete Forecaster")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on dose 2."
+		set startDateHeader to dose1AdminDate
+		set endDateHeader to dose1AdminDate
+		set vaccineName1rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-160", "-30", "50","100")
+		click text:"Items", SearchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		
+		log "VERIFICATION: Ensure Product name along with date of administration displays in the left hand pane"
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneDidNotCountSearchRectangle(1)
+		Run "Immunizations/Util/Validation".verifyText product1, leftPaneSearchRectangle
+		run "Immunizations/Util/Validation".verifyText dose1AdminDate, leftPaneSearchRectangle
+		set dose1AdminAge to "Immunizations/Util/Date".ageCalculator(dob, dose1AdminDate, false, false)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1AdminAge, "Immunizations/Util/Date".setPattern(dose1AdminAge), leftPaneSearchRectangle
+		
+		log "VERIFICATION: In the header of the right hand pane ensure 'Administered on <DOB> - Pfizer1 COVID Vaccine displays."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText dose1AdminDate, rightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText  product1, rightPaneHeaderSearchRectangle
+		
+		log "VERIFICATION: In the body of the right hand pane, Dose 2 Admin date is shown in the performed date field."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, dose1AdminDate
+		
+		log "VERIFICATION: In the body of the right hand pane, the user is displayed in the user field."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField userField, user
+		
+		log "VERIFICATION: In the body of the right hand pane, source is displayed in the source field."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField sourceField, Source
+		
+		log "VERIFICATION: In the body of the right hand pane, the documented date is shown in the documented date field"
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField documentedDateField, "Immunizations/Util/Date".todaysDate(format)
+		
+		log "VERIFICATION: In the body of the right hand pane, the product displays in the product field."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField ProductNameField, product1
+		capturescreen (Name:"Step" & Global stepNumber & "-Expanded View dose2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on List View."
+		Click text:"Print", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+		
+		log "VERIFICATION: Ensure COVID-19 is shown in the vaccine column, with COVID-19 showing a status of complete."
+		set vaccineName1rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".largeFirstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1 & return & complete, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		
+		log "VERIFICATION: In the action column, ensure the administered dose displays for both COVID-19, <DOB>."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle(1)
+		run "Immunizations/Util/Validation".verifyText product2 & return & dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1AdminAge, "Immunizations/Util/Date".setPattern(dose1AdminAge), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		
+		log "VERIFICATION: In the action column 2, ensure the administered dose displays for both COVID-19, <Dose 1 Admin Date + 0 days>."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle(2)
+		run "Immunizations/Util/Validation".verifyText product1 & return & dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1AdminAge, "Immunizations/Util/Date".setPattern(dose1AdminAge), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		capturescreen (Name:"Step" & Global stepNumber & "-List View")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on the Workflow MPage."
+		run "Immunizations/Common/Actions".clickMPagesView viewPoint
+		
+		log "VERIFICATION: Ensure COVID-19 displays in the historical section with a status of 'Complete'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName1
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName1, complete
+		
+		log "VERIFICATION: Ensure COVID-19 displays administrations of 2."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, 2
+		
+		log "VERIFICATION: Ensure COVID-19 displays a next recommended of '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, doubleDashImage
+		
+		log "VERIFICATION: Ensure COVID-19 displays with a last action of 'Administered'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, "Administered"
+		capturescreen (Name:"Step" & Global stepNumber & "-Workflow MPage")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on COVID-19."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		
+		log "VERIFICATION: Ensure COVID-19 displays with a status of 'Complete'."
+		set SidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText "Complete", SidePanelHeaderRectangle
+		
+		log "VERIFICATION: Ensure the dose at <DOB> displays with all of the administration details."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex 1, documentedByField, sidePanelRectangle, dose1AdminDate
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex 1, documentedByField, sidePanelRectangle, "- Administered"
+		set dose1AdminAge to "Immunizations/Util/Date".ageCalculator(dob, dose1AdminDate, false, false)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1AdminAge, "Immunizations/Util/Date".setPattern(dose1AdminAge), (item 1 of everyImageLocation(Text:documentedByField, SearchRectangle:(sidePanelRectangle))+(-20,-60),item 1 of everyImageLocation(Text:documentedByField, SearchRectangle:(sidePanelRectangle))+(350,0))
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, mpageSourceField, sidePanelRectangle, source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, productField, sidePanelRectangle, product2
+		
+		log "VERIFICATION: Ensure the dose at <DOB> displays with all of the administration details."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex 2, documentedByField, sidePanelRectangle, dose1AdminDate
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex 2, documentedByField, sidePanelRectangle, "- Administered"
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1AdminAge, "Immunizations/Util/Date".setPattern(dose1AdminAge), (item 2 of everyImageLocation(Text:documentedByField, SearchRectangle:(sidePanelRectangle))+(-20,-60),item 2 of everyImageLocation(Text:documentedByField, SearchRectangle:(sidePanelRectangle))+(350,0))
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 2, documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 2, mpageSourceField, sidePanelRectangle, source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 2, productField, sidePanelRectangle, product1
+		capturescreen (Name:"Step" & Global stepNumber & "-Side panel series complete")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Close patient's chart."
+		run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		EndTestCase "VR/COVID/HLM-VR-Immunizations-COVID_Janssen_Series_Complete"
+		
+	Catch
+		logError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	#PATIENT CLEANUP
+	Log "ACTION: Cleanup Patient."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName,firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+Catch
+	logError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

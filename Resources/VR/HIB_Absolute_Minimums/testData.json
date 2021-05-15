@@ -1,0 +1,96 @@
+{
+	"SOLM64": {
+		"Patient1": {
+			"lastName": "HIBMIN1",
+			"firstName": "1Dose",
+			"nameFullFormatted": "HIBMIN1,1Dose",
+			"newLastName": "oldHIBMIN1",
+			"dob": "Today - 15 months",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "HIBMIN2",
+			"firstName": "2Dose",
+			"nameFullFormatted": "HIBMIN2,2Dose",
+			"newLastName": "oldHIBMIN2",
+			"dob": "Today - 15 months + 1 day",
+			"sex": "Male"
+		},
+		"Patient3": {
+			"lastName": "HIBMIN3",
+			"firstName": "3Dose",
+			"nameFullFormatted": "HIBMIN3,3Dose",
+			"newLastName": "oldHIBMIN3",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"Patient4": {
+			"lastName": "HIBMIN4",
+			"firstName": "PRP",
+			"nameFullFormatted": "HIBMIN4,PRP",
+			"newLastName": "oldHIBMIN4",
+			"dob": "Today - 15 months",
+			"sex": "Male"
+		},
+		"Patient5": {
+			"lastName": "HIBMIN5",
+			"firstName": "4Dose",
+			"nameFullFormatted": "HIBMIN5,4Dose",
+			"newLastName": "oldHIBMIN5",
+			"dob": "Today - 12 months + 1 day",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName": "Haemophilus Influenzae Type B",
+		"Product1": "haemophilus b conjugate (PRP-T) vaccine",
+		"Product2": "haemophilus b conjugate (PRP-OMP) vaccine",
+		"Source": "Device"
+	},
+	"S18VX": {
+		"Patient1": {
+			"lastName": "HIBMIN1",
+			"firstName": "1Dose",
+			"nameFullFormatted": "HIBMIN1,1Dose",
+			"newLastName": "oldHIBMIN1",
+			"dob": "Today - 15 months",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "HIBMIN2",
+			"firstName": "2Dose",
+			"nameFullFormatted": "HIBMIN2,2Dose",
+			"newLastName": "oldHIBMIN2",
+			"dob": "Today - 15 months + 1 day",
+			"sex": "Male"
+		},
+		"Patient3": {
+			"lastName": "HIBMIN3",
+			"firstName": "3Dose",
+			"nameFullFormatted": "HIBMIN3,3Dose",
+			"newLastName": "oldHIBMIN3",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"Patient4": {
+			"lastName": "HIBMIN4",
+			"firstName": "PRP",
+			"nameFullFormatted": "HIBMIN4,PRP",
+			"newLastName": "oldHIBMIN4",
+			"dob": "Today - 15 months",
+			"sex": "Male"
+		},
+		"Patient5": {
+			"lastName": "HIBMIN5",
+			"firstName": "4Dose",
+			"nameFullFormatted": "HIBMIN5,4Dose",
+			"newLastName": "oldHIBMIN5",
+			"dob": "Today - 12 months + 1 day",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName": "Haemophilus Influenzae Type B",
+		"Product1": "haemophilus b conjugate (PRP-T) vaccine",
+		"Product2": "haemophilus b conjugate (PRP-OMP) vaccine",
+		"Source": "Device"
+	}
+}

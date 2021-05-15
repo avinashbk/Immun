@@ -1,0 +1,256 @@
+{
+	"SOLM64":{
+		"Patient_Permanent":{
+			"lastName":"ReconcileNotGiven1",
+			"firstName":"Pat1",
+			"nameFullFormatted":"ReconcileNotGiven1,Pat1",
+			"newLastName":"oldReconcileNotGiven1",
+			"dob":"Today - 5 years",
+			"sex":"Male",
+			"vaccineName1":"Rotavirus",
+			"vaccineName1NotGivenDate1":"2018-07-04",
+			"vaccineName1NotGivenDate2":"2018-11-01",
+			"vaccineName1AdminDate1LastModified":"Today"
+		},
+		"Patient_NonForecasted":{
+			"lastName":"ReconcileNotGiven2",
+			"firstName":"Pat2",
+			"nameFullFormatted":"ReconcileNotGiven2,Pat2",
+			"newLastName":"oldReconcileNotGiven2",
+			"dob":"Today - 5 years",
+			"sex":"Male",
+			"vaccineName1":"Japanese Encephalitis",
+			"vaccineName1NotGivenDate1":"2018-07-04",
+			"vaccineName1NotGivenDate2":"2018-11-01",
+			"vaccineName1AdminDate1LastModified":"Today"
+		},
+		"User":"Maintenance, Health",
+		"product1":"",
+		"route1":"IM",
+		"lotNumber1":"123ab",
+		"source1":"self",
+		"source2":"",
+		"filePathToCollectionAndEnvironment":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\interop\\data generation",
+		"collectionName":"Immunization Data Generator",
+		"environmentName":"Immun Mock Deveng",
+		"filePathToCsv":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\Interop\\Mock_Data_CSVs\\HLM-VR-Immunizations-Reconcile_Not_Given",
+		"csvFileName":"HLM-VR-Immunizations-Reconcile_Not_Given_DEVENG.csv",
+		"pedJsonUrl1":"http://scm.health-maintenance.cerner.corp/svn/sandbox/jake.zimmerman/Interop_Mock_PED_Data/HLM-VR-Immunizations-Reconcile_Not_Given/DEVENG/Reconcile_Not_Given_P2.json"
+
+	},
+	"DEVENG":{
+		"Patient_Permanent":{
+			"lastName":"ReconcileNotGiven1",
+			"firstName":"Pat1",
+			"nameFullFormatted":"ReconcileNotGiven1,Pat1",
+			"newLastName":"oldReconcileNotGiven1",
+			"dob":"Today - 5 years",
+			"sex":"Male",
+			"vaccineName1":"Rotavirus",
+			"vaccineName1NotGivenDate1":"2017-03-09",
+			"vaccineName1NotGivenDate2":"2019-08-02",
+			"vaccineName1NotGivenDate3":"2019-01-01",
+			"filePathToCsv":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\Interop\\Mock_Data_CSVs\\HLM-VR-Immunizations-Reconcile_Not_Given\\HLM-VR-Immunizations-Reconcile_Not_Given_Permanent"
+
+		},
+		"Patient_NonForecasted":{
+			"lastName":"ReconcileNotGiven2",
+			"firstName":"Pat2",
+			"nameFullFormatted":"ReconcileNotGiven2,Pat2",
+			"newLastName":"oldReconcileNotGiven2",
+			"dob":"Today - 5 years",
+			"sex":"Male",
+			"vaccineName1":"Japanese Encephalitis",
+			"vaccineName1NotGivenDate1":"2017-01-14",
+			"vaccineName1NotGivenDate2":"2018-11-01",
+			"filePathToCsv":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\Interop\\Mock_Data_CSVs\\HLM-VR-Immunizations-Reconcile_Not_Given\\HLM-VR-Immunizations-Reconcile_Not_Given_Non-Forecasted"
+
+		},
+		"User":"Maintenance, Health",
+		"product1":"",
+		"notGivenType":"Refused",
+		"notGivenAction":"Cancel series and stop forecasting",
+		"notGivenReason":"Patient Refuses",
+		"expirationDate1":"2019-07-31",
+		"site1":"Left Foot",
+		"route1":"IM",
+		"lotNumber1":"123ab",
+		"source1":"self",
+		"source2":"Device",
+		"manufacturer1":"Novation",
+		"Comment1":{
+			"text": "Second Comment",
+			"date1":"2017-11-03"
+		},
+		"Comment2":{
+			"text": "Fuzzy Data Comment",
+			"date2":"2015"
+		},
+		"filePathToCollectionAndEnvironment":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\interop\\data generation",
+		"collectionName":"Immunization Data Generator",
+		"environmentName":"Immun Mock Deveng",
+		"csvFileName":"HLM-VR-Immunizations-Reconcile_Not_Given_DEVENG.csv",
+		"jsonUrl1":"http://scm.health-maintenance.cerner.corp/svn/sandbox/jake.zimmerman/Interop_Mock_PED_Data/HLM-VR-Immunizations-Reconcile_Not_Given/DEVENG/Reconcile_Not_Given_P2.json"
+	},
+	"64DEV":{
+		"Patient_Permanent":{
+			"lastName":"ReconcileNotGiven1",
+			"firstName":"Pat1",
+			"nameFullFormatted":"ReconcileNotGiven1,Pat1",
+			"newLastName":"oldReconcileNotGiven1",
+			"dob":"Today - 5 years",
+			"sex":"Male",
+			"vaccineName1":"Rotavirus",
+			"vaccineName1NotGivenDate1":"2017-03-09",
+			"vaccineName1NotGivenDate2":"2019-08-02",
+			"vaccineName1NotGivenDate3":"2019-01-01",
+			"filePathToCsv":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\Interop\\Mock_Data_CSVs\\HLM-VR-Immunizations-Reconcile_Not_Given\\HLM-VR-Immunizations-Reconcile_Not_Given_Permanent"
+		},
+		"Patient_NonForecasted":{
+			"lastName":"ReconcileNotGiven2",
+			"firstName":"Pat2",
+			"nameFullFormatted":"ReconcileNotGiven2,Pat2",
+			"newLastName":"oldReconcileNotGiven2",
+			"dob":"Today - 5 years",
+			"sex":"Male",
+			"vaccineName1":"Japanese Encephalitis",
+			"vaccineName1NotGivenDate1":"2019-01-14",
+			"vaccineName1NotGivenDate2Partial":"Jun. 2017",
+			"vaccineName1NotGivenDate2":"2017-06-01",
+			"filePathToCsv":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\Interop\\Mock_Data_CSVs\\HLM-VR-Immunizations-Reconcile_Not_Given\\HLM-VR-Immunizations-Reconcile_Not_Given_Non-Forecasted"
+		},
+		"User":"Maintenance, Health",
+		"product1":"",
+		"notGivenType":"Refused",
+		"notGivenAction":"Cancel series and stop forecasting",
+		"notGivenReason":"Patient Refuses",
+		"expirationDate1":"2019-07-31",
+		"site1":"Left Foot",
+		"route1":"IM",
+		"lotNumber1":"123ab",
+		"source1":"self",
+		"source2":"Device",
+		"source3":"Blue Cross",
+		"source4":"Military",
+		"manufacturer1":"Novation",
+		"Comment1":{
+			"text": "Second Comment",
+			"date1":"2017-11-03"
+		},
+		"Comment2":{
+			"text": "Fuzzy Data Comment",
+			"date2":"2015-01-01"
+		},
+		"Comment3":{
+			"text": "This is a comment",
+			"date2":"2015-01-01"
+		},
+		"filePathToCollectionAndEnvironment":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\interop\\data generation",
+		"collectionName":"Immunization Data Generator 64DEV",
+		"environmentName":"Immun Mock 64dev",
+		"filePathToCsv":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\Interop\\Mock_Data_CSVs\\HLM-VR-Immunizations-Reconcile_Not_Given",
+		"csvFileName":"HLM-VR-Immunizations-Reconcile_Not_Given_64dev.csv",
+		"jsonUrl1":"http://scm.health-maintenance.cerner.corp/svn/sandbox/jake.zimmerman/Interop_Mock_PED_Data/HLM-VR-Immunizations-Reconcile_Not_Given/DEVENG/Reconcile_Not_Given_P2.json"
+	},
+	"ENG18":{
+		"Patient_Permanent":{
+			"lastName":"ReconcileNotGiven1",
+			"firstName":"Pat1",
+			"nameFullFormatted":"ReconcileNotGiven1,Pat1",
+			"newLastName":"oldReconcileNotGiven1",
+			"dob":"Today - 5 years",
+			"sex":"Male",
+			"vaccineName1AdminDate1":"2018-07-04",
+			"vaccineName1AdminDate2":"2018-11-01",
+			"vaccineName1AdminDate1LastModified":"Today"
+		},
+		"Patient_NonForecasted":{
+			"lastName":"ReconcileNotGiven2",
+			"firstName":"Pat2",
+			"nameFullFormatted":"ReconcileNotGiven2,Pat2",
+			"newLastName":"oldReconcileNotGiven2",
+			"dob":"Today - 5 years",
+			"sex":"Male",
+			"vaccineName1AdminDate1":"2018-07-04",
+			"vaccineName1AdminDate2":"2018-11-01",
+			"vaccineName1AdminDate1LastModified":"Today"
+		},
+		"User":"Maintenance, Health",
+		"vaccineName1":"Varicella",
+		"vaccineName1Status":"",
+		"vaccineName2":"Japanese Encephalitis",
+		"product1":"",
+		"route1":"IM",
+		"lotNumber1":"123ab",
+		"source1":"self",
+		"source2":"",
+		"filePathToCollectionAndEnvironment":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\interop\\data generation",
+		"collectionName":"Immunization Data Generator",
+		"environmentName":"Immun Mock Deveng",
+		"filePathToCsv":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\Interop\\Mock_Data_CSVs\\HLM-VR-Immunizations-Reconcile_Workflow",
+		"csvFileName":"HLM-VR-Immunizations-Reconcile_Workflow_DEVENG.csv",
+		"jsonUrl1":"http://scm.health-maintenance.cerner.corp/svn/sandbox/jake.zimmerman/Interop_Mock_PED_Data/HLM-VR-Immunizations-Reconcile_Workflow/DEVENG/Reconcile_Workflow_P2.json",
+		"jsonUrl2":"http://scm.health-maintenance.cerner.corp/svn/sandbox/jake.zimmerman/Interop_Mock_PED_Data/HLM-VR-Immunizations-Reconcile_Workflow/DEVENG/Reconcile_Workflow_P3.json"
+	},
+	"S18VX":{
+		"Patient_Permanent":{
+			"lastName":"ReconcileNotGiven1",
+			"firstName":"Pat1",
+			"nameFullFormatted":"ReconcileNotGiven1,Pat1",
+			"newLastName":"oldReconcileNotGiven1",
+			"dob":"Today - 5 years",
+			"sex":"Male",
+			"vaccineName1":"Rotavirus",
+			"vaccineName1NotGivenDate1":"2017-03-09",
+			"vaccineName1NotGivenDate2":"2019-08-02",
+			"vaccineName1NotGivenDate3":"2019-01-01",
+			"filePathToCsv":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\Interop\\Mock_Data_CSVs\\HLM-VR-Immunizations-Reconcile_Not_Given\\HLM-VR-Immunizations-Reconcile_Not_Given_Permanent"
+		},
+		"Patient_NonForecasted":{
+			"lastName":"ReconcileNotGiven2",
+			"firstName":"Pat2",
+			"nameFullFormatted":"ReconcileNotGiven2,Pat2",
+			"newLastName":"oldReconcileNotGiven2",
+			"dob":"Today - 5 years",
+			"sex":"Male",
+			"vaccineName1":"Japanese Encephalitis",
+			"vaccineName1NotGivenDate1":"2019-01-14",
+			"vaccineName1NotGivenDate2Partial":"Jun. 2017",
+			"vaccineName1NotGivenDate2":"2017-06-01",
+			"filePathToCsv":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\Interop\\Mock_Data_CSVs\\HLM-VR-Immunizations-Reconcile_Not_Given\\HLM-VR-Immunizations-Reconcile_Not_Given_Non-Forecasted"
+		},
+		"User":"Maintenance, Health",
+		"product1":"",
+		"notGivenType":"Refused",
+		"notGivenAction":"Cancel series and stop forecasting",
+		"notGivenReason":"Patient Refuses",
+		"expirationDate1":"2019-07-31",
+		"site1":"Left Foot",
+		"route1":"IM",
+		"lotNumber1":"123ab",
+		"source1":"self",
+		"source2":"Device",
+		"source3":"Blue Cross",
+		"source4":"Military",
+		"manufacturer1":"Novation",
+		"Comment1":{
+			"text": "Second Comment",
+			"date1":"2017-11-03"
+		},
+		"Comment2":{
+			"text": "Fuzzy Data Comment",
+			"date2":"2015-01-01"
+		},
+		"Comment3":{
+			"text": "This is a comment",
+			"date2":"2015-01-01"
+		},
+		"filePathToCollectionAndEnvironment":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\interop\\data generation",
+		"collectionName":"Immunization Data Generator 64DEV",
+		"environmentName":"Immun Mock 64dev",
+		"filePathToCsv":"\\\\filesrvwhq\\hnammodels\\PowerChart\\Health Maintenance\\Interop\\Mock_Data_CSVs\\HLM-VR-Immunizations-Reconcile_Not_Given",
+		"csvFileName":"HLM-VR-Immunizations-Reconcile_Not_Given_64dev.csv",
+		"jsonUrl1":"http://scm.health-maintenance.cerner.corp/svn/sandbox/jake.zimmerman/Interop_Mock_PED_Data/HLM-VR-Immunizations-Reconcile_Not_Given/DEVENG/Reconcile_Not_Given_P2.json"
+	},
+		"dateFormat":"Date"
+}

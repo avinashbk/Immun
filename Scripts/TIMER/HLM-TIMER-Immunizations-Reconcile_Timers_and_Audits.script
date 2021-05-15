@@ -1,0 +1,222 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Windows-AmbulatoryOrganizer
+# https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+------------------------------------------------------------------------------------------------------------------------------
+(****************************PreReq Data****************************
+
+vaccineName1AdminDate1 - local admin to unchart
+vaccineName1AdminDate2 - local admin to modify then save
+vaccineName1AdminDate3 - outside record admin to add 
+vaccineName1AdminDate4 - outside record admin to reject
+vaccineName1AdminDate5 - outside record admin to add with modify
+*)
+
+params domain, patientData
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set format to "%m/%d/%Y"
+
+set testData to JSONValue(file ResourcePath("TIMER/Reconcile_Timers_and_Audits/testData.json")).(text of domain)
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set dob to formattedTime(format, value(testData.Patient1.dob)) 
+set age to "Immunizations/Util/Date".ageCalculator (dob, Today, true, true)
+set sex to testData.Patient1.sex
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set conversation to setup.conversation
+
+try
+	//IGNORE IF PATIENT DATA IS NOT NECESSARY
+	if patientData
+		//-------------------Patient Setup------------
+		Log "Create patient "& age &" for the test"
+		run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+		run "Immunizations/PatientCreation".openConversationContinuous conversation
+		run "Immunizations/PatientCreation".searchPatient lastName, firstName
+		run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, format, dob, encounterType
+		run "Util".closeApplication 2
+		//EXTERNAL Data
+		put (testData.lastName) into lastNameList
+		set patientInfo to "DiscernVisualDeveloper/Actions".getPersonAndEncounterID(username, password, domain, lastNameList) //retrieving Person and Encounter ID's for all patients that need External data
+		put trimAll(item 1 of patientInfo) into personIDList
+		run "DiscernVisualDeveloper/Actions".closeDiscernVisualDeveloper
+		run "Postman/Setup".openPostMan
+		run "Postman/Setup".importCollectionAndEnvironment filePathToCollectionAndEnvironment
+		//modify and set necessary variables for postman
+		run "Postman/Actions".setEnvironmentVariables environmentName, "0patientId", item 1 of personIDList
+		//run the collection
+		run "Postman/Collection_Runner/Task".runCollections collectionName , environmentName, filePathToCsv, csvFileName, 1
+		run "Postman/Actions".removeEnvironment 
+		//Close postman
+		run "Util".closeApplication 2 
+		//-------------------End Patient Setup------------
+		
+		log "Util".stepNumber & "ACTION: Open Powerchart and navigate to Patient 1's chart and chart 2 administrations for "& vaccineName1 &"."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, cleanup, relationship
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 6)), source, product1, "submit"
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 15)), source, product1, "submit"
+		----------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on the 'View Outside Records' link then requery to find the exact patient." 
+		captureScreen(Name:"Step"&Global stepNumber&"- Triggering timer for refine query")
+		----------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on "& vaccineName1AdminDate1 &" in the local records table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue true, vaccineName1, 5, vaccineName1AdminDate1
+		captureScreen(Name:"Step"&Global stepNumber&"- Triggering audit for ")
+		----------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Unchart "& vaccineName1AdminDate1 &"."
+		captureScreen(Name:"Step"&Global stepNumber&"- Triggering audit for unchart")
+		----------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on "& vaccineName1AdminDate2 &" in the local records table then modify and save the record."
+		captureScreen(Name:"Step"&Global stepNumber&"- Triggering audit/timer for local modify")
+		----------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on "& vaccineName1AdminDate2 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue true, vaccineName1, 5, vaccineName1AdminDate2
+		captureScreen(Name:"Step"&Global stepNumber&"- Triggering audit for side panel")
+		----------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on 'Add' for "& vaccineName1AdminDate3 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".addRejectUndoAdministration vaccineName1AdminDate3, vaccineName1, 5, "add"
+		captureScreen(Name:"Step"&Global stepNumber&"- Triggering audit/timer for add outside record")
+		----------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on 'Reject' for "& vaccineName1AdminDate4 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".addRejectUndoAdministration vaccineName1AdminDate4, vaccineName1, 5, "reject"
+		captureScreen(Name:"Step"&Global stepNumber&"- Triggering audit/timer for reject outside record")
+		----------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Add with modify "& vaccineName1AdminDate5 &". then save the record"
+		captureScreen(Name:"Step"&Global stepNumber&"- Triggering audit/timer for addModify outside record")
+		----------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on 'Undo' for "& vaccineName1AdminDate4 &". then click on 'Reject All'."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".addRejectUndoAdministration vaccineName1AdminDate4, vaccineName1, 5, "undo"
+		click image: "Immunizations/WorkflowMPage/Reconciliation/Bottom_Summary/Reject_All_Remaining/Reject_All_Remaining"
+		captureScreen(Name:"Step"&Global stepNumber&"- Triggering audit/timer for rejectAll outside record")
+		----------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on 'View Forecast' to open Registry Forecast."
+		captureScreen(Name:"Step"&Global stepNumber&"- Triggering audit for registry forecast")
+		----------------------------------------------------------------------------------------------------------	
+	else
+		//OLYMPUS VALIDATION
+		log "Util".stepNumber & "ACTION: Log into Olympus and search "& timer1 &"." 
+		run "Olympus/Task".openOlympus "svcphysdev", "Et%2#(s'Wg-ge@4P"
+		run "Olympus/Search".setupLeftPanel "CERN_KCM", domain
+		run "Olympus/Task".searchTimeAndName startDate, startTime, endDate, endTime, timer1
+		
+		log "VERIFICATION: "& timer1 &" displays in the timer field."
+		
+		log "VERIFICATION: "& domain &" displays in the domain field."
+		
+		log "VERIFICATION: "& date &" displays in the end date field."
+		
+		log "VERIFICATION: "& user &" displays in the User Name field."
+		
+		log "VERIFICATION: Powerchart displays in the Application field."
+		
+		log "VERIFICATION: The elapsed time field is less than 2 seconds."
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Olympus "& timer1 &"")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Search "& timer2 &"." 
+		run "Olympus/Task".searchTimeAndName startDate, startTime, endDate, endTime, timer2
+		
+		log "VERIFICATION: "& timer2 &" displays in the timer field."
+		
+		log "VERIFICATION: "& domain &" displays in the domain field."
+		
+		log "VERIFICATION: "& date &" displays in the end date field."
+		
+		log "VERIFICATION: "& user &" displays in the User Name field."
+		
+		log "VERIFICATION: Powerchart displays in the Application field."
+		
+		log "VERIFICATION: The elapsed time field is less than 2 seconds."
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Olympus "& timer2 &"")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Search "& timer3 &"." 
+		run "Olympus/Task".searchTimeAndName startDate, startTime, endDate, endTime, timer3
+		
+		log "VERIFICATION: "& timer3 &" displays in the timer field."
+		
+		log "VERIFICATION: "& domain &" displays in the domain field."
+		
+		log "VERIFICATION: "& date &" displays in the end date field."
+		
+		log "VERIFICATION: "& user &" displays in the User Name field."
+		
+		log "VERIFICATION: Powerchart displays in the Application field."
+		
+		log "VERIFICATION: The elapsed time field is less than 2 seconds."
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Olympus "& timer3 &"")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Search "& timer4 &"." 
+		run "Olympus/Task".searchTimeAndName startDate, startTime, endDate, endTime, timer4
+		
+		log "VERIFICATION: "& timer4 &" displays in the timer field."
+		
+		log "VERIFICATION: "& domain &" displays in the domain field."
+		
+		log "VERIFICATION: "& date &" displays in the end date field."
+		
+		log "VERIFICATION: "& user &" displays in the User Name field."
+		
+		log "VERIFICATION: Powerchart displays in the Application field."
+		
+		log "VERIFICATION: The elapsed time field is less than 2 seconds."
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Olympus "& timer4 &"")
+		
+		//AUDIT VALIDATION
+		log "Util".stepNumber & "ACTION: Log into IPSensage and generate a report for "& user &" then run the report and open it."
+		
+		log "VERIFICATION: "& auditEvent1 &" displays with the date, patient name and immunization group name."
+		
+		log "VERIFICATION: "& auditEvent2 &" displays with the date, patient name and immunization group name."
+		
+		log "VERIFICATION: "& auditEvent3 &" displays with the date, patient name and immunization group name."
+		
+		log "VERIFICATION: "& auditEvent4 &" displays with the date, patient name and immunization group name."
+		
+		log "VERIFICATION: "& auditEvent5 &" displays with the date, patient name and immunization group name."
+		
+		log "VERIFICATION: "& auditEvent6 &" displays with the date, patient name and immunization group name."
+		
+		log "VERIFICATION: "& auditEvent7 &" displays with the date, patient name and immunization group name."
+		
+		log "VERIFICATION: "& auditEvent8 &" displays with the date, patient name and immunization group name."
+		
+		log "VERIFICATION: "& auditEvent9 &" displays with the date, patient name and immunization group name."
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Audit Events in IPSensage")
+	end if 
+catch exception
+	logError "Exception encountered" && exception.reason
+	log "Exception Location:" && exception.location		
+	captureScreen"Exception"
+end try
+----------------------------------------------------------------------------------------------------------------	
+Log "Util".stepNumber &"ACTION: Close Application."
+run "Immunizations/setup".closeApplication cleanup
+----------------------------------------------------------------------------------------------------------------	
+Log "Util".stepNumber &"ACTION: Cleanup Patient"
+run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+run "Immunizations/PatientCreation".openConversationContinuous conversation
+run "Immunizations/PatientCreation".searchPatient lastName,firstName
+run "Immunizations/PatientCreation".renamePatientSearched newLastName
+run "Util".closeApplication 2
+run "Cleanup".ZeroStateCloseAllApps

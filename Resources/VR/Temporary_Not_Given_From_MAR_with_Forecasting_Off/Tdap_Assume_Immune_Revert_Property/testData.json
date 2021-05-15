@@ -1,0 +1,53 @@
+{
+	"SOLM64":{
+		"Patient1":{
+			"lastName":"revertTdapAssumeImmune1",
+			"firstName":"Bob",
+			"nameFullFormatted":"revertTdapAssumeImmune1,Bob",
+			"newLastName":"oldTdapAssumeImmune2",
+			"dob":"Today - 19 years - 1 day",
+			"sex":"Male"
+                                           },
+		"Patient2":{
+			"lastName":"revertTdapAssumeImmune2",
+			"firstName":"Bob",
+			"nameFullFormatted":"revertTdapAssumeImmune2,Bob",
+			"newLastName":"oldTdapAssumeImmune2",
+			"dob":"Today - 19 years",
+			"sex":"Female"
+                                           },
+	"vaccineName1":"Td/Tdap",
+	"vaccineName2":"Diphtheria, Tetanus, and Pertussis",
+	"user":"Maintenance, Health",
+	"source":"Clinician",
+	"dtapProduct":"Daptacel (DTaP)",
+	"tdapProduct":"Adacel (Tdap)",
+	"tdapDefaultEventSet":"tetanus/diphth/pertuss (Tdap) adult/adol"
+      },
+	"ENG18":{
+		"Patient1":{
+			"lastName":"revertTdapAssumeImmune1",
+			"firstName":"Bob",
+			"nameFullFormatted":"revertTdapAssumeImmune1,Bob",
+			"newLastName":"oldTdapAssumeImmune1",
+			"dob":"Today - 19 years - 1 day",
+			"sex":"Male"
+                                           },
+		"Patient2":{
+			"lastName":"revertTdapAssumeImmune2",
+			"firstName":"Bob",
+			"nameFullFormatted":"revertTdapAssumeImmune2,Bob",
+			"newLastName":"oldTdapAssumeImmune2",
+			"dob":"Today - 19 years",
+			"sex":"Female"
+                                           },
+	"vaccineName1":"Td/Tdap",
+	"vaccineName2":"Diphtheria, Tetanus, and Pertussis",
+	"user":"Maintenance, Health",
+	"source":"Technician",
+	"dtapProduct":"Daptacel",
+	"tdapProduct":"Adacel",
+	"tdapDefaultEventSet":"tetanus/diphth/pertuss (Tdap) adult/adol"
+      }
+}
+   

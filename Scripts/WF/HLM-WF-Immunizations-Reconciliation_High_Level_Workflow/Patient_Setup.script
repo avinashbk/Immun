@@ -1,0 +1,34 @@
+﻿(****************************PreReq Data****************************
+
+Patient1: 
+vaccineName1
+	2 Outside source adminsitrations (external data)
+vaccineName2
+	Only one historical event (External Data Not Given)
+
+Patient2:
+No Data (Patient can be created in GOLDM and reused)
+*)
+params domain 
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set format to "%m/%d/%Y"
+set testData to JSONValue(file ResourcePath()).(value of domain)
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set dob to formattedTime(format, value(testData.Patient1.dob)) 
+set sex to testData.Patient1.sex
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set conversation to setup.conversation
+
+Log "Create patient1 (16 months old) for the test"
+run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+run "Immunizations/PatientCreation".openConversationContinuous conversation
+run "Immunizations/PatientCreation".searchPatient lastName, firstName
+run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, format, dob, encounterType
+----------------------------------------------------------------------------------------------------------------
+run "Util".closeApplication 2

@@ -1,0 +1,200 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=114957
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+Set encounterOrg to setup.encounterOrg
+Set encounterType to setup.encounterType
+Set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set administeredDidNotCount to textStrings.administeredDidNotCount
+
+set testData to JSONValue(file ResourcePath("VR/HepB_Absolute_Minimums/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file ResourcePath("VR/HepB_Absolute_Minimums/testData.json")).(value of domain)
+Set lastName to testData.Patient4.lastName
+Set firstName to testData.Patient4.firstName
+Set patientName to testData.Patient4.nameFullFormatted
+Set newLastName to testData.Patient4.newLastName
+Set sex to testData.Patient4.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.patient4.dob)) 
+set vaccineName to testData.vaccineName
+set source to testData.source
+set product3 to testData.product3
+
+set format to "%b %d, %Y"
+
+
+Try
+	---------------------------------------------------------------------------------------------------------------
+	# PATIENT SETUP
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	Run "Util".closeApplication 2
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		BeginTestCase "VR/HLM-VR-HepB_Absolute_Minimums_4_Dose_Series"
+		
+		Log "Util".stepNumber &"ACTION: Open Patient 4's chart, navigate to the immunization component and chart dose 1 of CVX 51 at <DOB> and a second dose of CVX 51 at <Dose1 Admin Date + 4 weeks - 5 days>."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, dob, source, product3, "Submit"
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("week":4, "day": -5)), source, product3, "Submit"
+		
+		Log "VERIFICATION: The administrations column displays '2' with the did not count icon for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "true"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered - Did Not Count' for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administeredDidNotCount
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Less Than Abs Min Age P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 2's admin date from <DOB + 4 weeks - 5 days> to <DOB + 4 weeks - 4 days>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 4, "Day": -5)), "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 4, "day": -4)) 
+		
+		Log "VERIFICATION: The administrations column displays '2' without the did not count icon for Hepatitis B"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Equal to Abs Min Age P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 1's admin date from <DOB> to <DOB + 1 week> and modify dose 2 from <DOB + 4 weeks - 4 days> to <DOB + 5 weeks - 5 days>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate dob, "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 1)) 
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 4, "Day": -4)), "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 5, "day": -5)) 
+		
+		Log "VERIFICATION: The administrations column displays '2' with the did not count icon for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "true"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered - Did Not Count' for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administeredDidNotCount
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Less than Abs Min Interval P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 2's admin date from <DOB + 5 weeks - 5 days> to <DOB + 5 weeks - 4 days>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 5, "Day": -5)), "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 5, "day": -4)) 
+		
+		Log "VERIFICATION: The administrations column displays '2' without the did not count icon for Hepatitis B"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Equal to Abs Min Interval P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Chart dose 3 on the same date as dose 2 and dose 4 at <DOB + 24 weeks - 5 days>."
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 5, "day": -4)) , source, product3, "Submit"
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("week":24, "day": -5)), source, product3, "Submit"
+		
+		Log "VERIFICATION: The administrations column displays '4' with the did not count icon for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "4", "true"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered - Did Not Count' for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administeredDidNotCount
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose4 Less Than Abs Min Age P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 4's admin date from <DOB + 24 weeks - 5 days> to <DOB + 24 weeks - 4 days>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("week":24, "day": -5)), "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("week":24, "day": -4)) 
+		
+		Log "VERIFICATION: The administrations column displays '4' without the did not count icon for Hepatitis B"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "4", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose4 Equal to Abs Min Age P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 1 to <DOB + 10 weeks>,Dose 2 to <DOB + 14 weeks>, dose 3 to <DOB + 14 weeks>, and dose 4 to <Dose1 + 16 weeks - 5 days>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		set dose1AdminDate to  "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 10)) 
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 1)) , "1", dateFormat, dose1AdminDate
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 5, "day": -4)) , "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 14)) 
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 5, "day": -4)) , "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Week": 14)) 
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format,  ("week":24, "day": -4)) , "1", dateFormat, "Immunizations/Util/Date".adjustDate(dose1AdminDate, format,  ("week":16, "day": -5)) 
+		
+		Log "VERIFICATION: The administrations column displays '4' with the did not count icon for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "4", "true"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered - Did Not Count' for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administeredDidNotCount
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose4 Less than min Interval P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 4 to <Dose1 + 16 weeks - 4 days>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dose1AdminDate, format,  ("week":16, "day": -5)) , "1", dateFormat, "Immunizations/Util/Date".adjustDate(dose1AdminDate, format,  ("week":16, "day": -4)) 
+		
+		Log "VERIFICATION: The administrations column displays '4' without the did not count icon for Hepatitis B"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "4", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for Hepatitis B."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose4 Equal to Prev Dose Interval P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient 4's chart."
+		Run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/HLM-VR-HepB_Absolute_Minimums_4_Dose_Series"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+	#################################################################################
+	# PATIENT CLEANUP
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	Run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	Run "Immunizations/PatientCreation".openConversationContinuous conversation
+	Run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	Run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	Run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

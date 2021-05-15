@@ -1,0 +1,30 @@
+﻿params domain 
+
+set domain to "Immunizations/Util/setup".domainRun(domain)
+log "Test running in domain"&&domain
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+
+set testData to JSONValue(file ResourcePath("VR/Administration_Date_Precision/testData.json")).(value of domain)
+set user to testData.User
+Set userLastName to item 1 of User
+Set userFirstName to item 2 of User
+
+//Prerequisites
+Log "Set the following Immunization preferences at user level for User 1: IMM_DATE_EST_MONTH should be set to 1 – Last Day of Month and IMM_DATE_EST_YEAR should be set to 0 – First Day of Year"
+Run "Prefmaint".LoginToPrefMaint_SelectUserAndSearch Username, Password, Domain,"powerchart","DBA",userLastName,userFirstName
+Run "Prefmaint".ClickLevel "Powerchart|Immunization Forecaster|Immunization Forecaster"
+Typetext rightArrow
+Run "Prefmaint".DeletePreference "IMM_DATE_EST_MONTH"
+Run "Prefmaint".DeletePreference "IMM_DATE_EST_YEAR"
+Run "Prefmaint".ModifyListPreference "IMM_DATE_EST_MONTH",1
+Run "Prefmaint".ModifyListPreference "IMM_DATE_EST_YEAR",0
+Click "Prefmaint/Button_Apply_18"
+wait 5 // Hard wait for the preference to save
+Run "Millennium_SelectMenu_SubMenu".SelectMenuSubMenu "Task","Task","Exit"
+wait 3
+TypeText windowsKey,upArrow
+Run "Millennium_SelectMenu_SubMenu".SelectMenuSubMenu "Task","Task","Exit"

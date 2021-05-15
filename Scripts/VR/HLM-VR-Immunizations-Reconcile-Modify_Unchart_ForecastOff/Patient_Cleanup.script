@@ -1,0 +1,20 @@
+﻿params domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+log "Test running in domain"&&domain
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set conversation to setup.conversation
+
+set testData to JSONValue(file resourcePath("VR/Modify_Unchart_ForecastOff/testData.json")).(value of domain)
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set newLastName to testData.Patient1.newLastName
+
+Log "Cleanup patient1."
+run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+run "Immunizations/PatientCreation".openConversationContinuous conversation
+run "Immunizations/PatientCreation".searchPatient lastName, firstName
+run "Immunizations/PatientCreation".renamePatientSearched newLastName
+run "Immunizations/Setup".CloseApplicationWithoutCleanup "2"

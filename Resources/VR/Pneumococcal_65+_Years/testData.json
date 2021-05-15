@@ -1,0 +1,171 @@
+{
+	"SOLM64": {
+		"Patient_PCV13_PPSV23_5Y_Interval": {
+			"lastName": "PneumoSeries5YearIntP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries5YearIntP1,Bob",
+			"newLastName": "oldPneumoSeries5YearIntP1",
+			"dob": "Today - 70 years",
+			"sex": "Male"
+		},
+		"Patient_PCV13_PPSV23_1Y_Interval": {
+			"lastName": "PneumoSeries1YearIntP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries1YearIntP2,Bob",
+			"newLastName": "oldPneumoSeries1YearIntP2",
+			"dob": "Today - 70 years",
+			"sex": "Female"
+		},
+		"Patient_PPSV23_PCV13_Completion": {
+			"lastName": "PneumoPPSV23PCV13CompleteP3",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoPPSV23PCV13CompleteP3,Bob",
+			"newLastName": "oldPneumoPPSV23PCV13CompleteP3",
+			"dob": "Today - 66 years",
+			"sex": "Female"
+		},
+		"Patient_PPSV23_1Dose_Complete": {
+			"lastName": "PneumoSeries5YearIntP4",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries5YearIntP4,Bob",
+			"newLastName": "oldPneumoSeries5YearIntP4",
+			"dob": "Today - 70 years",
+			"sex": "Male"
+		},
+		"vaccineName1": "Pneumococcal Polysaccharide",
+		"vaccineName2": "Pneumococcal Conjugate",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Pneumovax 23",
+		"product2": "Prevnar 13",
+		"product3": "Pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)"
+	},
+	"S18VX": {
+		"Patient_PCV13_PPSV23_5Y_Interval": {
+			"lastName": "PneumoSeries5YearIntP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries5YearIntP1,Bob",
+			"newLastName": "oldPneumoSeries5YearIntP1",
+			"dob": "Today - 70 years",
+			"sex": "Male"
+		},
+		"Patient_PCV13_PPSV23_1Y_Interval": {
+			"lastName": "PneumoSeries1YearIntP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries1YearIntP2,Bob",
+			"newLastName": "oldPneumoSeries1YearIntP2",
+			"dob": "Today - 70 years",
+			"sex": "Female"
+		},
+		"Patient_PPSV23_PCV13_Completion": {
+			"lastName": "PneumoPPSV23PCV13CompleteP3",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoPPSV23PCV13CompleteP3,Bob",
+			"newLastName": "oldPneumoPPSV23PCV13CompleteP3",
+			"dob": "Today - 66 years",
+			"sex": "Female"
+		},
+		"Patient_PPSV23_1Dose_Complete": {
+			"lastName": "PneumoSeries5YearIntP4",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries5YearIntP4,Bob",
+			"newLastName": "oldPneumoSeries5YearIntP4",
+			"dob": "Today - 70 years",
+			"sex": "Male"
+		},
+		"vaccineName1": "Pneumococcal Polysaccharide",
+		"vaccineName2": "Pneumococcal Conjugate",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Pneumovax 23",
+		"product2": "Prevnar 13",
+		"product3": "Pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)"
+	},
+	"SOLGM": {
+		"Patient_PCV13_PPSV23_5Y_Interval": {
+			"lastName": "PneumoSeries5YearIntP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries5YearIntP1,Bob",
+			"newLastName": "oldPneumoSeries5YearIntP1",
+			"dob": "Today - 70 years",
+			"sex": "Male"
+		},
+		"Patient_PCV13_PPSV23_1Y_Interval": {
+			"lastName": "PneumoSeries1YearIntP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries1YearIntP2,Bob",
+			"newLastName": "oldPneumoSeries1YearIntP2",
+			"dob": "Today - 70 years",
+			"sex": "Female"
+		},
+		"Patient_PPSV23_PCV13_Completion": {
+			"lastName": "PneumoPPSV23PCV13CompleteP3",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoPPSV23PCV13CompleteP3,Bob",
+			"newLastName": "oldPneumoPPSV23PCV13CompleteP3",
+			"dob": "Today - 66 years",
+			"sex": "Female"
+		},
+		"Patient_PPSV23_1Dose_Complete": {
+			"lastName": "PneumoSeries5YearIntP4",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries5YearIntP4,Bob",
+			"newLastName": "oldPneumoSeries5YearIntP4",
+			"dob": "Today - 70 years",
+			"sex": "Male"
+		},
+		"vaccineName1": "Pneumococcal Polysaccharide",
+		"vaccineName2": "Pneumococcal Conjugate",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Pneumovax 23",
+		"product2": "Prevnar 13",
+		"product3": "Pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)"
+	},
+	"ENG18": {
+		"Patient_PCV13_PPSV23_5Y_Interval": {
+			"lastName": "PneumoSeries5YearIntP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries5YearIntP1,Bob",
+			"newLastName": "oldPneumoSeries5YearIntP1",
+			"dob": "Today - 70 years",
+			"sex": "Male"
+		},
+		"Patient_PCV13_PPSV23_1Y_Interval": {
+			"lastName": "PneumoSeries1YearIntP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries1YearIntP2,Bob",
+			"newLastName": "oldPneumoSeries1YearIntP2",
+			"dob": "Today - 70 years",
+			"sex": "Female"
+		},
+		"Patient_PPSV23_PCV13_Completion": {
+			"lastName": "PneumoPPSV23PCV13CompleteP3",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoPPSV23PCV13CompleteP3,Bob",
+			"newLastName": "oldPneumoPPSV23PCV13CompleteP3",
+			"dob": "Today - 66 years",
+			"sex": "Female"
+		},
+		"Patient_PPSV23_1Dose_Complete": {
+			"lastName": "PneumoSeries5YearIntP4",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoSeries5YearIntP4,Bob",
+			"newLastName": "oldPneumoSeries5YearIntP4",
+			"dob": "Today - 70 years",
+			"sex": "Male"
+		},
+		"vaccineName1": "Pneumococcal Polysaccharide",
+		"vaccineName2": "Pneumococcal Conjugate",
+		"user": "Maintenance, Health",
+		"source": "Technician",
+		"product1": "Pneumovax 23",
+		"product2": "Prevnar 13",
+		"product3": "Pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)"
+	},
+	"dateFormat": "Date"
+}

@@ -1,0 +1,146 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST SCRIPT LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestScript&id=108945
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun (domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set seriesUnnecessary to textStrings.seriesUnnecessary
+
+set testData to JSONValue(file ResourcePath("VR/MMR_Vaccine/testData.json")).(value of domain)
+set lastName to testData.Patient_Immunity.lastName
+set firstName to testData.Patient_Immunity.firstName
+set newLastName to testData.Patient_Immunity.newLastName
+set sex to testData.Patient_Immunity.sex
+set dob to testData.Patient_Immunity.dob
+set patientName to testData.Patient_Immunity.nameFullFormatted
+set vaccineName1 to testData.vaccineName1
+set vaccineName1StrikeThrough to testData.vaccineName1StrikeThrough
+
+
+
+Try
+	---------------------------------------------------------------------------------------------------------------
+	# PATIENT SETUP
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/MMR/HLM-VR-Immunizations_MMR_P5_Immunity"
+		
+		Log "Util".stepNumber & "ACTION: Open Patient 5's chart, navigate to the immunization component and review the MPage."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		Log "VERIFICATION: Ensure MMR displays in the historical section with a status of series unnecessary"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName1
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName1, seriesUnnecessary
+		
+		Log "VERIFICATION: Ensure MMR displays administrations of '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "--", false
+		
+		Log "VERIFICATION: Ensure MMR displays a next recommended of '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, "--"
+		
+		Log "VERIFICATION: Ensure MMR displays with a last action of '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, "--"
+		CaptureScreen(Name: "Step" & Global stepNumber & "-Workflow series unnecessary P5")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on MMR"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		
+		Log "VERIFICATION: Ensure 'Series Unnecessary' displays below the MMR header. Ensure 'No vaccine history to display' is shown in the body of the side panel."
+		set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1, sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyText seriesUnnecessary, sidePanelHeaderRectangle
+		CaptureScreen(Name: "Step" & Global stepNumber & "-MPage Side Panel P5")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast button."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: In the CDC Schedule column, ensure MMR displays with a strikethrough and 'Series Unnecessary'. "
+		set rowSearchRectangleStrikeThrough to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(vaccineName1StrikeThrough)
+		set firstcolumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText seriesUnnecessary, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleStrikeThrough, firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure no doses are shown for the remainder of the timeline."
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Dose", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleStrikeThrough, columnSearchRectangle)
+		CaptureScreen(Name: "Step" & Global stepNumber & "-Forecaster series unnecessary P5")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on MMR."
+		click imageLocation(vaccineName1StrikeThrough)
+		
+		Log "VERIFICATION: Ensure 'Series Unnecessary' displays in the left hand column."
+		set leftPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText seriesUnnecessary, leftPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: In the right hand pane header, ensure that 'Series Unnecessary On <Today's Date> - Patient Refuses' displays."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText seriesUnnecessary && "-" && vaccineName1, rightPaneHeaderSearchRectangle
+		CaptureScreen(Name: "Step" & Global stepNumber & "-Expanded view series unnecessary P5")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient 5's chart."
+		run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/MMR/HLM-VR-Immunizations_MMR_P5_Immunity"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		CaptureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+	#################################################################################
+	# PATIENT CLEANUP
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	CaptureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

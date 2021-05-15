@@ -1,0 +1,253 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST SCRIPT LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestScript&id=110169
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set doubleDashImage to common.doubleDashImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set minimum to fieldLabels.minimum
+set earliestRecommended to fieldLabels.earliestRecommended
+set latestRecommended to fieldLabels.latestRecommended
+set maximum to fieldLabels.maximum
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set overdue to textStrings.overdue
+set viewForecast to textStrings.viewForecast
+set immunizationForecast to textStrings.immunizationForecast
+set complete to textStrings.complete
+set due to textStrings.due
+set agedOut to textStrings.agedOut
+
+set testData to JSONValue(file resourcePath("VR/Pneumococcal_65+_Years/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file resourcePath("VR/Pneumococcal_65+_Years/testData.json")).(value of domain)
+set lastName to testData.Patient_PPSV23_PCV13_Completion.lastName
+set firstName to testData.Patient_PPSV23_PCV13_Completion.firstName
+set sex to testData.Patient_PPSV23_PCV13_Completion.sex
+set patientName to testData.Patient_PPSV23_PCV13_Completion.nameFullFormatted
+set newLastName to testData.Patient_PPSV23_PCV13_Completion.newLastName
+set dob to formattedTime("%b %d, %Y", value(testData.Patient.dob)) 
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set source to testData.source
+set product1 to testData.product1
+set product2 to testData.product2
+
+set format to "%b %d, %Y"
+
+
+Try
+	---------------------------------------------------------------------------------------------------------------
+	# PATIENT SETUP
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	
+	Try
+		
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/Pneumococcal/HLM-VR-Immunizations-Pneumococcal_65+_Years_PPSV23-PCV13_Completion"
+		
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1935"
+		
+		(* ####  NOTE: Commenting out Test Script because of JIRA Issue: IMMUN-1935
+
+		Log "Util".stepNumber & "ACTION: Open Patient's chart and navigate to the Immunizations workflow mPage."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		Log "VERIFICATION: Pneumococcal Polysaccharide is displayed in the Vaccine column."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName1
+		
+		Log "VERIFICATION: The status column for Pneumococcal Polysaccharide displays as 'Overdue'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName1, overdue
+		
+		Log "VERIFICATION: The administrations column displays '--' for Pneumococcal Polysaccharide"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "--", "false"
+		
+		Log "VERIFICATION: The Next Recommended column displays 'Today' for Pneumococcal Polysaccharide."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, "Today"
+		
+		Log "VERIFICATION: Pneumococcal Polysaccharide displays above the History section."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameAboveHistorySection vaccineName1
+		
+		Log "VERIFICATION: Pneumococcal Conjugate is displayed in the Vaccine column."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName2
+		
+		Log "VERIFICATION: The status column for Pneumococcal Conjugate displays as 'Aged Out'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName2, agedOut
+		
+		Log "VERIFICATION: The administrations column displays '--' for Pneumococcal Conjugate"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName2, "--", "false"
+		
+		Log "VERIFICATION: The Next Recommended column displays '--' for Pneumococcal Conjugate."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName2, "--"
+		
+		Log "VERIFICATION: Pneumococcal Conjugate displays in the History section."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName2
+		CaptureScreen(Name: "Step" & Global stepNumber & "-mPage")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart a dose of PPSV23 at the age of 65 years."
+		set dose1v1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("Year": 65))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, dose1v1AdminDate, source, product1, "Submit"
+		
+		Log "VERIFICATION: The status column for Pneumococcal Polysaccharide displays as 'Complete'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName1, complete
+		
+		Log "VERIFICATION: The administrations column displays '--' for Pneumococcal Polysaccharide"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "1", "false"
+		
+		Log "VERIFICATION: The Next Recommended column displays '--' for Pneumococcal Polysaccharide."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, "--"
+		
+		Log "VERIFICATION: Pneumococcal Polysaccharide displays in the History section."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName1
+		CaptureScreen(Name: "Step" & Global stepNumber & "-mPg PPSV23Cpt")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on 'View Forecast'."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Pneumococcal Polysaccharide displays in the first column with 'Complete' below the vaccine group name."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set firstcolumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers". largeFirstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText complete, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, firstcolumnSearchRectangle)
+		CaptureScreen(Name: "Step" & Global stepNumber & "-FC PPSV23Cpt")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click Dose 1 of Pneumococcal Conjugate."
+		//Had to change to clicking vaccine header due to inability to find 1 when it's highlighted.
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName(VaccineName2)
+		
+		Log "VERIFICATION: In the left pane, Dose 1 displays 'Due' with Recommended Until Date (DOB + 65 years)."
+		set previousDose to "Immunizations/Util/Date".adjustDate(dob, format, ("Year": 65))
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneDoseSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText due & return & "Immunizations/Util/Date".adjustDate(previousDose, format, ("Year": 1)), rectangle
+		click text: "1", searchrectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchrectangle() //Had to change to clicking vaccine header due to inability to find 1 when it's highlighted.
+		
+		Log "VERIFICATION: Right-hand pane header displays 'Dose 1'."
+		Set rightPaneHeader2SearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText "Dose 1", rightPaneHeader2SearchRectangle
+		
+		Log "VERIFICATION: Earliest: date and age for + 65 years from DOB"
+		set dose1v2MinimumDate to "Immunizations/Util/Date".adjustDate(previousDose, format, ("Year": 1))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum, dose1v2MinimumDate
+		set dose1v2MinimumAge to "Immunizations/Util/Date".ageCalculator (dob, dose1v2MinimumDate, false, false)
+		Set rightPaneBodySearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneBodySearchRectangle()
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1v2MinimumAge, "Immunizations/Util/Date".setPattern(dose1v2MinimumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(minimum, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Recommended From: date and age for + 65 years from DOB"
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended, dose1v2MinimumDate
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1v2MinimumAge, "Immunizations/Util/Date".setPattern(dose1v2MinimumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(earliestRecommended, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Recommended Until: date and age for + 65 years from DOB"
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended, dose1v2MinimumDate
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1v2MinimumAge, "Immunizations/Util/Date".setPattern(dose1v2MinimumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(latestRecommended, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Latest: '--'"
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewFieldImage maximum, doubleDashImage
+		CaptureScreen(Name: "Step" & Global stepNumber & "-ExpVw PCV13D1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click outside expanded view and chart a dose of Pneumococcal Conjugate (PCV13) at 1 day after Dose 1 of PPSV23." 
+		set topPaneRectangle to "Immunizations/Common/Helpers".tabListSearchrectangle
+		click text: immunizationForecast, searchrectangle: topPaneRectangle
+		set dose1v2AdminDate to "Immunizations/Util/Date".adjustDate(previousDose, format, ("Year": 1))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName2, dateFormat, dose1v2AdminDate, source, product2, "Submit"
+		
+		Log "VERIFICATION: Pneumococcal Conjugate displays in the first column with 'Complete' below the vaccine group name."
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set firstcolumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers". largeFirstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText complete, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, firstcolumnSearchRectangle)
+		CaptureScreen(Name: "Step" & Global stepNumber & "-Fc PCV13Cpt")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click the List button."
+		run "Immunizations/Forecaster-Common/Actions" .clickFlipViews
+		
+		Log "VERIFICATION: The first column for Pneumococcal Polysaccharide displays 'Complete'."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set firstcolumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers". largeFirstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText complete, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, firstcolumnSearchRectangle) 
+		
+		Log "VERIFICATION: The first column for Pneumococcal Conjugate displays 'Complete'."
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		run "Immunizations/Util/Validation".verifyText complete, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, firstcolumnSearchRectangle)
+		
+		Log "VERIFICATION: Dose 1 for Pneumococcal Polysaccharide charted at DOB + 65 years is displayed in the second action column to the right."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText "1" && product1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText dose1v1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		set dose1v1AdminAge to "Immunizations/Util/Date".ageCalculator (dob, dose1v1AdminDate, false, false)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1v1AdminAge, "Immunizations/Util/Date".setPattern(dose1v1AdminAge), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Dose 1 for Pneumococcal Conjugate charted at + 1 year from Dose 1 of Pneumococcal Polysaccharide (DOB + 65 years + 1 year) is displayed in the first action column to the right."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText "1" && product2, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText dose1v2AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		set dose1v2AdminAge to "Immunizations/Util/Date".ageCalculator (dob, dose1v2AdminDate, false, false)
+		Run "Immunizations/Util/Validation".verifyTextWithPattern dose1v2AdminAge, "Immunizations/Util/Date".setPattern(dose1v2AdminAge), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)	
+		CaptureScreen(Name: "Step" & Global stepNumber & "-LstVw Cpt")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient's chart."
+		run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		*)
+		
+		EndTestCase "VR/Pneumococcal/HLM-VR-Immunizations-Pneumococcal_65+_Years_PPSV23-PCV13_Completion"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+	#################################################################################
+	# PATIENT CLEANUP
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".zeroStateCloseAllApps

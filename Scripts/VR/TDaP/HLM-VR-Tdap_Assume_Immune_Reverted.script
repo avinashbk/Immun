@@ -1,0 +1,399 @@
+﻿-------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+------------------------------------------------------------------------------------------------------------------------------
+
+#RQM TEST CASE LINK: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=62040
+params domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+log "Test running in domain"&&domain
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+Set minimum to fieldLabels.minimum
+Set earliestRecommended to fieldLabels.earliestRecommended
+Set latestRecommended to fieldLabels.latestRecommended
+Set maximum to fieldLabels.maximum
+set performedDateField to fieldLabels.performedDateField
+set userField to fieldLabels.userField
+set sourceField to fieldLabels.sourceField
+set documentedDateField to fieldLabels.documentedDateField
+set productNameField to fieldLabels.productNameField
+
+set testData to JSONValue(file resourcePath("VR/Tdap_Assume_Immune_Revert_Property/testData.json")).(value of domain)
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set patientName to testData.Patient1.nameFullFormatted
+set dob to formattedTime(format, value(testData.Patient1.dob)) 
+set source to testData.source
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set user to testData.user
+set source to testData.source
+set dtapProduct to testData.dtapProduct 
+set tdapProduct to testData.tdapProduct 
+
+set format to "%b %d, %Y"
+
+set dateFormat to "Date"
+Try
+	#PATIENT RESET
+	run "Immunizations/PatientCreation".resetPatientToZeroState username, password, domain, lastName, firstName, dob
+	
+	try
+		Log "Util".stepNumber &"ACTION: Open Patient's chart and navigate to the Immunizations workflow mPage, Complete the Dtap series and chart one dose of tdap at DOB + 7 years."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		Log "VERIFICATION: Tdap is displayed in the Vaccine column."
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyVaccineNameColumn vaccineName1
+		
+		Log "VERIFICATION: DTaP is displayed in the Vaccine column."
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyVaccineNameColumn vaccineName2
+		
+		Log "VERIFICATION: The status column for Tdap displays as '- -'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName1, "--"
+		
+		Log "VERIFICATION: The status column for DTaP displays 'Complete'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName2, "Complete"
+		
+		Log "VERIFICATION: The administrations column displays 5 for Tdap"
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyAdministrationColumn vaccineName1, "5", true
+		
+		Log "VERIFICATION: The administrations column displays 5 for DTaP."
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyAdministrationColumn vaccineName2, "5", false
+		
+		Log "VERIFICATION: The Next Recommended column displays the date for '< + 10 years from Dose 5's Admin Date > - < + 10 years + 4 weeks - 1 day from Dose 5's Admin Date >' for Tdap."
+		set immediatePreviousDose to "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19))
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyNextRecommendedColumn vaccineName1,  "Immunizations/Util/Date".adjustDate(immediatePreviousDose, format, ("year": 10)) && "-" && "Immunizations/Util/Date".adjustDate(immediatePreviousDose, format, ("year": 10, "week":4, "day":-1))
+		
+		Log "VERIFICATION: The Next Recommended column displays a double dash for DTaP"
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyNextRecommendedColumn vaccineName2, "--"
+		
+		Log "VERIFICATION: Td/Tdap displays above History section."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameAboveHistorySection vaccineName1
+		
+		Log "VERIFICATION: Diptheria, Tetanus, and Pertussis Vaccine displays in the History section."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName2
+		CaptureScreen(Name:"Step"&Global stepNumber&"-mPage Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on 'View Forecast'."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast ("View Forecast")
+		
+		Log "VERIFICATION: The first column for Tdap displays 'Last Admin: < Date for DOB + 19 years >'."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText "Last Admin:" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19)) && "(19yrs)", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The first column for DTaP displays 'Complete'."
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers". largeFirstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName2 & return & "Complete", columnSearchRectangle
+		
+		Log "VERIFICATION: The previous administrations for DTaP are displayed in the column dated at the time of for each administration with the product (if charted with one) or event set name with the date of administration."
+		//Administration1
+		run "Immunizations/Forecaster-Forecast/Actions".scrollToLeft
+		set startDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Month":2)))
+		set endDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Month":2)))
+		set alignment to ("Center","Center")
+		set (topOffset1, topOffset2, bottomOffSet1, bottomOffSet2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1, bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText dtapProduct, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Dose 1 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Month":2)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		//Administration2
+		set startDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)))
+		set endDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1, bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText dtapProduct, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Dose 2 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		//Administration3
+		set startDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)))
+		set endDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1, bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText dtapProduct, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Dose 3 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		//Administration4
+		set startDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Month":15)))
+		set endDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Month":15)))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1 ,bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText dtapProduct, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Dose 4 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Month":15)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		//Administration5
+		set startDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)))
+		set endDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1, bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText dtapProduct, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Dose 5 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The previous administrations for DTaP are displayed in the column with the age at the time of for each administration with the product (if charted with one) or event set name and 'Dose n < where n is the dose number >' with the date of administration."
+		//Administration1
+		set startDateHeader to "2m"
+		set endDateHeader to "2m"
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1, bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText dtapProduct, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Dose 1 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Month":2)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		//Administration2
+		set startDateHeader to "4m"
+		set endDateHeader to "4m"
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffSet1,bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText dtapProduct, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Dose 2 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		//Administration3
+		set startDateHeader to "6m"
+		set endDateHeader to "6m"
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffSet1,bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText dtapProduct, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Dose 3 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		//Administration4
+		set startDateHeader to "15m"
+		set endDateHeader to "15m"
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffSet1,bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText dtapProduct, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Dose 4 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Month":15)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		//Administration5
+		set startDateHeader to "4yrs"
+		set endDateHeader to "4yrs"
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1, bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText dtapProduct, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Dose 5 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-DTaP Administrations Patient1")
+		
+		Log "VERIFICATION: The previous administration for Tdap is displayed in the column dated at the time of the administration (DOB + 7 years) with the product (if charted with one) or event set name with the date of administration."
+		set startDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Year":7)))
+		set endDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Year":7)))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader, "-75", "-90", "75", "600")
+		run "Immunizations/Util/Validation".verifyText tdapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Year":7)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The previous administration for Tdap is displayed in the column aged at the time of the administration (DOB + 7 years) with the product (if charted with one) or event set name with the date of administration."
+		set startDateHeader to "7yrs"
+		set endDateHeader to "7yrs"
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader, "-95", "-100", "95", "600")
+		run "Immunizations/Util/Validation".verifyText tdapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Year":7)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Administration charted for Tdap at 19 years - 2 days is displayed in the column dated at the time of for the administration with the product (if charted with one) or event set name and the date of administration."
+		run "Immunizations/Common/Actions".typeTextWithRepeat "5", rightArrow
+		set startDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-2)))
+		set endDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-2)))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-75", "-90", "75", "600")
+		run "Immunizations/Util/Validation".verifyText tdapProduct & return & "Dose 1 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-2)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Administration charted for Tdap at 19 years - 2 days is displayed in the column aged at the time of for the administration with the product (if charted with one) or event set name and the date of administration."
+		set startDateHeader to "18yrs 11m"
+		set endDateHeader to "18yrs 11m"
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleWithIndex("1", startDateHeader, "1", endDateHeader, "-100", "-100", "100", "600")
+		run "Immunizations/Util/Validation".verifyText tdapProduct & return &  "Dose 1 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-2)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Administration charted for Tdap at 19 years - 1 day is displayed in the column dated at the time of for the administration with the product (if charted with one) or event set name and the date of administration."
+		set startDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-1)))
+		set endDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-1)))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-75", "-90", "75", "600")
+		run "Immunizations/Util/Validation".verifyText tdapProduct & return & "Dose 2 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-1)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Administration charted for Tdap at 19 years - 1 day is displayed in the column aged at the time of for the administration with the product (if charted with one) or event set name and the date of administration."
+		set startDateHeader to "18yrs 11m"
+		set endDateHeader to "18yrs 11m"
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleWithIndex("2", startDateHeader, "2", endDateHeader, "-100", "-100", "100", "600")
+		run "Immunizations/Util/Validation".verifyText tdapProduct & return & "Dose 2 -" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-1)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Dose 4 and 5 charted for Tdap at 19 years are displayed in the column dated at the time of for the administration with the product (if charted with one) or event set name and 2 Items Documented."
+		set startDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Year":19)))
+		set endDateHeader to uppercase("Immunizations/Util/Date".adjustDate(dob, format, ("Year":19)))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, topOffset1, topOffset2, bottomOffSet1, bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText tdapProduct & return & "2 Items Documented", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Dose 4 and 5 charted for Tdap at 19 years are displayed in the column aged at the time of for the administration with the product (if charted with one) or event set name and 2 Items Documented."
+		set startDateHeader to "19yrs"
+		set endDateHeader to "19yrs"
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-100", "-100", "100", "600")
+		run "Immunizations/Util/Validation".verifyText tdapProduct & return & "2 Items Documented", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Tdap Administrations Patient1")
+		
+		Log "VERIFICATION: Dose 5 is displayed in the timeline to the right for Tdap in the column dated for Dose 5's Admin Date + 10 years to Dose 5's Admin Date + 10 years + 4 weeks - 1 day."
+		run "Immunizations/Common/Actions".typeTextWithRepeat "3", rightArrow
+		set startDateHeader to uppercase("Immunizations/Util/Date".adjustDate(immediatePreviousDose, format, ("Year":10)))
+		set endDateHeader to uppercase("Immunizations/Util/Date".adjustDate(immediatePreviousDose, format, ("Year":10, "Week":4, "Day":-1)))
+		set alignment to ("Left","Right")
+		set (topOffset1, topOffset2, bottomOffSet1, bottomOffSet2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffSet1,bottomOffSet2)
+		run "Immunizations/Util/Validation".verifyText "Dose 5", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose 5 Forecast Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on Dose 5"
+		Click text: "Dose 5",searchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchrectangle)
+		
+		Log "VERIFICATION: Expanded view displays the following information: In the left pane, Dose 5 is listed with the status of Not Due Until with the Recommended From Date (Dose 5's Admin Date + 10 years)."
+		run "Immunizations/Common/Actions".typeTextWithRepeat "2", downArrow //added as a quick way to ensure that if another dose is forecasted it will be displayed and cause a failure in the verification. 
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneDoseSearchrectangle("5")
+		run "Immunizations/Util/Validation".verifyText "Not Due Until" & return & "Immunizations/Util/Date".adjustDate(immediatePreviousDose, format, ("Year":10)), rectangle
+		
+		Log "VERIFICATION: Dose 6 is not forecasted for Tdap"
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		run "Immunizations/Util/Validation".verifyTextNotVisible "6", rectangle
+		
+		Log "VERIFICATION: Right-hand pane header displays 'Dose 5'."
+		Set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Dose 5", rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Earliest: + 5 years from Dose 4's Admin Date"
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum,"Immunizations/Util/Date".adjustDate(immediatePreviousDose, format, ("Year":5)) && "(24yrs)"
+		
+		Log "VERIFICATION: Recommended From: + 10 years from Dose 4's Admin Date"
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended,"Immunizations/Util/Date".adjustDate(immediatePreviousDose, format, ("Year":10)) && "(29yrs)"
+		
+		Log "VERIFICATION: Recommended Until: + 10 years + 4 weeks - 1 day from Dose 4's Admin Date"
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended,"Immunizations/Util/Date".adjustDate(immediatePreviousDose, format, ("Year":10, "Week":4, "Day":-1)) && "(29yrs)"
+		
+		Log "VERIFICATION:  Latest: '--'"
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewFieldImage maximum, "Immunizations/Common/DoubleDash"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Tdap Expanded View Dose 6 Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on Dose 4"
+		click text:"4", searchrectangle:"Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchrectangle()
+		
+		Log "VERIFICATION: In the right pane header 'Administered On < date administered (DOB + 19 years) > - < product name (if charted with one) or event set name >' is displayed and the body contains the details filled out while charting for the Performed Date, Performed By, Source, Documented Date, and Product Name fields."
+		//Expanded view header validation
+		run "Immunizations/Util/Validation".verifyText "Administered On" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19)) && "-" && tdapProduct, rightPaneHeaderSearchRectangle
+		//Expanded view body validation
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField userField, user
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField sourceField, source
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField documentedDateField, "Immunizations/Util/Date".todaysDate(format)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField productNameField, tdapProduct
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose 5 Details Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on Dose 3"
+		click text:"3", searchrectangle:"Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchrectangle()
+		
+		Log "VERIFICATION: In the right pane header 'Administered On < date administered (DOB + 19 years) > - < product name (if charted with one) or event set name >' is displayed and the body contains the details filled out while charting for the Performed Date, Performed By, Source, Documented Date, and Product Name fields."
+		//Expanded view header validation
+		run "Immunizations/Util/Validation".verifyText "Administered On" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19)) && "-" && tdapProduct, rightPaneHeaderSearchRectangle
+		//Expanded view body validation
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField userField, user
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField sourceField, source
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField documentedDateField, "Immunizations/Util/Date".todaysDate(format)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField productNameField, tdapProduct
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose 4 Details Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on Dose 1" //had to switch order of clicking as Eggplant was struggling to read the text.
+		click text:"1", searchrectangle:"Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchrectangle()
+		
+		Log "VERIFICATION: In the right pane header 'Administered On < date administered (DOB + 19 years - 2 days) > - < product name (if charted with one) or event set name >' is displayed and the body contains the details filled out while charting for the Performed Date, Performed By, Source, Documented Date, and Product Name fields."
+		//Expanded view header validation
+		run "Immunizations/Util/Validation".verifyText "Administered On" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-2)) && "-" && tdapProduct, rightPaneHeaderSearchRectangle
+		//Expanded view body validation
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-2))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField userField, user
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField sourceField, source
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField documentedDateField, "Immunizations/Util/Date".todaysDate(format)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField productNameField, tdapProduct
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose 2 Details Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on Dose 2" //had to switch order of clicking as Eggplant was struggling to read the text.
+		click text:"2", searchrectangle:"Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchrectangle()
+		
+		Log "VERIFICATION: In the right pane header 'Administered On < date administered (DOB + 19 years - 1 day) > - < product name (if charted with one) or event set name >' is displayed and the body contains the details filled out while charting for the Performed Date, Performed By, Source, Documented Date, and Product Name fields."
+		//Expanded view header validation
+		run "Immunizations/Util/Validation".verifyText "Administered On" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-1)) && "-" && tdapProduct, rightPaneHeaderSearchRectangle
+		//Expanded view body validation
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-1))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField userField, user
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField sourceField, source
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField documentedDateField, "Immunizations/Util/Date".todaysDate(format)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField productNameField, tdapProduct
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose 3 Details Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click outside expanded view and click the List button"
+		Set topPaneRectangle to "Immunizations/Common/Helpers".tabListSearchrectangle
+		Click text:"Print", searchrectangle:topPaneRectangle
+		run "Immunizations/Forecaster-Common/Actions" .ClickFlipViews
+		
+		Log "VERIFICATION: The first column for Tdap displays 'Last Admin: < Date for DOB + 19 years >'."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers". largeFirstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1 & return & "Last Admin:" && "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19)) && "(19yrs)", columnSearchRectangle
+		
+		Log "VERIFICATION: The previous administration for Tdap at 7yrs is displayed in the Action column with the product (if charted with one) or event set name and the date of administration."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1) 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText  tdapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Year":7)) && "(7yrs)", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The previous administration for Tdap at 19 years - 2 days is displayed in the Action column with the product (if charted with one) or event set name and the date of administration."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("2")
+		run "Immunizations/Util/Validation".verifyText  "1" && tdapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-2)) && "(18yrs 11m)", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The previous administration for Tdap at 19 years - 1 day is displayed in the Action column with the product (if charted with one) or event set name and the date of administration."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("3")
+		run "Immunizations/Util/Validation".verifyText  "2" && tdapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19, "Day":-1)) && "(18yrs 11m)", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The previous administration for Tdap at 19 years is displayed in the Action column with the product (if charted with one) or event set name and the date of administration."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("4")
+		run "Immunizations/Util/Validation".verifyText  "3" && tdapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19)) && "(19yrs)", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The previous administration for Tdap at 19 years is displayed in the Action column with the product (if charted with one) or event set name and the date of administration."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("5")
+		run "Immunizations/Util/Validation".verifyText  "4" && tdapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Year":19)) && "(19yrs)", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The first column for DTaP displays 'Complete'."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers". largeFirstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName2 & return & "Complete", columnSearchRectangle
+		
+		Log "VERIFICATION: The administration of DTaP charted at 2 months displays with the product and administration date charted in the 1st Action column"
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2) 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText  "1" && dtapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Month":2)) && "(2m)", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The administration of DTaP charted at 4 months displays with the product and administration date charted in the 2nd Action column."
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2) 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("2")
+		run "Immunizations/Util/Validation".verifyText "2" && dtapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)) && "(4m)", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The administration of DTaP charted at 6 months displays with the product and administration date charted in 3rd the Action column."
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2) 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("3")
+		run "Immunizations/Util/Validation".verifyText "3" && dtapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)) && "(6m)", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The administration of DTaP charted at 15 months displays with the product and administration date charted in the 4th Action column"
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2) 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("4")
+		run "Immunizations/Util/Validation".verifyText  "4" && dtapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Month":15)) && "(15m)", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: The administration of DTaP charted at 4 years displays with the product and administration date charted in the 5th Action column"
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2) 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("5")
+		run "Immunizations/Util/Validation".verifyText  "5" && dtapProduct & return & "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)) && "(4yrs)", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-List View Patient1")
+		---------------------------------------------------------------------------------------------------------------
+	catch exception
+		logError "Exception encountered during test steps" && exception.reason
+		log "Exception Location:" && exception.location	
+		captureScreen"Exception"	
+	end try
+	---------------------------------------------------------------------------------------------------------------	
+	log "Util".stepNumber &"ACTION: Close patient's chart."
+	run "Immunizations/setup".closeApplication 
+	--------------------------------------------------------------------------------------------------------------- 
+catch exception
+	logError "Exception encountered" && exception.reason
+	log "Exception Location:" && exception.location	
+	captureScreen"Exception" && "at" & Global stepNumber
+end try
+run "Cleanup".ZeroStateCloseAllApps

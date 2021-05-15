@@ -1,0 +1,48 @@
+{
+	"originalcapturelocation": [
+		68,
+		775,
+		32,
+		16
+	],
+	"lastmodifieddate": 1615229947.5349998,
+	"createddate": 1615229947.5349998,
+	"name": "S18DC_7_0",
+	"lastfounddate": 1615229948.7249999,
+	"ocrcapturestring": "- His",
+	"lastfoundlocation": [
+		68,
+		775,
+		32,
+		16
+	],
+	"testlocationdata": [
+		{
+				"connectionportnum": 3389,
+				"properties": {
+					"CropRectangle": "[0,0,0,0]",
+					"Rotate": 0,
+					"Scale": "    1",
+					"HotSpot": "[16,8]",
+					"Tolerance": "_45",
+					"Discrepancy": "_0",
+					"SearchType": "Tolerant of Background"
+				},
+				"sutinfo": {
+					"type": "Unknown RDP"
+				},
+				"name": "S18DC_7_0.png",
+				"connectionname": "Team VM",
+				"type": 1,
+				"connectionserverid": "10.171.44.21",
+				"capturerect": [
+					68,
+					775,
+					32,
+					16
+				],
+				"connectiontype": "RDP",
+				"capturedocrtext": "- His"
+			}
+	]
+}

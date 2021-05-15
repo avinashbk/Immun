@@ -1,0 +1,371 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=122305
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set noVaccineHistoryImage to common.noVaccineHistoryImage
+set doubleDashImage to common.doubleDashImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set minimum to fieldLabels.minimum
+set earliestRecommended to fieldLabels.earliestRecommended
+set latestRecommended to fieldLabels.latestRecommended
+set maximum to fieldLabels.maximum
+set performedDateField to fieldLabels.performedDateField
+set userField to fieldLabels.userField
+set sourceField to fieldLabels.sourceField
+set documentedDateField to fieldLabels.documentedDateField
+set productNameField to fieldLabels.productNameField
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set overdue to textStrings.overdue
+set viewForecast to textStrings.viewForecast
+set notStarted to textStrings.notStarted
+set forecastSuspended to textStrings.forecastSuspended
+set lastAdmin to textStrings.lastAdmin
+set complete to textStrings.complete
+set administeredOn to textStrings.administeredOn
+set administered to textStrings.administered
+
+set testData to JSONValue(file ResourcePath("VR/HIB_3_DoseSeries/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file ResourcePath("VR/HIB_3_DoseSeries/testData.json")).(value of domain)
+Set lastName to testData.Patient_Condition_Skip.lastName
+Set firstName to testData.Patient_Condition_Skip.firstName
+Set patientName to testData.Patient_Condition_Skip.nameFullFormatted
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Condition_Skip.dob))
+set user to testData.User
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set Product1 to testData.Product1
+set Source to testData.Source
+set format to "%b %d, %Y"
+
+
+
+Try
+	#PATIENT RESET
+	run "Immunizations/PatientCreation".resetPatientToZeroState username, password, domain, lastName, firstName, dob
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/HIB/HLM-VR-Immunizations-HIB_3_DoseSeries_Conditional_Skip"
+		
+		Log "Util".stepNumber &"ACTION: Open Powerchart.exe with User1, search for and open the chart for Patient1, and open the Immunizations Workflow component."
+		run "Immunizations/setup".LoginAndLoadComponentViaMenu Username, Password, Domain, patientName, Menu, SubMenu,  relationship
+		
+		Log "VERIFICATION: Ensure HIB displays in the vaccine Column."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName1
+		
+		Log "VERIFICATION: Ensure Status displays as 'Overdue'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName1, overdue
+		
+		Log "VERIFICATION:Ensure the Next recommended administration is 'Today'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, "Today"
+		
+		Log "VERIFICATION: Ensure Administrations displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, doubleDashImage, "false"
+		
+		Log "VERIFICATION: Ensure Last action displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, doubleDashImage
+		
+		Log "VERIFICATION: Ensure Last action Date displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName1, doubleDashImage
+		capturescreen (Name:"Step"&Global stepNumber&"-MPage Review ")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on the View Forecast button."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: In the CDC Schedule column, ensure HIB displays with a status of 'Not Started'."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1 &return& notStarted, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure Dose 1 displays in the today column."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Dose 1","Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangleToday)
+		
+		Log "VERIFICATION: Ensure that 'forecast suspended' displays in the today + 1 column and spans across all future columns."
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set endDateHeader to  "Immunizations/Util/Date".todaysDate(format)+1 day
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-20", "-30", "1200","100")
+		run "Immunizations/Util/Validation".verifyText forecastSuspended,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"-Forecaster review ")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber &"ACTION: Click Document History button and chart a dose at <(DOB + 12 months - 5 days> for HIB using product Comvax." 
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat,  "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12,"day":-5)), source, product1, "submit"
+		
+		Log "VERIFICATION: Ensure HIB displays with a status of 'Last Admin: <DOB + 12 months - 5 days>'."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,firstColumnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText lastAdmin && "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12,"day":-5)), "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose 1 displays charted in the forecaster with the product name, 'Dose 1' and date of administration in the cell."
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12,"day":-5))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12,"day":-5))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "50","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 1" && "-" && "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12,"day":-5)),"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		
+		set startDateHeader to  "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12,"day":-5)), false, false)
+		set endDateHeader to  "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12,"day":-5)), false, false)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "50","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 1" && "-" && "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12,"day":-5)),"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure Comvax also charts for Hepatitis B."
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set startDateHeader to  "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12,"day":-5))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12,"day":-5))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "50","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 1" && "-" && "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12,"day":-5)),"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"-Forecaster Dose1 charted ")
+		
+		Log "VERIFICATION: Ensure dose 2 displays in the today column."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Dose 2","Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangleToday)
+		
+		Log "VERIFICATION: Ensure no more doses are forecasted."
+		click imagelocation("Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarRightArrow")
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set endDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-110", "-30", "50","100")
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Dose", "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"-No More Doses Forecasted ")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber &"ACTION: Click on dose 1."
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "Day": -5))
+		set endDateHeader to  "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "Day": -5))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "100","100")
+		click text:"Dose 1", SearchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: In the left hand pane, ensure dose 1 displays with Comvax and <DOB + 12 months - 5 days>."
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers". expandedViewLeftPaneDoseSearchRectangle("1")
+		set age to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "Day": -5)), false, true)
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "Day": -5)) && age,  leftPaneSearchRectangle
+		
+		Log "VERIFICATION: In the right hand pane header, ensure 'Administered on <DOB + 12 months - 5 days> - Comvax'."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText administeredOn && "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "Day": -5)) && "-" && product1, rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Performed date field displays in the right hand column."
+		run  "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "Day": -5))
+		
+		Log "VERIFICATION: User displays in the right hand column."
+		run  "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField  userField, user
+		
+		Log "VERIFICATION: Source  displays in the right hand column."
+		run  "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField  sourceField, Source
+		
+		Log "VERIFICATION: Documented Date displays in the right hand column."
+		run  "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField  documentedDateField,"Immunizations/Util/Date".todaysDate(format)
+		
+		Log "VERIFICATION:Product displays in the right hand column."
+		run  "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField  productNameField, product1
+		capturescreen (Name:"Step"&Global stepNumber&"-Dose 1 Expanded view details")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		//4 dose series: TRUE/TRUE dose 3 set Id 2 (evaluation conditional skip)
+		Log "Util".stepNumber &"ACTION: Exit out of the expanded view and Chart HIB as of today uing product Comvax."
+		Click text:"Print Record", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, "Immunizations/Util/Date".todaysDate(format), source, product1, "submit"
+		
+		Log "VERIFICATION: Ensure HIB displays with a status of Complete in the CDC Schedule column."
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1 &return& complete, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,firstColumnSearchRectangle)
+		
+		//Here it counted for dose 3 and skips Dose 2 
+		Log "VERIFICATION: Ensure dose 2 displays charted in the forecaster with the product name, 'Dose 2' and date of administration in the cell."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 2 -"  && "Immunizations/Util/Date".todaysDate(format), "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangleToday)
+		
+		Log "VERIFICATION: Ensure Comvax also charts for Hepatitis B."
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 2" && "-" && "Immunizations/Util/Date".todaysDate(format) ,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName2RowSearchRectangle,columnSearchRectangleToday)
+		
+		Log "VERIFICATION: Ensure no more doses are forecasted."
+		click imagelocation("Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarRightArrow")
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set endDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-110", "-30", "50","100", format)
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Dose", "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"- Skip Applied")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber &"ACTION: Click on dose 2."
+		set startDateHeader to "Today"
+		set endDateHeader to "Today"
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "100","100")
+		click text:"Dose 2", SearchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: In the left hand pane, ensure dose 1 displays with Comvax as of today."
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers". expandedViewLeftPaneDoseSearchRectangle("2")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Immunizations/Util/Date".todaysDate(format) && "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".todaysDate(format), false, true),  leftPaneSearchRectangle
+		
+		Log "VERIFICATION: In the right hand pane header, ensure 'Administered on <DOB + 12 months - 5 days> - Comvax'."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText administeredOn && "Immunizations/Util/Date".todaysDate(format) && "-" && product1, rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Performed date field displays in the right hand column."
+		run  "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, "Immunizations/Util/Date".todaysDate(format)
+		
+		Log "VERIFICATION: User displays in the right hand column."
+		run  "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField  userField, user
+		
+		Log "VERIFICATION: Source  displays in the right hand column."
+		run  "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField  sourceField, Source
+		
+		Log "VERIFICATION: Documented Date displays in the right hand column."
+		run  "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField  documentedDateField,"Immunizations/Util/Date".todaysDate(format)
+		
+		Log "VERIFICATION:Product displays in the right hand column."
+		run  "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField  productNameField, product1
+		
+		Log "VERIFICATION: Ensure no more doses is shown in the expanded view."
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Dose 3", "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		capturescreen (Name:"Step"&Global stepNumber&"-Dose 1 Expanded view details")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber &"ACTION: Navigate back to the workflow MPage."
+		Click text:"Print", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run  "Immunizations/Common/Actions".clickMPagesView viewpoint
+		
+		Log "VERIFICATION: Ensure HIB displays in the historical section with a status of complete"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName1
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName1, complete
+		
+		Log "VERIFICATION: The administrations column displays '2'  for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "2", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, administered
+		
+		Log "VERIFICATION: Ensure HIB displays a next recommended of '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, doubleDashImage
+		
+		Log "VERIFICATION: Verify the Last Action Date matches with the last charting event date."
+		set age to "Immunizations/Util/Date".ageCalculator(dob,"Immunizations/Util/Date".todaysDate(format) , false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName1, uppercase("Immunizations/Util/Date".todaysDate(format)), age
+		capturescreen (Name:"Step"&Global stepNumber&"-Workflow MPage Skip Applied")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		////3 dose series dose 3 set Id 2 (evaluation conditional skip) TRUE/FALSE
+		Log "Util".stepNumber &"ACTION: Chart HIB  at <Dose 2 - 8 weeks + 3 days> for HIB using product Comvax from Workflow MPage"
+		set dose2AdminDate to "Immunizations/Util/Date".adjustDate("Immunizations/Util/Date".todaysDate(format), format, ("week":-8, "day":3)) 
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, dose2AdminDate, source, product1, "submit"
+		
+		Log "VERIFICATION: Ensure HIB displays in the historical section with a status of complete"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName1
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName1, complete
+		
+		Log "VERIFICATION: The administrations column displays '3'  for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "3", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, administered
+		
+		Log "VERIFICATION: Ensure HIB displays a next recommended of '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, doubleDashImage
+		capturescreen (Name:"Step"&Global stepNumber&"-Workflow MPage Skip Interval Not Met")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "VERIFICATION: Navigate back to the Forecaster view."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: Ensure the CDC schedule column shows HIB with a status of 'Complete'."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1 &return& complete, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose 2 displays charted in the forecaster with the product name, 'Dose 2' and date of administration in the cell."
+		set dose2AdminDate to "Immunizations/Util/Date".adjustDate("Immunizations/Util/Date".todaysDate(format),format, ("week":-8, "day":3))
+		set startDateHeader to dose2AdminDate
+		set endDateHeader to  dose2AdminDate
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "50","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 2 -"  && dose2AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		
+		set startDateHeader to  "Immunizations/Util/Date".ageCalculator (dob, dose2AdminDate, false, false)
+		set endDateHeader to  "Immunizations/Util/Date".ageCalculator (dob, dose2AdminDate,false, false)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "50","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 2 -"&& dose2AdminDate ,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose 3 displays charted in the forecaster with the product name, 'Dose 3' and date of administration in the cell."
+		set startDateHeader to "Today"
+		set endDateHeader to  "Today"
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "50","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 3 -"  && "Immunizations/Util/Date".todaysDate(format), "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"-  Forecaster 3rd Dose Counted")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber &"ACTION: Navigate to the list view."
+		run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+		
+		Log "VERIFICATION: Ensure HIB is shown in the vaccine column with a status of complete."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".largeFirstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1 &return& complete, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: In the action column 1, ensure the administered dose displays for HIB with Comvax, <DOB + 12 months - 5 days>."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		set age to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "day":-5)), false, true) 
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "day":-5)) && age,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: In the action column 2, ensure the administered dose displays for HIB with Comvax, <Today - 8 weeks + 3 days."
+		set dose2AdminDate to "Immunizations/Util/Date".adjustDate("Immunizations/Util/Date".todaysDate(format),format, ("week":-8, "day":3))
+		set age to  "Immunizations/Util/Date".ageCalculator (dob, dose2AdminDate , false, true)
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("2")
+		run "Immunizations/Util/Validation".verifyText product1 &return& dose2AdminDate  && age ,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: In the action column 3, ensure the administered dose displays for  HIB with Comvax,<Today>."
+		set age to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".todaysDate(format), false, true)
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("3")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Immunizations/Util/Date".todaysDate(format) && age ,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"-List View ")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber &"ACTION: Close Application."
+		run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/HIB/HLM-VR-Immunizations-HIB_3_DoseSeries_Conditional_Skip"
+		
+	catch
+		logError "Test Steps Exception: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	end try
+catch
+	logError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+end try
+---------------------------------------------------------------------------------------------------------------
+#SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

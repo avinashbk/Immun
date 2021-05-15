@@ -1,0 +1,87 @@
+﻿logWarning "remove prereqs after automating and update RQM test case if any are changed."
+(*
+
+
+Purpose:  Admin chartings to modify/unchart
+1522555, 1552306, 1206650, 193857, 807232, 1516571, 1517666, 1517705, 1521105, 1552300, 1522554, 1522555, 1522552, 1522551, 1552306, 193865
+
+Prereq Data Needed
+vaccineName1Admin1
+	1. Forecasted Non-Combo
+	2. External Source Type
+	3. Fuzzy dates for VIS Published Date, VIS Given Date, Product Expiration Date, and Administration Comment Date values have been returned.
+	4. User not returned with comment (will apply system user)
+	5. Admin date is a precise date (need precise admin date for admin and tolerence notes (comments) testing per 1522555) and is NOT today but is within the last year.
+	6. Multiple Source values returned (2 related outside records)
+	7. Product, Dose, Unit, Route, Side, Lot Number, Manufacturer, VIS, Funding Source, VFC, and Last Modified values have been returned
+	8. Last Modified Date should be after the Admin Date.
+
+vaccineName1Admin2
+	1. Combo Product
+	2. External Source Type
+	3. Fuzzy date for admin date and admin/tolerance notes (comment date) for testing 1522555 and 1558546
+	4. User not returned with  comment1 (includes fuzzy dates and will apply system user)
+	5. User is returned with comment2 (admin comment made by user)
+	6. Only 1 source value has been returned (0 related outside records)
+
+vaccineName2Admin1
+	1. Forecasted vaccine group
+      2. PED Source Type
+	3. Does not include any comments
+	4. All date values are precise
+	5. Admin date is the same admin date as a local record that was charted with a different CVX for the same vaccine group (locally charted event must be an admin)
+	6. Multiple Source values returned (2 related outside records)
+	
+vaccineName3Admin1
+	1. Non-forecasted vaccine group that is currently not ever included as a forecasted vaccine group in the U.S. (e.g. Cholera) 
+      2. PED Source Type
+	3. Missing value for CVX (needed to test in order to trigger add with modify per 1552306 and 1517666)
+	4. Fuzzy date for  VIS Given Date
+      5. Only 1 source value has been returned (0 related outside records)
+
+
+
+*)
+
+
+
+
+
+
+params domain
+log "Test running in domain"&&domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+log "After handler to set domain, domain is" && domain
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set testData to JSONValue(file resourcePath("VR/Interop_Modify_Unchart_Not_Givens/testData.json")).(value of domain)
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set source to testData.source
+set dtapProduct to testData.dtapProduct 
+set tdapProduct to testData.tdapProduct 
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set relationship to setup.relationship
+set conversation to setup.conversation
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+
+set format to "%m/%d/%Y"
+
+Log "Create patient1 for the test"
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set dob to formattedTime(format, value(testData.Patient1.dob)) 
+set sex to testData.Patient1.sex
+run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+run "Immunizations/PatientCreation".openConversationContinuous conversation
+run "Immunizations/PatientCreation".searchPatient lastName, firstName
+run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, format, dob, encounterType
+run "Util".CloseApplication "2"
+----------------------------------------------------------------------------------------------------------------	

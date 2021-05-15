@@ -1,0 +1,469 @@
+﻿-------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+------------------------------------------------------------------------------------------------------------------------------
+#RQM TEST CASE LINK: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=104697
+
+params domain
+set format to "%b %d, %Y"
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set conversation to setup.conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set outsideRecordsBannerImage to common.outsideRecordsBannerImage
+set sidePanelXButtonImage to common.sidePanelXButtonImage
+set xButtonImage to common.xButtonImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set administeredByField to fieldLabels.administeredByField
+set productField to fieldLabels.productField
+set originatingSourceField to fieldLabels.originatingSourceField
+set siteField to fieldLabels.siteField
+set routeField to fieldLabels.routeField
+set doseField to fieldLabels.doseField
+set transmittingSourceField to fieldLabels.transmittingSourceField
+set manufacturerField to fieldLabels.manufacturerField
+set commentField to fieldLabels.commentField
+set expirationDateField to fieldLabels.expirationDateField
+set relatedOutsideRecordsField to fieldLabels.relatedOutsideRecordsField
+set originatingAuthorField to fieldLabels.originatingAuthorField
+set lotNumberField to fieldLabels.lotNumberField
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set administered to textStrings.administered
+set lastAdmin to textStrings.lastAdmin
+set administration to textStrings.administration
+
+set testData to JSONValue(file ResourcePath("VR/Reconcile_Workflow/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file ResourcePath("VR/Reconcile_Workflow/testData.json")).(text of domain)
+set lastName to testData.Patient_Outdside_Sources.lastName
+set firstName to testData.Patient_Outdside_Sources.firstName
+set newLastName to testData.Patient_Outdside_Sources.newLastName
+set patientName to testData.Patient_Outdside_Sources.nameFullFormatted
+set patientName2 to testData.Patient_No_Data.nameFullFormatted
+set sex to testData.Patient_PED.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Outdside_Sources.dob)) 
+set vaccineName1AdminDate1 to "Immunizations/Util/Date".adjustDate(testData.Patient_Outdside_Sources.vaccineName1AdminDate1, format)
+set vaccineName1AdminDate2 to "Immunizations/Util/Date".adjustDate(testData.Patient_Outdside_Sources.vaccineName1AdminDate2, format)
+set vaccineName2AdminDate1 to "Immunizations/Util/Date".adjustDate(testData.Patient_Outdside_Sources.vaccineName2AdminDate1, format)
+set vaccineName1 to testData.vaccineName1
+set vaccineName1Status to testData.vaccineName1Status
+set vaccineName2 to testData.vaccineName2
+set product1 to testData.product1
+set product2 to testData.product2
+set user to testData.user
+set route1 to testData.route1
+set lotNumber1 to testData.lotNumber1
+set expirationDate1 to "Immunizations/Util/Date".adjustDate(testData.expirationDate1, format)
+set comment1Text to testData.comment1.text
+set comment1Date to "Immunizations/Util/Date".adjustDate(testData.comment1.date1, format)
+set source1 to testData.source1
+set source2 to testData.source2
+set source3 to testData.source3
+set source4 to testData.source4
+set source5 to testData.source5
+set filePathToCollectionAndEnvironment to testData.filePathToCollectionAndEnvironment
+set collectionName to testData.collectionName
+set environmentName to testData.environmentName
+set filePathToCsv to testData.Patient_Outdside_Sources.filePathToCsv
+set csvFileName to testData.csvFileName
+
+
+
+try
+	
+	//-------------------Patient Setup------------
+	log "Create patient (4 years old) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	
+	//EXTERNAL Data
+	put (testData.Patient_Outdside_Sources.lastName) into lastNameList
+	set patientInfo to "DiscernVisualDeveloper/Actions".getPersonAndEncounterID(username, password, domain, lastNameList) //retrieving Person and Encounter ID's for all patients that need External data
+	put trimAll(item 1 of patientInfo) into personIDList
+	run "DiscernVisualDeveloper/Actions".closeDiscernVisualDeveloper
+	run "Postman/Setup".openPostMan
+	run "Postman/Actions".removeEnvironment 
+	run "Postman/Setup".importCollectionAndEnvironment filePathToCollectionAndEnvironment
+	//modify and set necessary variables for postman
+	run "Postman/Actions".setEnvironmentVariables environmentName, "domain", domain, "0patientId", item 1 of personIDList, "1patientId", item 1 of personIDList, "2patientId", item 1 of personIDList, "3patientId", item 1 of personIDList
+	//run the collection
+	run "Postman/Collection_Runner/Task".runCollections filePathToCsv, csvFileName, 5
+	//Close postman
+	run "Util".closeApplication 2
+	//-------------------End Patient Setup------------
+	
+	try		
+		log "Util".stepNumber & "ACTION: Open Powerchart and navigate to Patient 1's chart."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		log "VERIFICATION: Ensure the reconciliation banner displays on the top of the table with the message 'Outside records available. Reconciliation has not been completed on this encounter.' along with a 'Reconcile' button."
+		run "Immunizations/Util/Validation".verifyImage outsideRecordsBannerImage
+		capturescreen (Name:"Step"&Global stepNumber&"- Base Component")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Chart an Admin for "& vaccineName2 &" at DOB then click on the 'Reconcile' button within the reconciliation banner."
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName2, dateFormat, dob, source1, product2, "submit"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileBanners
+		
+		//vaccineNe1AdminDate1
+		log "VERIFICATION: Ensure "& vaccineName1AdminDate1 &" is shown in the outside records table with the source as '--'."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifySourceColumn vaccineName1AdminDate1, vaccineName1, 1, "--"
+		
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName1AdminDate1, false, true)
+		log "VERIFICATION: Ensure Administration date dispays as "& vaccineName1AdminDate1 &" & patient's age at the time of charting (e.g."&& age &") displays in the Administration Date column within the outside record table for" && vaccineName1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName1, 1, vaccineName1AdminDate1, age
+		
+		log "VERIFICATION: Only one row for "& vaccineName1AdminDate1 &" "&& vaccineName1 &&" is shown on the table."
+		set columnSearchRectangle to  "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineColumnSearchRectangle(false, vaccineName1, 2)
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1AdminDate1 && age &return& vaccineName1AdminDate1 && age, columnSearchRectangle
+		
+		log "VERIFICATION: Ensure "& vaccineName1AdminDate1 &" displays with the comment icon under the Details section of the outside records table along with "& product2 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyDetailsColumn vaccineName1AdminDate1, vaccineName1, 1, false, vaccineName1, true
+		
+		log "VERIFICATION: Ensure Updates displays as 'New Administration' for the Administration dated for "& vaccineName1AdminDate1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyUpdatesColumn vaccineName1AdminDate1, vaccineName1, 1, administration
+		
+		log "VERIFICATION: Ensure 'Add' and 'Reject' buttons appear in the action column for the Administration dated for "& vaccineName1AdminDate1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName1AdminDate1, vaccineName1, 1, false, false
+		
+		//vaccineName1AdminDate2
+		log "VERIFICATION: Ensure "& vaccineName1AdminDate2 &" is shown in the outside records table with the source as "& source4 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifySourceColumn vaccineName1AdminDate2, vaccineName1, 2, source4
+		
+		log "VERIFICATION: Ensure Administration date dispays as "& vaccineName1AdminDate2 &" & patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName1 & "."
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName1AdminDate2, false, true)
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName1, 2, vaccineName1AdminDate2, age
+		
+		log "VERIFICATION: Ensure Updates displays as 'New Administration' for the Administration dated for "& vaccineName1AdminDate2 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyUpdatesColumn vaccineName1AdminDate2, vaccineName1, 2, administration
+		
+		log "VERIFICATION: Ensure 'Add' and 'Reject' buttons appear in the action column for the Administration dated for "& vaccineName1AdminDate1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName1AdminDate1, vaccineName1, 2, false, false
+		
+		//local record table
+		log "VERIFICATION: Ensure "& vaccineName1 &" also displays in the local record table suffixed with '(0)'."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyVaccineHeader true, vaccineName1, 0
+		
+		log "VERIFICATION: In the local records table, the corresponding row displays with '--' in all fields for "& vaccineName1AdminDate1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyCorrespondingRecordRow vaccineName1AdminDate1, false, vaccineName1, 2	
+		capturescreen (Name:"Step"&Global stepNumber&"- Outside Records Table")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on "& vaccineName1AdminDate1 &" in the outside records table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue false, vaccineName1, 2, vaccineName1AdminDate1
+		
+		log "VERIFICATION: Ensure "& vaccineName1 &" dispays on the top of the side panel."
+		set sidePanelHeaderRectangle to"Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName1, sidePanelHeaderRectangle
+		
+		log "VERIFICATION: Ensure the Administration Date along with the last action displays in the side panel."
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName1AdminDate1, false, true)
+		run "Immunizations/Util/Validation".verifyText vaccineName1AdminDate1 && age, sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyText administered, sidePanelHeaderRectangle
+		
+		log "VERIFICATION: Ensure 'Originating Source' displays with '--'."
+		set SidePanelRectangle to "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, originatingSourceField, sidePanelRectangle, "--"
+		
+		log "VERIFICATION: Ensure 'Originating Author' displays with '--'."
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, originatingAuthorField, sidePanelRectangle, "--"
+		
+		log "VERIFICATION: Ensure 'Transmitting Source' displays with '--'."
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, transmittingSourceField, sidePanelRectangle, "--"
+		
+		log "VERIFICATION: Ensure 'Administered by' displays with" && user && "."
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, administeredByField, sidePanelRectangle, user
+		
+		log "VERIFICATION: Ensure 'Product' displays with '--'."
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, productField, sidePanelRectangle, product1
+		
+		log "VERIFICATION: Ensure 'Site' displays with '--'."
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, siteField, sidePanelRectangle, "--"
+		
+		log "VERIFICATION: Ensure 'Route' displays with "& route1 &"."
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, routeField, sidePanelRectangle, route1
+		
+		log "VERIFICATION: Ensure 'Dose' displays with '--'."
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, doseField, sidePanelRectangle, "--"
+		
+		log "VERIFICATION: Ensure 'Lot Number' displays with "& lotNumber1 &"."
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, lotNumberField, sidePanelRectangle, lotNumber1
+		
+		log "VERIFICATION: Ensure 'Expiration Date' displays with "& expirationDate1 &"."
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, expirationDateField, sidePanelRectangle, expirationDate1
+		
+		log "VERIFICATION: Ensure 'Manufacturer' displays with '--'."
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, manufacturerField, sidePanelRectangle, "--"
+		
+		log "VERIFICATION: Ensure "& comment1Text &" dispays under the comment section of the side panel."
+		click imageLocation(text:vaccineName1, searchRectangle: sidePanelHeaderRectangle) + (0, 100)
+		scrollWheelDown 3
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyLargeFieldValue 1, commentField, sidePanelRectangle, comment1Text
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyLargeFieldValue 1, commentField, sidePanelRectangle, user  && "|" && comment1Date
+		capturescreen (Name:"Step"&Global stepNumber&"- Dose1 Side Panel")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on "& vaccineName1AdminDate2 &" in the outside records table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue false, vaccineName1, 3, vaccineName1AdminDate2
+		
+		log "VERIFICATION: Ensure 'Originating Source' displays with "& source4 &"."
+		click imageLocation(text:vaccineName1, searchRectangle: sidePanelHeaderRectangle) + (0, 100)
+		scrollWheelUp 3
+		set SidePanelRectangle to "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, originatingSourceField, sidePanelRectangle, source4
+		
+		set sidePanelHeaderRectangle to"Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelHeaderRectangle
+		set SidePanelRectangle to "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelRectangle
+		
+		log "VERIFICATION: Ensure"&& source5 &&"displays in the Related Outside Records field in the side panel."
+		click imageLocation(text:vaccineName1, searchRectangle: sidePanelHeaderRectangle) + (0, 100)
+		scrollWheelDown 3
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyLargeFieldValue 1, relatedOutsideRecordsField, sidePanelRectangle, source5
+		capturescreen (Name:"Step"&Global stepNumber&"- Dose2 Side Panel")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on the 'Add' for the "& vaccineName1AdminDate1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".addRejectUndoAdministration vaccineName1AdminDate1, vaccineName1, 3, "add"
+		
+		log "VERIFICATION: Ensure the Action column displays as 'Added' along with a green check mark."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName1AdminDate1, vaccineName1, 3, false, false, false, "added"
+		
+		log "VERIFICATION: "& vaccineName1AdminDate1 &" is shown in the local table."
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName1AdminDate1, false, true)
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn true, vaccineName1, 1, vaccineName1AdminDate1, age
+		capturescreen (Name:"Step"&Global stepNumber&"- Dose1 added")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on "& vaccineName1AdminDate1 &" in the outside record table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue false, vaccineName1, 2, vaccineName1AdminDate1
+		
+		log "VERIFICATION: Ensure 'Added' displays in the header of the side pane."
+		set sidePanelHeaderRectangle to"Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/Outside_Record_Table/Action_Column/Added", sidePanelHeaderRectangle
+		capturescreen (Name:"Step"&Global stepNumber&"- Dose1 added side panel")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on "& vaccineName1AdminDate1 &" in the local record table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue true, vaccineName1, 2, vaccineName1AdminDate1
+		
+		log "VERIFICATION: Ensure "& vaccineName1AdminDate1 &" displays in the header of the side panel along with "& age &" and "& administered &"."
+		set sidePanelHeaderRectangle to"Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName1, sidePanelHeaderRectangle
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName1AdminDate1, false, true)
+		run "Immunizations/Util/Validation".verifyText vaccineName1AdminDate1 && age, sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyText administered, sidePanelHeaderRectangle
+		
+		log "VERIFICATION: Ensure 'Administered By' displays with "& user &"."
+		set SidePanelRectangle to "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, administeredByField, sidePanelRectangle, user
+		
+		log "VERIFICATION: Ensure '--' displays in the 'Originating Source' field."
+		click imageLocation("Immunizations/WorkflowMPage/SidePanel/Button_ModifyEnabled") + (0, 200)
+		scrollWheelDown 3
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, originatingSourceField, sidePanelRectangle, "--"
+		capturescreen (Name:"Step"&Global stepNumber&"- Dose1 details localRecord")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on the 'X' button in the side panel."
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Actions".closeSidePanel
+		
+		log "VERIFICATION: Ensure the side panel no longer displays."
+		set rectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Local_Record_Header") + (20, -50, 400, 400)
+		run "Immunizations/Util/Validation".verifyImageNotVisible sidePanelXButtonImage, rectangle
+		capturescreen (Name:"Step"&Global stepNumber&"- Side Panel Closed")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on the 'Add' for the "& vaccineName1AdminDate2 &" then change the Records Displaying filter to 'All'."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".addRejectUndoAdministration vaccineName1AdminDate2, vaccineName1, 2, "add"
+		
+		log "VERIFICATION: "& vaccineName1AdminDate2 &" is shown in the local table."
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName1AdminDate2, false, true)
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn true, vaccineName1, 2, vaccineName1AdminDate2, age
+		
+		log "VERIFICATION: Ensure the comment icon displays under the details column in the local records table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyDetailsColumn vaccineName1AdminDate2, vaccineName1, 2, true, vaccineName1, false
+		
+		log "VERIFICATION: Ensure the Action column displays as 'Added' along with a green check mark."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName1AdminDate2, vaccineName1, 2, false, false, false, "added"
+		capturescreen (Name:"Step"&Global stepNumber&"- "& vaccineName1AdminDate2 &" added")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		log "Util".stepNumber & "ACTION: Click on "& vaccineName1AdminDate2 &" in the local record table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue true, vaccineName1, 2, vaccineName1AdminDate2
+		
+		log "VERIFICATION: Ensure "& vaccineName1AdminDate2 &" displays in the header of the side panel along with "& age &" and "& administered &"."
+		set sidePanelHeaderRectangle to"Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName1AdminDate2 && age, sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyText administered, sidePanelHeaderRectangle
+		
+		log "VERIFICATION: Ensure 'Administered by' displays with" && user && "."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, administeredByField, sidePanelRectangle, user
+		
+		log "VERIFICATION: Ensure "& source4 &" displays in the 'Originating Source' field."
+		logWarning "Test error occuring due to DEFECT: https://jira2.cerner.com/browse/IMMUN-1645"
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Validations".fieldValidation 1, originatingSourceField, sidePanelRectangle, source4
+		
+		log "VERIFICATION: Ensure the 'Related Outside Records' section shows with "& source5 &"." 
+		logError "Test error occuring due to DEFECT: https://jira2.cerner.com/browse/IMMUN-1645"
+		logWarning "Code will be reintroduced once issue is fixed since this is throwing an exception"
+		(*		click imageLocation("Immunizations/WorkflowMPage/SidePanel/Button_ModifyEnabled") + (0, 200)
+		scrollWheelDown 3
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Validations".largeFieldValidation 1, relatedOutsideRecordsField, sidePanelRectangle, source5*)
+		capturescreen (Name:"Step"&Global stepNumber&"-  "& vaccineName1AdminDate2 &" details localRecord")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on "& vaccineName2AdminDate1 &" then on the 'Reject' button in the side panel."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue false, vaccineName2, 2, vaccineName2AdminDate1
+		run "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Actions".addRejectUndo "reject"
+		
+		log "VERIFICATION: Ensure the action column now displays with 'Rejected' along with the option to undo for "& vaccineName2AdminDate1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName2AdminDate1, vaccineName2, 2, false, false, false, "rejected"
+		capturescreen (Name:"Step"&Global stepNumber&"- vaccineName2 rejected")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on the undo button in the action column."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".addRejectUndoAdministration vaccineName2AdminDate1, vaccineName2, 2, "undo"
+		
+		log "VERIFICATION: Ensure the Action column now displays with the 'Add' and 'Reject' buttons."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName2AdminDate1, vaccineName2, 2, false, false, false
+		capturescreen (Name:"Step"&Global stepNumber&"- vaccineName2 rejected undo")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		log "Util".stepNumber & "ACTION: Close the reconcilation dialog then reopen it, then switch the Records displaying filter to 'All'."
+		run "Immunizations/WorkflowMPage/Reconciliation/Actions".refreshModalWindow
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Records_Displaying/Header", "All"
+		
+		log "VERIFICATION: Ensure "& vaccineName2AdminDate1 &" displays in the outside record side."
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName2AdminDate1, false, true)
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName2, 2, vaccineName2AdminDate1, age
+		
+		log "VERIFICATION: In the outside records table, the corresponding row displays with '--' in all fields for "& vaccineName1AdminDate2 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyCorrespondingRecordRow vaccineName2AdminDate1, false, vaccineName2, 2	
+		capturescreen (Name:"Step"&Global stepNumber&"- Dose2 still displays")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		log "Util".stepNumber & "ACTION: Click on the 'X' button to close the reconciliation Dialog."
+		click item 1 of EveryImageLocation(xButtonImage)
+		
+		log "VERIFICATION: Ensure 'Administrations' displays with 2 for "& vaccineName1 &"."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, 2, false
+		
+		log "VERIFICATION: Ensure 'Last Action Date' displays with "& vaccineName1AdminDate2 &"."
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1AdminDate2, false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionDateColumn vaccineName1,vaccineName1AdminDate2, age
+		
+		log "VERIFICATION: Ensure 'Administrations' displays with '1' for "& vaccineName2 &"."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName2, 1, false
+		capturescreen (Name:"Step"&Global stepNumber&"- Base Component Review")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on 'View Forecast'."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		log "VERIFICATION: Ensure " & vaccineName1 & " displays with a status of 'Last Admin: <Date and age for " & vaccineName1AdminDate2 & ">'."
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1AdminDate2, false, true)
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,firstColumnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText lastAdmin && vaccineName1AdminDate2 && age, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose 1 displays charted in the forecaster with the product name, 'Dose 1 and date of administration in the cell Dated for " & vaccineName1AdminDate1 & "."
+		set startDateHeader to vaccineName1AdminDate1
+		set endDateHeader to vaccineName1AdminDate1
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "100","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 1 - " & vaccineName1AdminDate1,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose 1 displays charted in the forecaster with the product name, 'Dose 1 and date of administration in the cell aged for " & vaccineName1AdminDate1 & "."
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1AdminDate1, false, false)
+		set startDateHeader to age
+		set endDateHeader to age
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-110", "-30", "110","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 1 - " & vaccineName1AdminDate1,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose 2 displays charted in the forecaster with the product name, 'Dose 2 and date of administration in the cell Dated for " & vaccineName1AdminDate2 & "."
+		set startDateHeader to vaccineName1AdminDate2
+		set endDateHeader to vaccineName1AdminDate2
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "100","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 2 - " & vaccineName1AdminDate2,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose 2 displays charted in the forecaster with the product name, 'Dose 2 and date of administration in the cell aged for " & vaccineName1AdminDate2 & "."
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1AdminDate2, false, false)
+		set startDateHeader to age
+		set endDateHeader to age
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-110", "-30", "110","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 2 - " & vaccineName1AdminDate2,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"- Base Component Forecast")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on List View."
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews
+		
+		Log "VERIFICATION: Ensure "& vaccineName1 &" shows in the vaccine column with a status of '"& vaccineName1Status &"'."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".largeFirstColumnSearchRectangle() 
+		run "Immunizations/Util/Validation".verifyText vaccineName1 &return& vaccineName1Status, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: In the action column 1, ensure dose 1 displays for "& vaccineName1 &" <Date and age for "& vaccineName1AdminDate1 &">."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle(1)
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1AdminDate1, false, false)
+		set pattern to "Immunizations/Util/Date".setPattern(age)
+		run "Immunizations/Util/Validation".verifyText 1 && product1 &return& vaccineName1AdminDate1 ,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle) 
+		
+		Log "VERIFICATION: In the action column 2, ensure dose 2 displays for "& vaccineName1 &" <Date and age for "& vaccineName1AdminDate2 &">."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle(2)
+		set age to "Immunizations/Util/Date".ageCalculator (dob, vaccineName1AdminDate2, false, true)
+		run "Immunizations/Util/Validation".verifyText 2 && product1 &return& vaccineName1AdminDate2 && age,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"-List View")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Open Patient 2's Chart and click on the 'View Outside Records' button."
+		run "Immunizations/setup".navigateToImmunizationWorkflowViaMenu  patientName2, menu, subMenu, relationship
+		run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+		
+		log "VERIFICATION: Ensure 'No Results' displays in the reconcilation dialog where the table previously existed."
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/Outside_Record_Table/No_results_For_Any_Filter"
+		capturescreen (Name:"Step"&Global stepNumber&"-Different Patient chart Opened")
+		----------------------------------------------------------------------------------------------------------------
+	catch exception
+		logError "Exception encountered" && exception.reason
+		log "Exception Location:" && exception.location	
+		captureScreen"Exception" && "at" & Global stepNumber	
+	end try 
+	---------------------------------------------------------------------------------------------------------------	
+	log "Util".stepNumber &"ACTION: Close patient's chart."
+	run "Immunizations/setup".closeApplication 
+	--------------------------------------------------------------------------------------------------------------- 	 
+	log "Util".stepNumber &"ACTION: Cleanup Patient"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName,firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	----------------------------------------------------------------------------------------------------------------
+catch exception
+	logError "Exception encountered during patient cleanup or setup due to" && exception.reason
+	log "Exception Location:" && exception.location	
+	captureScreen"Exception" && "at" & Global stepNumber
+end try
+run "Cleanup".ZeroStateCloseAllApps		

@@ -1,0 +1,227 @@
+﻿-------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+------------------------------------------------------------------------------------------------------------------------------
+
+#RQM TEST CASE LINK: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=116645
+
+params domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set format to "%b %d, %Y"
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set conversation to setup.conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set outsideRecordsBannerImage to common.outsideRecordsBannerImage
+set sidePanelXButtonImage to common.sidePanelXButtonImage
+set xButtonImage to common.xButtonImage
+set viewingOutsideRecordsBannerImage to common.viewingOutsideRecordsBannerImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set productField to fieldLabels.productField
+set originatingSourceField to fieldLabels.originatingSourceField
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set lastAdmin to textStrings.lastAdmin
+set administration to textStrings.administration
+set notGiven to textStrings.notGiven
+
+set testData to JSONValue(file ResourcePath("VR/Reconcile_Workflow/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file ResourcePath("VR/Reconcile_Workflow/testData.json")).(text of domain)
+set patientName to testData.Patient_Mixed.nameFullFormatted
+set newLastName to testData.Patient_Mixed.newLastName
+set lastName to testData.Patient_Mixed.lastName
+set firstName to testData.Patient_Mixed.firstName
+set sex to testData.Patient_Mixed.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Mixed.dob)) 
+set vaccineName1AdminDate1 to "Immunizations/Util/Date".adjustDate(testData.Patient_Mixed.vaccineName1AdminDate1, format)
+set vaccineName1NotGivenDate1 to "Immunizations/Util/Date".adjustDate(testData.Patient_Mixed.vaccineName1NotGivenDate1, format)
+set vaccineName1AdminDate2 to dob
+set vaccineName2AdminDate1 to "Immunizations/Util/Date".adjustDate(testData.Patient_Mixed.vaccineName2AdminDate1, format)
+set notGivenType to testData.notGivenType
+set notGivenAction to testData.notGivenAction
+set notGivenReason to testData.notGivenReason
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set notGivenReason to testData.notGivenReason
+set notGivenType to testData.notGivenType
+set product1 to testData.product1
+set product2 to testData.product2
+set source1 to testData.source1
+set filePathToCollectionAndEnvironment to testData.filePathToCollectionAndEnvironment
+set collectionName to testData.collectionName
+set environmentName to testData.environmentName
+set filePathToCsv to testData.Patient_Mixed.filePathToCsv
+set csvFileName to testData.csvFileName
+
+
+
+try
+	//-------------------Patient Setup------------
+	log "Create patient (4 years old) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	wait 3
+	run "Util".closeApplication 2
+	
+	//EXTERNAL Data
+	put (testData.Patient_Mixed.lastName) into lastNameList
+	set patientInfo to "DiscernVisualDeveloper/Actions".getPersonAndEncounterID(username, password, domain, lastNameList) //retrieving Person and Encounter ID's for all patients that need External data
+	put trimAll(item 1 of patientInfo) into personIDList
+	run "DiscernVisualDeveloper/Actions".closeDiscernVisualDeveloper
+	run "Postman/Setup".openPostMan
+	run "Postman/Actions".removeEnvironment 
+	run "Postman/Setup".importCollectionAndEnvironment filePathToCollectionAndEnvironment
+	//modify and set necessary variables for postman
+	run "Postman/Actions".setEnvironmentVariables environmentName, "0patientId", item 1 of personIDList, "1patientId", item 1 of personIDList
+	//run the collection
+	run "Postman/Collection_Runner/Task".runCollections collectionName , environmentName, filePathToCsv, csvFileName, 3
+	//Close postman
+	run "Util".closeApplication 2
+	
+	//PED Data
+	put (testData.Patient_Mixed.lastName) into lastNameList
+	put (testData.Patient_Mixed.jsonUrl) into jsonUrlList 
+	set personnelId to setup.personnelId
+	run "DiscernVisualDeveloper/Task".generatePedData username, password, domain, lastNameList, personnelId, jsonUrlList
+	run "DiscernVisualDeveloper/Actions".closeDiscernVisualDeveloper
+	//-------------------End Patient Setup------------
+	try
+		log "Util".stepNumber & "ACTION: Navigate to Patient's chart and chart a Not Given for "& vaccineName1 &" and chart an administration for "& vaccineName2 &"." 
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		run "Immunizations/Common/ChartNotGiven/Task".chartRequiredInput vaccineName1, notGivenType, notGivenAction, notGivenReason, "submit"
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName2, dateFormat, dob, source1, product2, "submit"
+		
+		log "VERIFICATION: Ensure the reconciliation banner displays on the top of the table with the message 'Outside records available. Reconciliation has not been completed on this encounter.' along with a 'View' button."
+		run "Immunizations/Util/Validation".verifyImage outsideRecordsBannerImage
+		capturescreen (Name:"Step"&Global stepNumber&"- Base Component")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		log "Util".stepNumber & "ACTION: Click on the 'View' button in the reconcilation banner."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileBanners
+		
+		log "VERIFICATION: Ensure the reconciliation banner displays on the top of the table with the message 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'"
+		run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage
+		
+		//vaccineName1NotGivenDate1 outside record table
+		log "VERIFICATION: Ensure "& vaccineName1NotGivenDate1 &" is shown in the outside records table with the source as '--'."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifySourceColumn vaccineName1NotGivenDate1, vaccineName1, 2, "--"
+		
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName1NotGivenDate1, false, true)
+		log "VERIFICATION: Ensure Administration date dispays as "& vaccineName1NotGivenDate1 &" & patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName1 & "."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName1, 2, vaccineName1NotGivenDate1, age
+		
+		log "VERIFICATION: Ensure "& vaccineName1NotGivenDate1 &" displays with the comment icon under the Details section of the outside records table along with "& product1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyDetailsColumn vaccineName1NotGivenDate1, vaccineName1, 2, false, vaccineName1, false
+		
+		log "VERIFICATION: Ensure Updates displays as 'Not Given' for the Administration dated for "& vaccineName1NotGivenDate1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyUpdatesColumn vaccineName1NotGivenDate1, vaccineName1, 2, NotGiven
+		
+		log "VERIFICATION: Ensure 'Add' and 'Reject' buttons appear in the action column for the Administration dated for "& vaccineName1NotGivenDate1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName1NotGivenDate1, vaccineName1, 2, false, false, true
+		
+		//vaccineName1AdminDate1 not given outside record table
+		log "VERIFICATION: Ensure "& vaccineName1AdminDate1 &" is shown in the outside records table with the source as '--'."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifySourceColumn vaccineName1AdminDate1, vaccineName1, 2, "--"
+		
+		set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName1AdminDate1, false, true)
+		log "VERIFICATION: Ensure Administration date dispays as "& vaccineName1AdminDate1 &" & patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName1 & " in a different row than "& vaccineName1NotGivenDate1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyAdministrationDateColumn false, vaccineName1, 2, vaccineName1AdminDate1, age
+		
+		log "VERIFICATION: Ensure "& vaccineName1AdminDate1 &" displays with the comment icon under the Details section of the outside records table along with "& product1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyDetailsColumn vaccineName1AdminDate1, vaccineName1, 2, false, vaccineName1, false
+		
+		log "VERIFICATION: Ensure Updates displays as 'Not Given' for the Administration dated for "& vaccineName1AdminDate1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyUpdatesColumn vaccineName1AdminDate1, vaccineName1, 2, notGiven
+		
+		log "VERIFICATION: Ensure 'Add' and 'Reject' buttons appear in the action column for the Administration dated for "& vaccineName1AdminDate1 &"."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName1AdminDate1, vaccineName1, 2, false, false, true
+		capturescreen (Name:"Step"&Global stepNumber&"- Outside Records")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		log "Util".stepNumber & "ACTION: Click on"&& vaccineName1AdminDate1 &" in the outside records table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue false, vaccineName1, 2, vaccineName1AdminDate1
+		
+		log "VERIFICATION: Ensure the outside record for "& vaccineName1 &" shows under the 'Related Outside Records' section in the side panel with the "& source1 &" and "& vaccineName1AdminDate1 &"."
+		logWarning "Cannot mock provenance source record i.e. Related outside records."
+		
+		log "VERIFICATION: Ensure 'Not Given' is shown as the status."
+		set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyText notGiven, sidePanelHeaderRectangle
+		
+		log "VERIFICATION: Ensure 'Source(s)' displays as '--'."
+		set SidePanelRectangle to "Immunizations/WorkflowMPage/Reconciliation/SidePanel/Helpers".sidePanelRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySmallFieldValue 1, originatingSourceField, sidePanelRectangle, "--"
+		capturescreen (Name:"Step"&Global stepNumber&"- Local "& vaccineName1 &" Side Panel")
+		----------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber & "ACTION: Click on the 'Reject' button for "& vaccineName2AdminDate1 &" and change the 'Records Displaying' dropdown above the outside records table to 'All'.."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Source/Header", "patient"
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".addRejectUndoAdministration vaccineName2AdminDate1, vaccineName2, 2, "reject"
+		
+		log "VERIFICATION: Ensure the Action column displays as 'rejected' without the option to undo."
+		set rowSearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".vaccineRowSearchRectangle(vaccineName2AdminDate1, false, vaccineName2, 2)
+		set columnSearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Table/Helpers".columnSearchRectangle(false, "Action")
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/Outside_Record_Table/Action_Column/Rejected", "Immunizations/WorkflowMPage/Table/Helpers".cellintersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImageNotVisible "Immunizations/WorkflowMPage/Reconciliation/Outside_Record_Table/Action_Column/Undo_Button", "Immunizations/WorkflowMPage/Table/Helpers".cellintersection(rowSearchRectangle, columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"- "&vaccineName2AdminDate1&" rejected")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		log "Util".stepNumber & "ACTION: Click on "& vaccineName2AdminDate1 &" in the outside records table."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Actions".clickAdminDateColumnValue false, vaccineName2, 2, vaccineName2AdminDate1
+		
+		log "VERIFICATION: rejected is shown in the header of the side panel and the undo button is not present"
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/Outside_Record_Table/Action_Column/Rejected", sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible "Immunizations/WorkflowMPage/Reconciliation/Outside_Record_Table/Action_Column/Undo_Button", sidePanelHeaderRectangle
+		capturescreen (Name:"Step"&Global stepNumber&"- "& vaccineName2 &" Side Panel")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		log "Util".stepNumber & "ACTION: Click on the 'Reject Remaining' button."
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Source/Header", "external"
+		wait 1
+		click image: "Immunizations/WorkflowMPage/Reconciliation/Bottom_Summary/Reject_All_Remaining/Reject_All_Remaining"
+		run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Records_Displaying/Header", "All"
+		
+		log "VERIFICATION: Ensure all External source events in the outside records table show 'Rejected' and 'Undo' in the action column."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyActionColumn vaccineName1AdminDate1, vaccineName1, 2, false, false, false,"rejected"
+		capturescreen (Name:"Step"&Global stepNumber&"- Reject All")
+		----------------------------------------------------------------------------------------------------------------	
+	catch exception
+		logError "Exception encountered" && exception.reason
+		log "Exception Location:" && exception.location	
+		captureScreen"Exception"	
+	end try
+	---------------------------------------------------------------------------------------------------------------	
+	log "Util".stepNumber &"ACTION: Close patient's chart."
+	run "Immunizations/setup".closeApplication 
+	--------------------------------------------------------------------------------------------------------------- 	
+	log "Util".stepNumber &"ACTION: Cleanup Patient"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName,firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	wait 3
+	run "Util".closeApplication 2
+	----------------------------------------------------------------------------------------------------------------
+catch exception
+	logError "Exception encountered" && exception.reason
+	log "Exception Location:" && exception.location	
+	captureScreen"Exception" && "at" & Global stepNumber
+end try
+run "Cleanup".ZeroStateCloseAllApps		

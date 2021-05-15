@@ -1,0 +1,424 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=61895
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+Set encounterOrg to setup.encounterOrg
+Set encounterType to setup.encounterType
+Set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewpoint to common.viewpoint
+set hamburgerButton to common.hamburgerButton
+set doubleDashImage to common.doubleDashImage
+set sidePanelCloseButtonImage to common.sidePanelCloseButtonImage
+set unchartedCheckMark to common.unchartedCheckMark
+set unchartIconImage to common.unchartIconImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set otherVaccines to fieldLabels.otherVaccines
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set printRecord to textStrings.printRecord
+set viewForecast to textStrings.viewForecast
+set lastAdmin to textStrings.lastAdmin 
+set noForecastingInformation to textStrings.noForecastingInformation
+
+set testData to JSONValue(file resourcePath("VR/ListView_OtherVaccines/testData.json")).(value of domain)
+Set lastName to testData.Patient1.lastName
+Set firstName to testData.Patient1.firstName
+Set patientName to testData.Patient1.nameFullFormatted
+Set newLastName to testData.Patient1.newLastName
+Set sex to testData.Patient1.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient1.dob))
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set productName1 to testData.productName1
+set productName2 to testData.productName2
+set dateFormat to testData.dateFormat
+set source to testData.source
+
+set format to "%b %d, %Y"
+
+
+Try
+	---------------------------------------------------------------------------------------------------------------
+	# PATIENT SETUP
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	Run "Util".closeApplication 2
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/HLM-VR-Immunizations-ListView_Other_Vaccines_section"
+		
+		Log "Util".stepNumber & "ACTION: Open Powerchart.exe with User1. Search and select Patient1. From the TOC, select the MPage and Navigate to the Immunizations section."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		Log "VERIFICATION: Ensure the Immunization Workflow MPage displays."
+		set columnSearchRectangle to "Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Vaccine")
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1, columnSearchRectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName2, columnSearchRectangle
+		CaptureScreen (Name: "Step" & Global stepNumber & "-WorkFlowMpage-NonforecastedValidation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the + icon next to Immunizations section header and select Document History, click on Add Immunizations button and select " & vaccineName1 & " and" & vaccineName2 & " from the select Immunizations dialog."
+		run "Immunizations/Common/DocumentHistory/Actions".openDialog
+		run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineName1
+		run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineName2
+		
+		Log "VERIFICATION: Ensure Immunization administration dialog is displayed. Ensure " & vaccineName1 & " and" & vaccineName2 & " are selected and select button is enabled with count of 2(e.g. Select(2))."
+		run "Immunizations/Common/ChartingDiaLog/Validation".verifySelectButton true, "2" 
+		CaptureScreen (Name: "Step" & Global stepNumber & "-DocumentHistoryWindow-Validation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart an administration for " & vaccineName1 & " and" & vaccineName2 & " , fill in all the required fields and click on the submit button."
+		run "Immunizations/Common/SelectImmunizationsList".clickSelectButton
+		set dose1AdminDate to "Immunizations/Util/Date".todaysDate(format)
+		run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineName1, dateFormat, dose1AdminDate, source
+		run "Immunizations/Common/DocumentHistory/Actions".productInput productName1
+		put imagerectangle("Immunizations/Common/Image_AddImmunizations").bottomleft() into addImmunizationsList
+		insert addImmunizationsList + (200, 350) into addImmunizationsList
+		click text: vaccineName2, searchrectangle: addImmunizationsList
+		run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineName2, dateFormat, dose1AdminDate, source
+		run "Immunizations/Common/DocumentHistory/Actions".productInput productName2
+		run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton "submit"
+		
+		Log "VERIFICATION: Ensure that Administration dialog is disposed and user returns to Immunization WorkFlow Mpage."
+		Wait until not ImageFound(image: "Immunizations/Common/DocumentHistory/TL_Dialog")
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure that " & vaccineName1 & " displays within History section with status '--' Admin: '1' Last Action Date: 'Administration Date with age in parenthesis' Last Action: 'Administered' and Next Dose Recommended: '--'."
+		set age to "Immunizations/Util/Date".ageCalculator(dob, dose1AdminDate, false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName1
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName1, "--"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "1", false
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, "Administered"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName1, dose1AdminDate , age
+		
+		Log "VERIFICATION: Ensure that " & vaccineName2 & " displays within History section with status '--' Admin: '1' Last Action Date: 'Administration Date with age in parenthesis' Last Action: 'Administered' and Next Dose Recommended: '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName2
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName2, "--"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName2, "1", false
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName2, "Administered"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName2, dose1AdminDate , age
+		CaptureScreen (Name: "Step" & Global stepNumber & "-WorkFlowMpage-ForecastedValidation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on View Forecast button."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast (viewForecast)
+		
+		Log "VERIFICATION: Verify that Other Vaccines section display with the count 'Other Vaccines (2)' in the forecast view."
+		run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		set age to "Immunizations/Util/Date".ageCalculator(dob, dose1AdminDate, false, true)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText otherVaccines && "(2)", columnSearchRectangle
+		
+		Log "VERIFICATION: Ensure that " & vaccineName1 & " is displayed within the first column on the first line with Vaccine name and with Admin date with age in parenthesis on the second line in the 'Other Vaccines' section" 
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".otherVaccinesColumnSearchRectangle(otherVaccines)
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText lastAdmin && dose1AdminDate & age, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure that " & vaccineName2 & " is displayed within the first column on the first line with Vaccine name and with Admin date with age in parenthesis on the second line in the 'Other Vaccines' section" 
+		moveTo FoundImageLocation()
+		ScrollWheelDown 30		
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName2, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText lastAdmin && dose1AdminDate & age, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Product name displays on the first line in the charted event cell in Todays column with Admin date with age in parenthesis displays for " & vaccineName1
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText productName1 && return && dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Product name displays on the first line in the charted event cell in Todays column with Admin date with age in parenthesis displays for " & vaccineName2
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText productName2 && return && dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: " & noForecastingInformation & " name displays in the same row to the right after the Today column with a gray background for " & vaccineName1 
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(dose1AdminDate, format, ("Day": 1))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("year": 2, "week": 4, "day": -1))
+		set vaccineName1rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-20", "-30", "1200", "100")
+		run "Immunizations/Util/Validation".verifyText noForecastingInformation, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: " & noForecastingInformation & " name displays in the same row to the right after the Today column with a gray background for " & vaccineName2
+		set vaccineName2rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-20", "-30", "1200", "100")
+		run "Immunizations/Util/Validation".verifyText noForecastingInformation, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName2rowSearchRectangle, columnSearchRectangle)
+		Capturescreen (Name: "Step" & Global stepNumber & "-ForecastView-No Forecasting Information")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the List view."
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews
+		run "Immunizations/Forecaster-Common/Actions".clickHideRecords false
+		
+		Log "VERIFICATION: Verify that Other Vaccines section display with the count 'Other Vaccines (2)' in the list view."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText otherVaccines && "(2)", columnSearchRectangle
+		
+		Log "VERIFICATION: Verify " & vaccineName1 & "displays within the first column on the first line with Vaccine name and Last admin date with age in parenthesis on the second line in the 'Other Vaccines' section."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		set rectangle to "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText vaccineName1 & return & lastAdmin && dose1AdminDate && "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, true), rectangle
+		
+		Log "VERIFICATION: Verify for " & vaccineName1 & " the product name displays with 'product name' in the second column on the first line with Last admin date with age in parenthesis on the second line."
+		set vaccineName1rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		set rectangle to "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText productName1, rectangle
+		run "Immunizations/Util/Validation".verifyText dose1AdminDate && "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, true), rectangle
+		
+		Log "VERIFICATION: Verify " & vaccineName2 & " displays within the first column on the first line with Vaccine name and Last admin date with age in parenthesis on the second line in the 'Other Vaccines' section."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		set rectangle to "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText vaccineName2 & return & lastAdmin && dose1AdminDate && "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, true), rectangle
+		
+		Log "VERIFICATION: Verify for " & vaccineName2 & " the product name displays with 'product name' in the second column on the first line with Last admin date with age in parenthesis on the second line."
+		set vaccineName2rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		set rectangle to "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText productName2, rectangle
+		run "Immunizations/Util/Validation".verifyText dose1AdminDate && "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, true), rectangle
+		Capturescreen (Name: "Step" & Global stepNumber & "-List View- Validation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the WorkFlow MPage tab, click on the " & vaccineName1 & " and unchart it."
+		run "Immunizations/Common/Actions".clickMPagesView viewPoint
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".unchart dose1AdminDate, "1", "Uncharting"
+		
+		Log "VERIFICATION: Ensure side panel closes without error."
+		run "Immunizations/Util/Validation".verifyImageNotVisible sidePanelCloseButtonImage 
+		
+		Log "VERIFICATION: Verify that " & vaccineName1 & " no longer displays in the history section."
+		set rectangle to (imageLocation("Immunizations/WorkflowMPage/Search/TL_History"), imageLocation("Immunizations/WorkflowMPage/Search/BR_History"))
+		run "Immunizations/Util/Validation".VerifyTextNotVisible vaccineName1, rectangle
+		Capturescreen (Name: "Step" & Global stepNumber & "-WorkFlowMpage-UnchartedVaccine1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast (viewForecast)
+		
+		Log "VERIFICATION: Verify that Other Vaccines section display with the count 'Other Vaccines (2)' "
+		run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		set firstcolumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText otherVaccines && "(2)", firstcolumnSearchRectangle
+		moveTo FoundImageLocation()
+		ScrollWheelDown 30
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".otherVaccinesColumnSearchRectangle(otherVaccines)
+		
+		Log "VERIFICATION: Verify that " & vaccineName1 & " displays in the first column under the 'Other Vaccines' section with 'Vaccine name' on the first line and '--' on the second line "
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage doubleDashImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure uncharted dose displays under today column with Uncharted and Date administered below it with Paper clip Icon on right."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Uncharted" && return && dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage unchartIconImage, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle, columnSearchRectangle)
+		Capturescreen (Name: "Step" & Global stepNumber & "-ForecastView-UnchartedVaccine1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the List View"
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews
+		run "Immunizations/Forecaster-Common/Actions".clickHideRecords false
+		
+		Log "VERIFICATION: Verify that " & vaccineName1 & " displays in the 'Other Vaccines' section with an Uncharted event."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage doubleDashImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText "Uncharted" & return & dose1AdminDate && "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, true), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Verify that Other Vaccines section display with the count 'Other Vaccines (2)' in the list view."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText otherVaccines && "(2)", columnSearchRectangle
+		Capturescreen (Name: "Step" & Global stepNumber & "-ListView-UnchartedVaccine1_validation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click the hamburger settings menu and click Hide Uncharted Records."
+		moveto (0,0)
+		run "Immunizations/Forecaster-Common/Actions".clickHideRecords true
+		
+		Log "VERIFICATION: Verify that Other Vaccines section display with the count 'Other Vaccines (1)' in the list view."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText otherVaccines && "(1)", columnSearchRectangle
+		
+		Log "VERIFICATION: Verify that " & vaccineName1 & " no longer display in the 'Other Vaccines' section."
+		run "Immunizations/Util/Validation".VerifyTextNotVisible vaccineName1, "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		
+		Log "VERIFICATION: Verify that " & vaccineName2 & " displays in the 'Other Vaccines' section."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		set rectangle to "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText vaccineName2 & return & lastAdmin && dose1AdminDate && "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, true), rectangle
+		
+		Log "VERIFICATION: Ensure the Hide Uncharted Records is checked."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		click imageLocation(ImageName: hamburgerButton, searchRectangle: rectangle)
+		run "Immunizations/Util/Validation".verifyImage unchartedCheckMark, rectangle 
+		Capturescreen (Name: "Step" & Global stepNumber & "-ListView-HideUnchart_validation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click the hamburger settings menu and click Hide Uncharted Records to unhide the uncharted events."
+		moveto (0,0)
+		run "Immunizations/Forecaster-Common/Actions".clickHideRecords false
+		
+		Log "VERIFICATION: Verify that Other Vaccines section display with the count 'Other Vaccines (2)' in the list view."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText otherVaccines && "(2)", columnSearchRectangle
+		
+		Log "VERIFICATION: Verify that " & vaccineName1 & " displays in the 'Other Vaccines' section with an Uncharted event."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage doubleDashImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		set rectangle to "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Uncharted" & return & dose1AdminDate && "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, true), rectangle
+		
+		Log "VERIFICATION: Verify that " & vaccineName2 & " display in the 'Other Vaccines' section."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		set rectangle to "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText vaccineName2 & return & lastAdmin && dose1AdminDate && "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, true), rectangle
+		Capturescreen (Name: "Step" & Global stepNumber & "-ListView-HideUnchart_validation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Select the Print button."
+		run "Immunizations/Common/Print/Actions".clickPrintRecord (printRecord)
+		
+		Log "VERIFICATION: Verify only " & vaccineName2 & " displays in the Report Body along with the product name associated with documented vaccine2 "
+		run "Immunizations/Util/Validation".verifyText vaccineName2, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("true", 1)
+		run "Immunizations/Util/Validation".verifyText productName2, "Immunizations/Common/Print/Helpers".productSearchRectangle("true", 1, 1)
+		run "Immunizations/Util/Validation".verifyText dose1AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true", 1, 1)
+		
+		Log "VERIFICATION: Verify uncharted " & vaccineName1 & " is not displayed in the Report Body along with the product name associated with documented vaccine2 "
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("true", 1)
+		run "Immunizations/Util/Validation".verifyTextNotVisible productName1, "Immunizations/Common/Print/Helpers".productSearchRectangle("true", 1, 1)
+		Capturescreen (Name: "Step" & Global stepNumber & "-PrintReport UnchartedVaccine1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close the DiscernReportViewer window and Click on the WorkFlow MPage tab, click on the " & vaccineName2 & " and unchart it."
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Immunizations/Common/Actions".clickMPagesView viewPoint
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName2
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".unchart dose1AdminDate, "1", "Uncharting"
+		
+		Log "VERIFICATION: Verify that " & vaccineName2 & " no longer displays in the history section."
+		set rectangle to (imageLocation("Immunizations/WorkflowMPage/Search/TL_History"), imageLocation("Immunizations/WorkflowMPage/Search/BR_History"))
+		run "Immunizations/Util/Validation".VerifyTextNotVisible vaccineName2, rectangle
+		Capturescreen (Name: "Step" & Global stepNumber & "-WorkFlowMpage-UnchartedVaccine2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast (viewForecast)
+		
+		Log "VERIFICATION: Verify that Other Vaccines section display with the count 'Other Vaccines (2)' in the forecast view."
+		run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText otherVaccines && "(2)", columnSearchRectangle
+		
+		Log "VERIFICATION: Verify that " & vaccineName2 & " displays in the 'Other Vaccines' section with 'Vaccine name' on the first line and '--' on the second line."
+		moveTo FoundImageLocation()
+		ScrollWheelDown 30
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".otherVaccinesColumnSearchRectangle(otherVaccines)
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName2, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage doubleDashImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		Capturescreen (Name: "Step" & Global stepNumber & "-ForecastView-UnchartedVaccine2_validation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the List View."
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews
+		run "Immunizations/Forecaster-Common/Actions".clickHideRecords false
+		
+		Log "VERIFICATION: Verify that Other Vaccines section display with the count 'Other Vaccines (2)' in the list view."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText otherVaccines && "(2)", columnSearchRectangle
+		
+		Log "VERIFICATION: Verify that " & vaccineName2 & " displays in the 'Other Vaccines' section with an Uncharted event."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		set rectangle to "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText vaccineName2 , rectangle
+		run "Immunizations/Util/Validation".verifyImage doubleDashImage , rectangle
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		set rectangle to "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Uncharted" & return & dose1AdminDate && "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, true), rectangle
+		Capturescreen (Name: "Step" & Global stepNumber & "-ListView-UnchartedVaccine2_validation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click the hamburger settings menu and click Hide Uncharted Records."
+		run "Immunizations/Forecaster-Common/Actions".clickHideRecords true
+		
+		Log "VERIFICATION: Verify that 'Other Vaccines' section no longer displays."
+		run "Immunizations/Forecaster-List/Validations".VerifyNoVaccineHistory 
+		Capturescreen (Name: "Step" & Global stepNumber & "-ListView-NoVaccineHistroy")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient 1's chart."
+		Run "Immunizations/Setup".closeApplication global cleanup
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/HLM-VR-Immunizations-ListView_Other_Vaccines_section"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+	#################################################################################
+	# PATIENT CLEANUP
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	Run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	Run "Immunizations/PatientCreation".openConversationContinuous conversation
+	Run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	Run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	Run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

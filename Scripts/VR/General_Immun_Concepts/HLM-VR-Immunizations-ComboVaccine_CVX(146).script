@@ -1,0 +1,443 @@
+﻿--------------------------------------------------HELPER SUITE INFORMATION-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+# https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+------------------------------------------------RQM TEST CASE LINK--------------------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=115506
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+params domain
+
+Log "Test running in domain"&&domain
+set domain to "Immunizations/Util/setup".domainRun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set relationship to setup.relationship
+set conversation to setup.Conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set mpageSourceField to fieldLabels.mpageSourceField
+set documentedByField to fieldLabels.documentedByField
+set productField to fieldLabels.productField
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set administeredDidNotCount to textStrings.administeredDidNotCount
+
+set testData to JSONValue(file ResourcePath("VR/CVX_Code_Update/testData_combo.json")).(value of domain)
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set patientName to testData.Patient1.nameFullFormatted
+set newLastName to testData.Patient1.newLastName
+set dob to formattedTime( "%m/%d/%Y", value(testData.Patient1.dob)) 
+set sex to testData.Patient1.sex
+set user to testData.user
+set source to testdata.source
+set product1 to testdata.product1
+set product2 to testdata.product2
+set vaccineName1 to testdata.VaccineName1
+set vaccineName2 to testdata.VaccineName2
+set vaccineName3 to testdata.VaccineName3
+set vaccineName4 to testdata.VaccineName4
+set vaccineName5 to testdata.VaccineName5
+set dateFormat to testData.dateFormat
+
+set format to "%b %d, %Y"
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+Try
+	#PATIENT CREATION
+	Log "Create patient1 for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	
+	Try
+		#TEST STEPS
+		BeginTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-ComboVaccine_CVX(146)"
+		
+		Log "Util".stepNumber &"ACTION: Open Powerchart.exe with User1, search for and open the chart for Patient1, and open the Immunizations Workflow component."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, cleanup, relationship
+		
+		Log"VERIFICATION: Ensure the DTaP, Hib, HepA, HepB, and Polio vaccines are displayed in the Vaccine column." 
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName1
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName2
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName3
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName4
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName5
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Vaccines are displayed")
+		----------------------------------------------------------------------------------------------------------------
+		//DTaP
+		Log "Util".stepNumber &"ACTION: Chart a dose for DTaP at 6 weeks after DOB, using product DTaP-IPV-Hib-HepB (CVX 146) and a source of Device" 
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat,"Immunizations/Util/Date".adjustDate(dob, format, ("week":6)),source, product1, "Submit"
+		
+		Log"VERIFICATION: Ensure the Administrations, Last Action and Last Action Date display correctly"
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyAdministrationColumn vaccineName1, "1"
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionColumn vaccineName1,"Administered"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("week":6)), false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionDateColumn vaccineName1, "Immunizations/Util/Date".adjustDate(dob, format, ("week":6)), Age
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- MPage DTaP Patient1") 
+		----------------------------------------------------------------------------------------------------------------
+		//Hib
+		Log "Util".stepNumber &"ACTION: Chart a dose for Hib at 4 months after DOB, using product DTaP-IPV-Hib-HepB (CVX 146) and a source of Device" 
+		run "Immunizations/Common/DocumentHistory/Actions".OpenDialog
+		run "Immunizations/Common/SelectImmunizationsList".SelectvaccineName vaccineName2
+		run "Immunizations/Common/SelectImmunizationsList".ClickSelectButton
+		run "Immunizations/Common/DocumentHistory/Actions".RequiredInput vaccineName2, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), Source 
+		run "Immunizations/Common/DocumentHistory/Actions".ProductInput product1
+		
+		Log"VERIFICATION: Ensure Vaccine will satisfy: Diphtheria, Tetanus, and Pertussis, Hepatitis B, Polio. Displays below product dropdown"
+		set Rectangle to "Immunizations/Common/DocumentHistory/Helpers".DiaLogSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Vaccine will satisfy: Diphtheria, Tetanus, and Pertussis, Hepatitis B, Polio.",Rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Hib Document History Patient1")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on the submit button"
+		run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton "submit"
+		
+		Log"VERIFICATION: Ensure the Administrations, Last Action and Last Action Date display correctly"
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyAdministrationColumn vaccineName2, "2"
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionColumn vaccineName2,"Administered"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("month":4)), false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionDateColumn vaccineName2,  "Immunizations/Util/Date".adjustDate(dob, format, ("month":4)), Age 
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- MPage Hib Patient1")
+		----------------------------------------------------------------------------------------------------------------
+		//HepA
+		Log "Util".stepNumber &"ACTION: Chart a dose for Hepatitis A at 1 year after DOB, using product TWINRIX (CVX 104) and a source of Device" 
+		run "Immunizations/Common/DocumentHistory/Actions".OpenDialog
+		run "Immunizations/Common/SelectImmunizationsList".SelectvaccineName vaccineName3
+		run "Immunizations/Common/SelectImmunizationsList".ClickSelectButton
+		run "Immunizations/Common/DocumentHistory/Actions".RequiredInput vaccineName3, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":1)), Source 
+		run "Immunizations/Common/DocumentHistory/Actions".ProductInput product2
+		
+		Log"VERIFICATION: Ensure Vaccine will satisfy: Hepatitis B. Displays below product dropdown"
+		set Rectangle to "Immunizations/Common/DocumentHistory/Helpers".DiaLogSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Vaccine will satisfy: Hepatitis B", Rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- HepA Document History Patient1")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on the submit button"
+		run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton "submit"
+		
+		Log"VERIFICATION: Ensure the Administrations, Last Action and Last Action Date display correctly"
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyAdministrationColumn vaccineName3, "1"
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionColumn vaccineName3,"Administered"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":1)), false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionDateColumn vaccineName3, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":1)), Age
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Workflow MPage HepA Patient1")
+		----------------------------------------------------------------------------------------------------------------
+		//HepB
+		Log "Util".stepNumber &"ACTION: Chart a dose for HepB at 6 months after DOB, using product DTaP-IPV-Hib-HepB (CVX 146) and a source of Device"
+		run "Immunizations/Common/DocumentHistory/Actions".OpenDialog
+		run "Immunizations/Common/SelectImmunizationsList".SelectvaccineName vaccineName4
+		run "Immunizations/Common/SelectImmunizationsList".ClickSelectButton
+		run "Immunizations/Common/DocumentHistory/Actions".RequiredInput vaccineName4, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("month":6)), Source 
+		run "Immunizations/Common/DocumentHistory/Actions".ProductInput product1
+		
+		Log"VERIFICATION: Ensure Vaccine will satisfy: Diphtheria, Tetanus, and Pertussis, Haemophilus Influenzae Type B, Polio. Displays below product dropdown"
+		set Rectangle to "Immunizations/Common/DocumentHistory/Helpers".DiaLogSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Vaccine will satisfy: Diphtheria, Tetanus, and Pertussis, Haemophilus Influenzae Type B, Polio.", Rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- HepB Document History Patient1")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on the submit button"
+		run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton "submit"
+		
+		Log"VERIFICATION: Ensure the Administrations, Last Action and Last Action Date display correctly"
+		set lastActionDate to  "Immunizations/Util/Date".adjustDate(dob, format, ("month":12))
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, lastActionDate, false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyAdministrationColumn vaccineName4, "4"
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionColumn vaccineName4, administeredDidNotCount
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionDateColumn vaccineName4, lastActionDate, Age
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- MPage HepB Patient1")
+		----------------------------------------------------------------------------------------------------------------
+		//Polio
+		Log "Util".stepNumber &"ACTION: Chart a dose for Polio at 4 years after DOB, using product DTaP-IPV-Hib-HepB (CVX 146) and a source of Device" 
+		run "Immunizations/Common/DocumentHistory/Actions".OpenDialog
+		run "Immunizations/Common/SelectImmunizationsList".SelectvaccineName vaccineName5
+		run "Immunizations/Common/SelectImmunizationsList".ClickSelectButton
+		run "Immunizations/Common/DocumentHistory/Actions".RequiredInput vaccineName5, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("year":4)), Source 
+		run "Immunizations/Common/DocumentHistory/Actions".ProductInput product1
+		
+		Log"VERIFICATION: Ensure Vaccine will satisfy: Diphtheria, Tetanus, and Pertussis, Haemophilus Influenzae Type B, Hepatitis B. Displays below product dropdown"
+		set Rectangle to "Immunizations/Common/DocumentHistory/Helpers".DiaLogSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Vaccine will satisfy: Diphtheria, Tetanus, and Pertussis, Haemophilus Influenzae Type B, Hepatitis B.", Rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Polio Document History Patient1")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on the submit button"
+		run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton "submit"
+		
+		Log"VERIFICATION: Ensure the Adiministrations, Last Action and Last Action Date display correctly"
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyAdministrationColumn vaccineName5, "4"
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionColumn vaccineName5,"Administered"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("year":4)), false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionDateColumn vaccineName5, "Immunizations/Util/Date".adjustDate(dob, format, ("year":4)), Age 
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- MPage Polio Patient1")
+		----------------------------------------------------------------------------------------------------------------
+		
+		//HepB
+		Log "Util".stepNumber &"ACTION: Click on HepB"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName4
+		
+		Log "VERIFICATION: Ensure Dose 1 displays with appropriate date, documented by user, source and product with in the side panel"
+		set SidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName4, SidePanelHeaderRectangle
+		
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle()
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)) && Age && "-" && administeredDidNotCount
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", productField, sidePanelRectangle, product1
+		
+		Log "VERIFICATION: Ensure Dose 2 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":12)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "2", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":12)) && Age && "-" && "Administered - Did Not Count"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", productField, sidePanelRectangle, product2
+		
+		Log "VERIFICATION: Ensure Dose 3 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", productField, sidePanelRectangle, product1
+		
+		repeat 5 times
+			run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollDownArrow
+		end repeat
+		
+		Log "VERIFICATION: Ensure Dose 4 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "2", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", productField, sidePanelRectangle, product1
+		
+		Log "VERIFICATION: Ensure Dose 5 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Week":6)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("week":6)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", productField, sidePanelRectangle, product1
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- HepB Side Panel Patient1")
+		
+		repeat 5 times
+			run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollUpArrow
+		end repeat
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".closeSidePanel sidePanelRectangle, vaccineName4
+		----------------------------------------------------------------------------------------------------------------
+		
+		//DTaP 
+		Log "Util".stepNumber &"ACTION: Click on DTaP"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		
+		Log "VERIFICATION: Ensure Dose 1 displays with appropriate date, documented by user, source and product with in the side panel"
+		set SidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1, SidePanelHeaderRectangle
+		
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle()
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", productField, sidePanelRectangle, product1
+		
+		Log "VERIFICATION: Ensure Dose 2 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "2", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", productField, sidePanelRectangle, product1
+		
+		Log "VERIFICATION: Ensure Dose 3 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", productField, sidePanelRectangle, product1
+		
+		repeat 2 times
+			run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollDownArrow
+		end repeat
+		
+		Log "VERIFICATION: Ensure Dose 4 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Week":6)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("week":6)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", productField, sidePanelRectangle, product1
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- DTaP Side Panel Patient 1")
+		
+		repeat 2 times
+			run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollUpArrow
+		end repeat
+		----------------------------------------------------------------------------------------------------------------
+		//Hib
+		Log "Util".stepNumber &"ACTION: Click on Hib"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName2
+		
+		Log "VERIFICATION: Ensure Dose 1 displays with appropriate date, documented by user, source and product with in the side panel"
+		set SidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName2, SidePanelHeaderRectangle
+		
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle()
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", productField, sidePanelRectangle, product1
+		
+		Log "VERIFICATION: Ensure Dose 2 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "2", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", productField, sidePanelRectangle, product1
+		
+		Log "VERIFICATION: Ensure Dose 3 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", productField, sidePanelRectangle, product1
+		
+		repeat 2 times
+			run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollDownArrow
+		end repeat
+		
+		Log "VERIFICATION: Ensure Dose 4 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Week":6)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("week":6)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", productField, sidePanelRectangle, product1
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Hib Side Panel Patient1")
+		
+		repeat 2 times
+			run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollUpArrow
+		end repeat
+		----------------------------------------------------------------------------------------------------------------
+		
+		//Polio
+		Log "Util".stepNumber &"ACTION: Click on Polio"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName5
+		
+		Log "VERIFICATION: Ensure Dose 1 displays with appropriate date, documented by user, source and product with in the side panel"
+		set SidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName5, SidePanelHeaderRectangle
+		
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle()
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", productField, sidePanelRectangle, product1
+		
+		Log "VERIFICATION: Ensure Dose 2 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "2", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "2", productField, sidePanelRectangle, product1
+		
+		Log "VERIFICATION: Ensure Dose 3 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", productField, sidePanelRectangle, product1
+		
+		repeat 2 times
+			run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollDownArrow
+		end repeat
+		
+		Log "VERIFICATION: Ensure Dose 4 displays with appropriate date, documented by user, source and product with in the side panel"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Week":6)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "3", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("week":6)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "3", productField, sidePanelRectangle, product1
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Polio Side Panel Patient1")
+		
+		repeat 2 times
+			run "Immunizations/WorkFlowMPage/SidePanel/Actions".clickScrollUpArrow
+		end repeat
+		----------------------------------------------------------------------------------------------------------------
+		
+		//HepA
+		Log "Util".stepNumber &"ACTION: Click on HepA"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName3
+		
+		Log "VERIFICATION: Ensure all administrations charted are displayed with appropriate date, documented by user, source and product with in the side panel"
+		set SidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName3, SidePanelHeaderRectangle
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle()
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":12)), false, true)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("Month":12)) && Age && "-" && "Administered"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", documentedByField, sidePanelRectangle, user
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", mpageSourceField, sidePanelRectangle, Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", productField, sidePanelRectangle, product2
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"- HepA Side Panel Patient1")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Close Application"
+		run "Immunizations/setup".CloseApplication Cleanup
+		----------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-ComboVaccine_CVX(146)"
+		
+	Catch
+		LogError "Test Steps Exception: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+	
+	#PATIENT CLEANUP
+	Log "ACTION: Cleanup Patient."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName,firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	CaptureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+#SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

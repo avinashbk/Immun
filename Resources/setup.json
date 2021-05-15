@@ -1,0 +1,39 @@
+{
+  	"DEFAULT":{
+			"username": "hmautotester",
+			"nonDbaUserName":"hmautonurse",
+			"password": ",2@72@V",
+			"remoteWorkInterval": "0.7",
+			"waitTime": "5",
+			"personnelId": 3330095.00,
+			"relationship": "Attending Physician",
+			"Conversation": "HMAuto",
+			"EncounterOrg": "Baseline East Medical Center",
+			"EncounterType": "Outpatient"
+	},
+	"INTGM":{
+			"EncounterOrg": "Baseline North Medical Center",
+	},
+	"DEVENG":{
+			"personnelId": 136774536.00,
+	},
+	"64DEV": {
+			"personnelId": 14477075.00,
+			"EncounterOrg": "Baseline West Medical Center",
+	},
+	"ABLPREPF":{
+			"username": "system",
+			"password": "<FA=2;",
+			"personnelId": 14477075.00,
+			"EncounterOrg": "Baseline West Medical Center",
+			"subMenu": "MPages Workflow"
+	},
+  "S18DA":{
+			"password": ",2@72@",
+      "EncounterType": "Inpatient"
+	},
+	"S18DD": {
+			"EncounterOrg": "Baseline West Behavioral Health",
+	}
+
+}

@@ -1,0 +1,226 @@
+{
+	"SOLM64":{
+		"HepB_4_Standard_AgedOut_Patients":
+		{
+		"Patient1":{
+			"lastName":"HepB1",
+			"firstName":"Standard",
+			"nameFullFormatted":"HepB1,Standard",
+			"newLastName":"oldHepB1",
+			"dob":"Today - 6 months",
+			"sex":"Male"
+			},
+		"Patient2":{
+			"lastName":"HepB2",
+			"firstName":"AgedOut",
+			"nameFullFormatted":"HepB2,AgedOut",
+			"newLastName":"oldHepB2",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+			},
+		},
+	   "HepB_4_CVX_Patient":{
+			"lastName":"HepB3",
+			"firstName":"Cvx",
+			"nameFullFormatted":"HepB3,Cvx",
+			"newLastName":"oldHepB3",
+			"dob":"Today - 21 years",
+			"sex":"Male"
+		},
+		"Patient_CpG_HepB_Mixed_Use":{
+			"lastName":"CpGHepBMixedUse",
+			"firstName":"Standard",
+			"nameFullFormatted":"CpGHepBMixedUse,Standard",
+			"newLastName":"oldCpGHepB1",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+		},
+		"Patient_HepB_CpG_Mixed_Use":{
+			"lastName":"HepBCpGMixedUse",
+			"firstName":"Standard",
+			"nameFullFormatted":"HepBCpGMixedUse,Standard",
+			"newLastName":"oldHepBCpG1",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+			},
+	"User":"Maintenance, Health",
+	"vaccineName1":"Hepatitis B",
+	"vis1":"Hepatitis B (English)",
+	"vaccineName2":"Haemophilus Influenzae Type B",
+	"dateFormat":"Date",
+	"Product1":"Comvax",
+	"Product2":"HepB-CpG",
+	"Product3":"ENGERIX B-PEDS",
+	"Product4":"Recombivax HB Adult",
+	"Source":"Device",
+	"unchartReason":"Test"
+	},
+	"S18VX":{
+		"HepB_4_Standard_AgedOut_Patients":
+		{
+		"Patient1":{
+			"lastName":"HepB1",
+			"firstName":"Standard",
+			"nameFullFormatted":"HepB1,Standard",
+			"newLastName":"oldHepB1",
+			"dob":"Today - 6 months",
+			"sex":"Male"
+			},
+		"Patient2":{
+			"lastName":"HepB2",
+			"firstName":"AgedOut",
+			"nameFullFormatted":"HepB2,AgedOut",
+			"newLastName":"oldHepB2",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+			},
+		},
+	   "HepB_4_CVX_Patient":{
+			"lastName":"HepB3",
+			"firstName":"Cvx",
+			"nameFullFormatted":"HepB3,Cvx",
+			"newLastName":"oldHepB3",
+			"dob":"Today - 21 years",
+			"sex":"Male"
+		},
+		"Patient_CpG_HepB_Mixed_Use":{
+			"lastName":"CpGHepBMixedUse",
+			"firstName":"Standard",
+			"nameFullFormatted":"CpGHepBMixedUse,Standard",
+			"newLastName":"oldCpGHepB1",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+		},
+		"Patient_HepB_CpG_Mixed_Use":{
+			"lastName":"HepBCpGMixedUse",
+			"firstName":"Standard",
+			"nameFullFormatted":"HepBCpGMixedUse,Standard",
+			"newLastName":"oldHepBCpG1",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+			},
+	"User":"Maintenance, Health",
+	"vaccineName1":"Hepatitis B",
+	"vis1":"Hepatitis B (English)",
+	"vaccineName2":"Haemophilus Influenzae Type B",
+	"dateFormat":"Date",
+	"Product1":"Comvax",
+	"Product2":"HepB-CpG",
+	"Product3":"ENGERIX B-PEDS",
+	"Product4":"Recombivax HB Adult",
+	"Source":"Device",
+	"unchartReason":"Test"
+	},
+	"SOLGM":{
+		"HepB_4_Standard_AgedOut_Patients":
+		{
+		"Patient1":{
+			"lastName":"HepB1",
+			"firstName":"Standard",
+			"nameFullFormatted":"HepB1,Standard",
+			"newLastName":"oldHepB1",
+			"dob":"Today - 6 months",
+			"sex":"Male"
+			},
+		"Patient2":{
+			"lastName":"HepB2",
+			"firstName":"AgedOut",
+			"nameFullFormatted":"HepB2,AgedOut",
+			"newLastName":"oldHepB2",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+			},
+		},
+	   "HepB_4_CVX_Patient":{
+			"lastName":"HepB3",
+			"firstName":"Cvx",
+			"nameFullFormatted":"HepB3,Cvx",
+			"newLastName":"oldHepB3",
+			"dob":"Today - 21 years",
+			"sex":"Male"
+		},
+		"Patient_CpG_HepB_Mixed_Use":{
+			"lastName":"CpGHepBMixedUse",
+			"firstName":"Standard",
+			"nameFullFormatted":"HepBMixedUse,Standard",
+			"newLastName":"oldCpGHepB1",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+		},
+		"Patient_HepB_CpG_Mixed_Use":{
+			"lastName":"HepBCpGMixedUse",
+			"firstName":"Standard",
+			"nameFullFormatted":"HepBMixedUse,Standard",
+			"newLastName":"oldHepBCpG1",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+			},
+	"User":"Maintenance, Health",
+	"vaccineName1":"Hepatitis B",
+	"vis1":"Hepatitis B (English)",
+	"vaccineName2":"Haemophilus Influenzae Type B",
+	"dateFormat":"Date",
+	"Product1":"Comvax",
+	"Product2":"HepB-CpG",
+	"Product3":"ENGERIX B-PEDS",
+	"Product4":"Recombivax HB Adult",
+	"Source":"Device",
+	"unchartReason":"Test"
+	},
+	"INTGM":{
+		"HepB_4_Standard_AgedOut_Patients":
+		{
+		"Patient1":{
+			"lastName":"HepB1",
+			"firstName":"Standard",
+			"nameFullFormatted":"HepB1,Standard",
+			"newLastName":"oldHepB1",
+			"dob":"Today - 6 months",
+			"sex":"Male"
+			},
+		"Patient2":{
+			"lastName":"HepB2",
+			"firstName":"AgedOut",
+			"nameFullFormatted":"HepB2,AgedOut",
+			"newLastName":"oldHepB2",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+			},
+		},
+	   "HepB_4_CVX_Patient":{
+			"lastName":"HepB3",
+			"firstName":"Cvx",
+			"nameFullFormatted":"HepB3,Cvx",
+			"newLastName":"oldHepB3",
+			"dob":"Today - 21 years",
+			"sex":"Male"
+		},
+		"Patient_CpG_HepB_Mixed_Use":{
+			"lastName":"CpGHepBMixedUse",
+			"firstName":"Standard",
+			"nameFullFormatted":"HepBMixedUse,Standard",
+			"newLastName":"oldCpGHepB1",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+		},
+		"Patient_HepB_CpG_Mixed_Use":{
+			"lastName":"HepBCpGMixedUse",
+			"firstName":"Standard",
+			"nameFullFormatted":"HepBMixedUse,Standard",
+			"newLastName":"oldHepBCpG1",
+			"dob":"Today - 19 years",
+			"sex":"Male"
+			},
+	"User":"Maintenance, Health",
+	"vaccineName1":"Hepatitis B",
+	"vis1":"Hepatitis B (English)",
+	"vaccineName2":"Haemophilus Influenzae Type B",
+	"dateFormat":"Date",
+	"Product1":"Comvax",
+	"Product2":"HepB-CpG",
+	"Product3":"ENGERIX B-PEDS",
+	"Product4":"Recombivax HB Adult",
+	"Source":"Device",
+	"unchartReason":"Test"
+	}
+}

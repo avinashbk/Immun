@@ -1,0 +1,163 @@
+{
+	"SOLM64": {
+		"Patient1": {
+			"lastName": "HEPBMIN1",
+			"firstName": "2Dose",
+			"nameFullFormatted": "HEPBMIN1,2Dose",
+			"newLastName": "oldHEPBMIN1",
+			"dob": "Today - 19 years",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "HEPBMIN2",
+			"firstName": "2DoseAdl",
+			"nameFullFormatted": "HEPBMIN2,2DoseAdl",
+			"newLastName": "oldHEPBMIN2",
+			"dob": "Today - 16 years",
+			"sex": "Male"
+		},
+		"Patient3": {
+			"lastName": "HEPBMIN3",
+			"firstName": "3Dose",
+			"nameFullFormatted": "HEPBMIN3,3Dose",
+			"newLastName": "oldHEPBMIN3",
+			"dob": "Today - 8 months",
+			"sex": "Male"
+		},
+		"Patient4": {
+			"lastName": "HEPBMIN4",
+			"firstName": "4Dose",
+			"nameFullFormatted": "HEPBMIN4,4Dose",
+			"newLastName": "oldHEPBMIN4",
+			"dob": "Today - 8 months",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName": "Hepatitis B",
+		"Product1": "Recombivax HB Adult",
+		"Product2": "HepB-CpG",
+		"Product3": "Comvax",
+		"Source": "Device"
+	},
+	"S18VX": {
+		"Patient1": {
+			"lastName": "HEPBMIN1",
+			"firstName": "2Dose",
+			"nameFullFormatted": "HEPBMIN1,2Dose",
+			"newLastName": "oldHEPBMIN1",
+			"dob": "Today - 19 years",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "HEPBMIN2",
+			"firstName": "2DoseAdl",
+			"nameFullFormatted": "HEPBMIN2,2DoseAdl",
+			"newLastName": "oldHEPBMIN2",
+			"dob": "Today - 16 years",
+			"sex": "Male"
+		},
+		"Patient3": {
+			"lastName": "HEPBMIN3",
+			"firstName": "3Dose",
+			"nameFullFormatted": "HEPBMIN3,3Dose",
+			"newLastName": "oldHEPBMIN3",
+			"dob": "Today - 8 months",
+			"sex": "Male"
+		},
+		"Patient4": {
+			"lastName": "HEPBMIN4",
+			"firstName": "4Dose",
+			"nameFullFormatted": "HEPBMIN4,4Dose",
+			"newLastName": "oldHEPBMIN4",
+			"dob": "Today - 8 months",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName": "Hepatitis B",
+		"Product1": "Recombivax HB Adult",
+		"Product2": "HepB-CpG",
+		"Product3": "Comvax",
+		"Source": "Device"
+	},
+	"INTGM": {
+		"Patient1": {
+			"lastName": "HEPBMIN1",
+			"firstName": "2Dose",
+			"nameFullFormatted": "HEPBMIN1,2Dose",
+			"newLastName": "oldHEPBMIN1",
+			"dob": "Today - 19 years",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "HEPBMIN2",
+			"firstName": "2DoseAdl",
+			"nameFullFormatted": "HEPBMIN2,2DoseAdl",
+			"newLastName": "oldHEPBMIN2",
+			"dob": "Today - 16 years",
+			"sex": "Male"
+		},
+		"Patient3": {
+			"lastName": "HEPBMIN3",
+			"firstName": "3Dose",
+			"nameFullFormatted": "HEPBMIN3,3Dose",
+			"newLastName": "oldHEPBMIN3",
+			"dob": "Today - 8 months",
+			"sex": "Male"
+		},
+		"Patient4": {
+			"lastName": "HEPBMIN4",
+			"firstName": "4Dose",
+			"nameFullFormatted": "HEPBMIN4,4Dose",
+			"newLastName": "oldHEPBMIN4",
+			"dob": "Today - 8 months",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName": "Hepatitis B",
+		"Product1": "Recombivax HB Adult",
+		"Product2": "HepB-CpG",
+		"Product3": "Comvax",
+		"Source": "Device"
+	},
+	"ENG18": {
+		"Patient1": {
+			"lastName": "HEPBMIN1",
+			"firstName": "2Dose",
+			"nameFullFormatted": "HEPBMIN1,2Dose",
+			"newLastName": "oldHEPBMIN1",
+			"dob": "Today - 19 years",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "HEPBMIN2",
+			"firstName": "2DoseAdl",
+			"nameFullFormatted": "HEPBMIN2,2DoseAdl",
+			"newLastName": "oldHEPBMIN2",
+			"dob": "Today - 16 years",
+			"sex": "Male"
+		},
+		"Patient3": {
+			"lastName": "HEPBMIN3",
+			"firstName": "3Dose",
+			"nameFullFormatted": "HEPBMIN3,3Dose",
+			"newLastName": "oldHEPBMIN3",
+			"dob": "Today - 8 months",
+			"sex": "Male"
+		},
+		"Patient4": {
+			"lastName": "HEPBMIN4",
+			"firstName": "4Dose",
+			"nameFullFormatted": "HEPBMIN4,4Dose",
+			"newLastName": "oldHEPBMIN4",
+			"dob": "Today - 8 months",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName": "Hepatitis B",
+		"Product1": "Recombivax HB Adult",
+		"Product2": "Hep B-CpG",
+		"Product3": "Comvax",
+		"Source": "Device"
+	},
+	"dateFormat": "Date"
+}

@@ -1,0 +1,100 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=99258
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set complete to textStrings.complete
+
+set testData to JSONValue(file ResourcePath("VR/HIB_Absolute_Minimums/testData.json")).(value of domain)
+Set lastName to testData.Patient1.lastName
+Set firstName to testData.Patient1.firstName
+Set patientName to testData.Patient1.nameFullFormatted
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient1.dob))
+set vaccineName to testData.vaccineName
+set source to testData.source
+set product1 to testData.product1
+
+set format to "%b %d, %Y"
+
+
+Try
+	#PATIENT RESET
+	run "Immunizations/PatientCreation".resetPatientToZeroState username, password, domain, lastName, firstName, dob
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/HLM-VR-HIB_Absolute_Minimums_1_Dose_Series"
+		
+		Log "Util".stepNumber &"ACTION: Open Patient1's chart and navigate to the Immunizations workflow mPage and chart dose 1 of PRP-T at <DOB + 15 months - 5 day>."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":15, "day": -5)), source, product1, "Submit"
+		
+		Log "VERIFICATION: The HIB displays above the historical section with a status of '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameAboveHistorySection vaccineName
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, "--"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose1 Less Than Abs Min Age Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 1's admin date from <DOB + 15 months - 5 day> to <DOB + 15 months - 4 day>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("Month":15, "day": -5)), "1", "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":15, "day": -4))
+		
+		Log "VERIFICATION: Ensure HIB displays in the historical section with a status of 'Complete'. "
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName, complete
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		
+		Log "VERIFICATION: The Next Recommended Column displays '--' for HIB."
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyNextRecommendedColumn vaccineName, "--"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose1 Equal to Abs Min Age Patient1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient 1's chart."
+		Run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/HLM-VR-HIB_Absolute_Minimums_1_Dose_Series"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

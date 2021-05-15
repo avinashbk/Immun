@@ -1,0 +1,97 @@
+{
+	"SOLM64": {
+		"Patient_Series_Complete": {
+			"lastName": "HIB3P1",
+			"firstName": "Complete",
+			"nameFullFormatted": "HIB3P1,Complete",
+			"newLastName": "oldHIB3",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Perm_Not_Given": {
+			"lastName": "HIB3P2",
+			"firstName": "notGiven",
+			"nameFullFormatted": "HIB3P2,notGiven",
+			"newLastName": "oldHIB3",
+			"dob": "Today - 15 months",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HIB3P3",
+			"firstName": "AgedOut",
+			"nameFullFormatted": "HIB3P3,AgedOut",
+			"newLastName": "oldHIB3",
+			"dob": "Today - 5 years",
+			"sex": "Male"
+		},
+		"Patient_Condition_Skip": {
+			"lastName": "HIB3P4",
+			"firstName": "Skip",
+			"nameFullFormatted": "HIB3P4,Skip",
+			"newLastName": "oldHIB3",
+			"dob": "Today - 15 months + 4 days",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Haemophilus Influenzae Type B",
+		"vaccineName2": "Hepatitis B",
+		"vaccineName3": "Diphtheria, Tetanus, and Pertussis",
+		"Product1": "Comvax",
+		"Product2": "Trihibit",
+		"vis": "Haemophilus influenzae type b (English)",
+		"unchartedReason": "Test",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"tempNotGivenAction": "This Season Only",
+		"notGivenReason": "Patient Refuses",
+		"Source": "Device"
+	},
+	"S18VX": {
+		"Patient_Series_Complete": {
+			"lastName": "HIB3P1",
+			"firstName": "Complete",
+			"nameFullFormatted": "HIB3P1,Complete",
+			"newLastName": "oldHIB3",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Perm_Not_Given": {
+			"lastName": "HIB3P2",
+			"firstName": "notGiven",
+			"nameFullFormatted": "HIB3P2,notGiven",
+			"newLastName": "oldHIB3",
+			"dob": "Today - 15 months",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HIB3P3",
+			"firstName": "AgedOut",
+			"nameFullFormatted": "HIB3P3,AgedOut",
+			"newLastName": "oldHIB3",
+			"dob": "Today - 5 years",
+			"sex": "Male"
+		},
+		"Patient_Condition_Skip": {
+			"lastName": "HIB3P4",
+			"firstName": "Skip",
+			"nameFullFormatted": "HIB3P4,Skip",
+			"newLastName": "oldHIB4",
+			"dob": "Today - 15 months + 4 days",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Haemophilus Influenzae Type B",
+		"vaccineName2": "Hepatitis B",
+		"vaccineName3": "Diphtheria, Tetanus, and Pertussis",
+		"Product1": "Comvax",
+		"Product2": "Trihibit",
+		"vis": "Haemophilus influenzae type b (English)",
+		"unchartedReason": "Test",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"tempNotGivenAction": "This Season Only",
+		"notGivenReason": "Patient Refuses",
+		"Source": "Device"
+	},
+	"dateFormat":"Date"
+}

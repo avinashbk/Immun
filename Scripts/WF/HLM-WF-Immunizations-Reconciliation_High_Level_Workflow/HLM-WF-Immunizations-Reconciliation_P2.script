@@ -1,0 +1,13 @@
+﻿try	
+	log "Util".stepNumber & "ACTION: Open Patient 2's chart and click on 'View Outside Records'."
+	
+	log "VERIFICATION: Ensure 'No Results' displays in place of both the local table and the outside records table." 
+	capturescreen (Name:"Step"&Global stepNumber&"- No Data P2")
+	----------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber & "ACTION: Close the application"
+	----------------------------------------------------------------------------------------------------------------
+catch exception
+	logError "Exception encountered" && exception.reason
+	captureScreen"Exception"
+end try		

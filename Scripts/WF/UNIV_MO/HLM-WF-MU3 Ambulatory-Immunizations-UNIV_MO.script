@@ -1,0 +1,522 @@
+﻿--------------------------------------------------Helper Suite Information--------------------------------------------------------------------------------------------------------------
+
+#Repo: IPDev-Shared-Millennium
+#Repo: IPDev-mPages-Shared-Immunizationss
+#Repo: IPDev-Millennium-Shared-HealthMaintenanceTools
+#Repo: IPDev-Millennium-Shared-Medication-Record
+#Repo: IPDev-Millennium-Shared-Immunizations
+#Repo: IPDev-Millennium-Shared-PowerchartFramework
+#Repo: IPDev-Millennium-PowerChart-Framework-Shared
+# https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+--------------------------------------------------RQM Test Case Link-----------------------------------------------------------------------------------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=113198
+
+---------------------------------------------------Assigning Test Data to Variables------------------------------------------------------------------------------------------------------
+params domain
+Log "Test running in domain"&&domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+
+set setup to JSONValue(file ResourcePath("setup.json")).("S18VX")
+Log "commonData:" && setup
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set relationship to setup.relationship
+set conversation to setup.conversation
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set greyForecastButton to common.greyForecastButton
+
+set textStrings to JSONValue(file resourcePath("textStrings.json")).("S18VX")
+set viewForecast to textStrings.viewForecast
+set immunizationForecast to textStrings.immunizationForecast
+
+set global cleanup to "Immunizations/Setup".setCleanup()
+
+set testData to JSONValue(file ResourcePath("WF/UNIV_MO/MU3_Ambulatory_Immunizations_UNIV_MO/testData.json"))
+set citrixLoginUsername to testData.citrixLoginUsername
+set citrixLoginPassword to testData.citrixLoginPassword
+
+set testData to JSONValue(file ResourcePath("WF/UNIV_MO/MU3_Ambulatory_Immunizations_UNIV_MO/testData.json")).(value of domain)
+set format to "%m/%d/%Y"
+set applicationName to testData.applicationName
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set registryName to testData.registryName
+set patientName to testData.Patient1.nameFullFormatted
+set newLastName to testData.Patient1.newLastName
+set dob to formattedTime(format, value(testData.Patient1.dob))
+set sex to testData.Patient1.sex
+set VIS1 to testData.VIS1
+set vaccineName to testData.vaccineName
+set orderableName to testData.orderableName
+set exceptionMAR to testData.exceptionMAR
+set exceptionReasonMAR to testData.exceptionReasonMAR
+
+Try 
+	--------------------------------------------------Citrix Login-----------------------------------------------------------------------------------------------------------
+	//Launching Domain
+	run "Open_Application".run "chrome -incognito http://ipctxsf.northamerica.cerner.net/Citrix/IPCTXWeb/"
+	WaitFor 50, "Google_Chrome/Button_Reload_This_Page"
+	typetext windowsKey & upArrow
+	
+	//Detect Reciever
+	if ImageFound(text:"Detect Receiver", SearchRectangle: ORNScreen.center,DPI:144,waitFor:15)
+		wait 3
+		click FoundImageLocation()
+		wait 2
+	end if
+	
+	//Citrix Workspace Launcher Popup
+	if ImageFound(text:"If no window appears", SearchRectangle: ORNScreen.center,waitFor:15)
+		click FoundImageLocation()+(0,35)
+		wait 2
+	end if
+	
+	//Citrix Workspace Launcher Popup
+	if ImageFound(imageName:"Millennium_Login_window/Button_OpenCitrixWorkspaceLauncher", waitFor:15)
+		click FoundImageLocation()
+		wait 2
+	end if
+	
+	//Login with Username and Password
+	if ImageFound(image:"Millennium_Login_window/Textbox_UsernameIPDomains", waitFor:20)
+		Click FoundImageLocation()
+		wait 1
+		typetext controlKey&"a"
+		typetext citrixLoginUsername //When running this script need to specify the crdentials in JSON file as this is LDAP citrix cred
+		typetext tabkey
+		typetext citrixLoginPassword //When running this script need to specify the crdentials in JSON file as this is LDAP citrix cred
+		typetext Returnkey
+	end if
+	
+	waitFor 30, "Millennium_Login_window/Dropdown_CitrixLogOff"	
+	if ImageFound(imageName:"Millennium_Login_window/Button_OpenCitrixWorkspaceLauncher", waitFor:15)
+		click FoundImageLocation()
+		wait 2
+	end if
+	
+	wait 5
+	typetext applicationName
+	wait 3
+	typetext tabkey,tabkey,returnkey
+	
+	//Citrix Workspace Launcher Popup
+	if ImageFound(imageName:"Millennium_Login_window/Button_OpenCitrixWorkspaceLauncher", waitFor:15)
+		click FoundImageLocation()
+		wait 2
+	end if
+	
+	//Citrix Workspace Launcher Popup
+	if ImageFound(text:"Citrix workspace", SearchRectangle: ORNScreen.center,waitFor:100)
+		wait 2
+		typetext returnkey
+	end if
+	
+	//Select Applications window if it loads in the background
+	if ImageFound(imageName:"Millennium_Login_window/Icon_CitrixDomainFolderIcon", waitFor:60)
+		Click FoundImageLocation()
+	else
+		Click "Millennium_Login_window/Icon_FolderWindows10"
+		wait 1
+		Click "Millennium_Login_window/Icon_CitrixDomainFolderIcon"
+	end if
+	
+	//Maximize Domain Applications Window
+	typetext windowskey,upArrow
+	
+	--------------------------------------------------Patient Setup---------------------------------------------------------------------------------------------------------
+	
+	Log "Create patient1 (2 years old) for the test"
+	waitfor 200,"PCF/MillenniumApps/Button_CommandPrompt_Toolbar"
+	click imagelocation("PCF/MillenniumApps/Button_CommandPrompt_Toolbar")+(0,100)	
+	typetext "pmlaunch",returnkey
+	waitfor 200, "PCF/MillenniumApps/Logo_Login_Popover"
+	run "Millennium_Login_window".LogIntoMillenniumApps username, password, domain
+	wait 3
+	typeText windowsKey & upArrow	
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	wait 2
+	run "Util".closeApplication 1
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Try
+		BeginTestCase "WF/UNIV_MO/HLM-WF-MU3 Ambulatory-Immunizations-UNIV_MO"
+		----------------------------------------------------------------Test Steps------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Log into PowerChart as Physician – Nurse as User1, Navigate to Immunizations Workflow MPAGE Tab. Review the patient's immunizations for Due and Overdue items"
+		Log "VERIFICATION: Immunizations MPAGE Tab displays with Overdue and Due immunizations"	
+		waitfor 200,"PCF/MillenniumApps/Button_CommandPrompt_Toolbar"
+		click imagelocation("PCF/MillenniumApps/Button_CommandPrompt_Toolbar")+(0,100)
+		typetext "powerchart",returnkey 
+		waitfor 50, "PCF/MillenniumApps/Logo_Login_Popover"
+		run "Millennium_Login_window".LogIntoMillenniumApps username, password, domain
+		run "Millennium_LoadPatient_RecentSearch".LoadPatient patientName
+		wait 5
+		click item 2 of "Powerchart Organizer/Icon_Powerchart"
+		typetext relationship,returnkey
+		run "Immunizations/Setup".LoadComponentViaPatientChart menu, subMenu
+		waitFor 300, "Immunizations/WorkflowMPage/Table/TL_Workflow"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Immunizations MPAGE")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: From the Immunizations MPAGE component click 'Registry Import' button"
+		click "Immunizations/Common/RegistryImport_Status/Import_Button"
+		
+		Log "VERIFICATION: Registry Import screen opens with possible matched patients if found"
+		set rectangle to "Immunizations/Common/RegistryImport/Helpers".dialogSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/RegistryImport/Label_MatchName",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Registry import window")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: If exact patient is not found, refine search further by selecting 'Refine' "
+		
+		set rectangle to "Immunizations/Common/RegistryImport/Helpers".registrySearchRectangle(registryName)
+		waitfor 50,text:"The registry returned"
+		run "Immunizations/Util/Validation".verifyText lastName,rectangle
+		run "Immunizations/Util/Validation".verifyText firstName,rectangle
+		
+		Log "VERIFICATION: You are able to filter by the fields your registry supports, and further refine your list to locate the correct patient"	
+		Log "Since the exact patient is found refine search filter is not being performed here, hence this validation does not apply"	
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Once you have matched the correct patient, select 'View Registry Forecast' to see the registry forecasted immunizations"
+		set rectangle to "Immunizations/Common/RegistryImport/Helpers".dialogSearchRectangle
+		click image: "Immunizations/Common/RegistryImport/Button_ViewForecast",SearchRectangle:rectangle
+		
+		Log "VERIFICATION: Registry will display with forecast section, history section and clinical comments depending on what your registry returns"
+		set rectangle to "Immunizations/Common/RegistryImport/Helpers".registrySearchRectangle(registryName)
+		waitfor 50,text:"Immunization Forecast"
+		run "Immunizations/Util/Validation".verifyText "Immunization Forecast",rectangle
+		run "Immunizations/Util/Validation".verifyText "Immunization History",rectangle
+		run "Immunizations/Util/Validation".verifyText "Clinical Comments",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-View registry window")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click on 'Back' button"
+		set rectangle to "Immunizations/Common/RegistryImport/Helpers".dialogSearchRectangle
+		click image:"Immunizations/Common/RegistryImport/Button_Back",SearchRectangle:rectangle
+		
+		Log "VERIFICATION: Returns to Patient Match screen"
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/RegistryImport/Label_MatchName",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Patient match screen")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select 'Load Records' "
+		click image:"Immunizations/Common/RegistryImport/Button_LoadRecords",SearchRectangle:rectangle
+		
+		Log "VERIFICATION: The Import Records screen opens with the immunization records from the state registry on the left, and the immunizations already in the patient's record in PowerChart on the right."
+		waitfor 25,"Immunizations/Common/RegistryImport/Label_ImportRecords"
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/RegistryImport/Label_ImportRecords",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Import record screen with registries")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Move immunizations from the state registry on the left to the patient's chart by selecting the arrows to move them over"
+		set rectangle to "Immunizations/Common/RegistryImport/Helpers".DialogSearchRectangle
+		click item 10 of EveryImageLocation("Immunizations/Common/RegistryImport/Icon_RightArrow")
+		
+		Log "VERIFICATION: Immunizations move to the right side and are displayed in 'Product on patient's chart' "
+		set rectangle to "Immunizations/Common/RegistryImport/Helpers".productOnPatientChartColumnSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "measles/mumps/rubella/varicella vaccine",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Product displayed on last right-hand column ")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: After you have selected the immunizations you want to move, select 'Submit' button"
+		set rectangle to "Immunizations/Common/RegistryImport/Helpers".dialogSearchRectangle
+		click image:"Immunizations/Common/RegistryImport/Button_Submit",SearchRectangle:rectangle
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/RegistryImport_Status/Import_Button"
+		
+		Log "VERIFICATION: Immunizations will be added to the patient's record in the Immunizations, and forecasting will adjust based on historical information added from the Registry."
+		waitFor 300, "Immunizations/WorkflowMPage/Table/TL_Workflow"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "1", "true"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered - Did Not Count"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Imported registry on MPAGE")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the '+' sign next to the Immunizations component header, and select 'Order Immunizations'.Select Order Immunization and select 'Submit'.Click on the dropped order available for signature at the top of the workflow MPage for signature in green color. Complete any required order details on Orders for Signature and select 'Sign' "	
+		Log "VERIFICATION: A list of Immunization orders are populated. Orders are dropped to the scratch pad and are available at the top of the workflow MPage for signature in green color. After the order is signed the subsequent tasks are dropped to the Task List available in MAR Tab"
+		run "Immunizations/Common/orderImmunizations/Task".orderAndSignImmunization orderableName, encounterType
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Access the Forecaster from the Immunization component and select 'View Forecast' "
+		waitFor 300, "Immunizations/WorkflowMPage/Table/TL_Workflow"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Immunization Forecaster opens in a dynamic tab"
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage greyForecastButton,rectangle
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the vaccine from the Forecaster view"
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName
+		
+		Log "VERIFICATION: Expanded view opens with the dose details and Vaccine Information Statements for the vaccine in the righthand side"
+		run "Immunizations/Util/Validation".verifyText VIS1, "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneSearchRectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Expanded view")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the appropriate Vaccine Information Statement for printing"
+		click text:VIS1,searchrectangle:"Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneSearchRectangle
+		
+		Log "VERIFICATION: Web browser opens to Vaccine Information Statement sheet and user can print through web browser printing"
+		click "Millennium_MaximizeRestore_Application/MaximizeApplication"
+		waitfor 50,"Immunizations/Forecaster-Forecast/Image_VaccineInformationStatement"
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Forecaster-Forecast/Image_VaccineInformationStatement"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Web browser opens to VIS to print")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Close Web Browser"
+		wait 2
+		run "Util".closeApplication 1
+		
+		Log "VERIFICATION: Returned to Forecaster Expanded view with vaccine in focus"
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Expanded view")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click anywhere outside of the expanded view"
+		Log "VERIFICATION: Expanded view closes"
+		
+		set topPaneRectangle to "Immunizations/Common/Helpers".tabListSearchrectangle
+		click text:immunizationForecast, searchrectangle:topPaneRectangle
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Navigate to MAR Tab and refresh the tab to view the order immunization signed to be displayed here.Select the signed vaccine for ex: Human Papillomavirus Vaccine from the task list"
+		run "Immunizations/Setup".LoadComponentViaPatientChart menu, "MAR"
+		WaitFor 50,"Medication_Administration_Record/MAR_Screen/Label_Medications"
+		
+		Log "VERIFICATION: Medication Administration opens with the charted order immunization"
+		put "Medication_Administration_Record/MAR_Screen".IdentifyOrder_FromMARSpread("Scheduled","Task",orderableName,orderableName) into rectangle
+		run "Immunizations/Util/Validation".verifyValue rectangle,"True"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-MAR with charted immunization")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Right click on the task and perform a charting by clicking on 'Quick Chart' "
+		RightClick imagelocation("Medication_Administration_Record/MAR_Screen/Label_Medications")+(140,60)
+		Run "Medication_Record_Dev_Common_Utilities/Common_Utilities".SelectOption "Quick Chart"
+		
+		Log "VERIFICATION: Verify that the Immunization Charting window is loaded."
+		waitfor 30,"Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_LotNumber"
+		run "Immunizations/Util/Validation".verifyImage "Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_LotNumber"
+		
+		Log "VERIFICATION: Verify that the Lot Number field is displayed as enabled, required and blank."
+		if "Medication_Record_Dev_Common_Utilities/Common_Utilities".IsRequired ("Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_LotNumber") is "True"
+			LogSuccess "Lot number field is a required field"	
+		else	
+			LogError "Lot number field is displayed as Not required"	
+		end if
+		put "Medication_Record_Dev_Common_Utilities/Common_Utilities".IsRequired ("Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_LotNumber") into lotNumberValidation
+		run "Immunizations/Util/Validation".verifyValueEquals "True",lotNumberValidation
+		
+		Log "VERIFICATION: Verify that the Manufacturer and Expiration Date fields are displayed in the window as enabled,required and blank."
+		if ColorAtLocation("Medication_Record_Dev_Common_images/Immunization_Charting/Texbox_Manufacturer") contains "255"	
+			LogSuccess "manufacturer date field displayed in the window are still disabled/dithered"			
+		else			
+			LogError "manufacturer date field displayed in the window are not disabled/dithered"			
+		end if
+		if ColorAtLocation("Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_ExpirationDate") contains "255"		
+			LogSuccess "Expiry date field displayed in the window are still disabled/dithered"			
+		else			
+			LogError "Expiry date field displayed in the window are not disabled/dithered"			
+		end if
+		
+		Log "VERIFICATION: Verify that the sign checkmark is dithered/disabled.", 
+		run "Immunizations/Util/Validation".verifyImageNotVisible "Medication_Record_Dev_Common_images/Icon_Sign"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Charting window with default preferences")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Enter the unique lot number Lot Number  from the medication, enter Manufacturer and Expiration Date fields"
+		click imagelocation("Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_LotNumber")+(50,0)
+		typetext "23"
+		
+		Log "VERIFICATION:  Lot number displays in the Medication Administration Window"
+		wait 2
+		typetext controlKey, "a", "c"
+		wait 1
+		if RemoteClipboard() equals "23"		
+			LogSuccess "Lot number displays in the Medication Administration Window"			
+		else		
+			LogError "Lot number does not display in the Medication Administration Window"			
+		end if
+		
+		Log "VERIFICATION: Verify that the Manufacturer and Expiration Date fields display the details associated to the lot if the lot number is entered from the search window else the fields have to be filled with any values explicitly"	
+		click imagelocation("Medication_Record_Dev_Common_images/Immunization_Charting/Texbox_Manufacturer")+(50,0)
+		typetext "Amgen USA",tabkey
+		click imagelocation("Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_ExpirationDate")+(50,0)
+		typetext "Immunizations/Util/Date".todaysDate(format),returnkey
+		
+		put ReadText(imagelocation("Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_ExpirationDate")+(50,0)) into TextExpire
+		if TextExpire contains "Immunizations/Util/Date".todaysDate(format) then		
+			LogSuccess "Expiry date field displays the associated information entered for the product"			
+		else
+			LogError "Expiry date field is not displaying the associated information entered for the product"			
+		end if
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Fill in the required 'Site' field and click on 'Sign' "
+		repeat 2 times
+			typetext tabkey
+		end repeat				
+		typetext "Medicaid"
+		wait 1
+		typetext returnkey
+		typetext tabkey,"Varicella (English)",returnkey
+		repeat 4 times
+			typetext tabkey
+		end repeat			
+		typetext "Right Arm"
+		wait 1
+		typetext returnkey,tabkey
+		Click  "Medication_Record_Dev_Common_images/Icon_Sign"
+		
+		Log "VERIFICATION: Medication Administration Window is dismissed. Task List is in view. HL7 message is created, and vaccine details are sent outbound to registry"
+		run "Immunizations/Util/Validation".verifyImageNotVisible "Medication_Record_Dev_Common_images/Icon_Sign"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Charted successfully in MAR")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Return to the Immunization Component -Immunization Schedule Tab"
+		run "Immunizations/Setup".LoadComponentViaPatientChart menu, "Immunization Schedule"
+		
+		Log "VERIFICATION: Immunization Schedule has been updated with charted details, and forecasting has been adjusted appropriately"
+		waitfor 15,"ImmunizationsSchedule/PreviousImmunizations/TL_PreviousImmunizations"
+		set rectangle to "ImmunizationsSchedule/PreviousImmunizations/Helpers".DialogRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Charted vaccine displayed in Schedule")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Re-launch Powerchart and Log into PowerChart as Physician – Nurse as User1, Navigate to Immunizations Workflow MPAGE Tab"
+		Log "VERIFICATION: Immunizations MPAGE Tab displays with Overdue and Due immunizations"
+		
+		wait 2
+		run "Util".closeApplication 1
+		wait 2
+		run "Util".closeApplication 1
+		waitfor 25,"PCF/MillenniumApps/Button_CommandPrompt_Toolbar"
+		click imagelocation("PCF/MillenniumApps/Button_CommandPrompt_Toolbar")+(0,100)
+		typetext "powerchart",returnkey
+		waitfor 50, "PCF/MillenniumApps/Logo_Login_Popover"
+		run "Millennium_Login_window".LogIntoMillenniumApps username, password, domain
+		run "Millennium_LoadPatient_RecentSearch".LoadPatient patientName
+		run "Immunizations/Setup".LoadComponentViaPatientChart menu, subMenu
+		waitFor 300, "Immunizations/WorkflowMPage/Table/TL_Workflow"
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Repeat the above done workflow from charting an order from Order Immunizations till navigating to MAR Tab "
+		Log "VERIFICATION: Subsequent tasks are dropped to the Task List available in MAR Tab"
+		run "Immunizations/Common/orderImmunizations/Task".orderAndSignImmunization orderableName, encounterType
+		run "Immunizations/Setup".LoadComponentViaPatientChart menu, "MAR"
+		WaitFor 50,"Medication_Administration_Record/MAR_Screen/Label_Medications"
+		click imagelocation ("Immunizations/Common/Icon_Refresh")	
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the signed vaccine for ex: Human Papillomavirus Vaccine from the task list"
+		run "Medication_Administration_Record/MAR_Screen".SelectOrderTypeFromTimeview "Scheduled"
+		
+		Log "VERIFICATION: Medication Administration window opens  with the charted order immunization"
+		put "Medication_Administration_Record/MAR_Screen".IdentifyOrder_FromMARSpread("Scheduled","Task",orderableName,orderableName) into rectangle
+		run "Immunizations/Util/Validation".verifyValue rectangle,"True"
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Right click on the task and perform a charting by clicking on 'Quick Chart' "
+		Put imagelocation("Medication_Administration_Record/MAR_Screen/Label_Medications")+(100,20) into notPreviouslyGiven
+		Insert notPreviouslyGiven+(250,380) into notPreviouslyGiven
+		wait 5
+		typetext tabkey
+		wait 3
+		RightClick ImageLocation(text:"previously",validCharacters:"previously",validWords:"previously",DPI:144,SearchRectangle:notPreviouslyGiven)
+		wait 2
+		Run "Medication_Record_Dev_Common_Utilities/Common_Utilities".SelectOption "Quick Chart"
+		
+		Log "VERIFICATION: Verify that the Immunization Charting window is loaded."
+		waitfor 30,"Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_LotNumber"
+		run "Immunizations/Util/Validation".verifyImage "Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_LotNumber"
+		
+		Log "VERIFICATION: Verify that the Lot Number field is displayed as enabled, required and blank."
+		if "Medication_Record_Dev_Common_Utilities/Common_Utilities".IsRequired ("Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_LotNumber") is "True"
+			LogSuccess "Lot number field is a required field"	
+		else	
+			LogError "Lot number field is displayed as Not required"	
+		end if
+		put "Medication_Record_Dev_Common_Utilities/Common_Utilities".IsRequired ("Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_LotNumber") into lotNumberValidation
+		run "Immunizations/Util/Validation".verifyValueEquals "True",lotNumberValidation
+		
+		Log "VERIFICATION: Verify that the Manufacturer and Expiration Date fields are displayed in the window as enabled,required and blank."
+		if ColorAtLocation("Medication_Record_Dev_Common_images/Immunization_Charting/Texbox_Manufacturer") contains "255"	
+			LogSuccess "manufacturer date field displayed in the window are still disabled/dithered"			
+		else			
+			LogError "manufacturer date field displayed in the window are not disabled/dithered"			
+		end if
+		if ColorAtLocation("Medication_Record_Dev_Common_images/Immunization_Charting/Textbox_ExpirationDate") contains "255"		
+			LogSuccess "Expiry date field displayed in the window are still disabled/dithered"			
+		else			
+			LogError "Expiry date field displayed in the window are not disabled/dithered"			
+		end if
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Charting window with default preferences")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select 'Not Given' at the bottom of the Medication Administration Window and select a Exception and Exception Reason for not giving the medication"
+		waitfor 15,"Medication_Record_Dev_Common_images/Immunization_Charting/Checkbox_Notgiven"
+		click "Medication_Record_Dev_Common_images/Immunization_Charting/Checkbox_Notgiven"
+		click "Medication_Record_Dev_Common_images/Immunization_Charting/Dropdown_Exception"
+		wait 2
+		typetext exceptionMAR,tabKey
+		click "Medication_Record_Dev_Common_images/Immunization_Charting/Dropdown_ExceptionReason"
+		wait 2
+		typetext exceptionReasonMAR,tabKey
+		
+		Log "VERIFICATION: Ensure Sign checkmark is not dithered"
+		run "Immunizations/Util/Validation".verifyImage "Medication_Record_Dev_Common_images/Icon_Sign"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Sign checkmark is not dithered")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click the Sign Checkmark"
+		click "Medication_Record_Dev_Common_images/Icon_Sign"
+		
+		Log "VERIFICATION: Ensure Medication Administration window closes"
+		run "Immunizations/Util/Validation".verifyImageNotVisible "Medication_Record_Dev_Common_images/Icon_Sign"
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Return to the MPAGE and Refresh the view and click on 'View Forecast' and see that the immunization is charted and reflected"
+		run "Immunizations/Setup".LoadComponentViaPatientChart menu,subMenu
+		waitFor 300, "Immunizations/WorkflowMPage/Table/TL_Workflow"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Forecaster reflects with the not given charted"
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Not Given","Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Forecaster doesn't reflect the not given charted")
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Exit the PowerChart Application"
+		run "Immunizations/Setup".closeApplication global Cleanup
+		-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		EndTestCase "WF/UNIV_MO/HLM-WF-MU3 Ambulatory-Immunizations-UNIV_MO"
+		
+	Catch
+		LogError "Exception encountered" & newline & "Exception Reason:" && the exception.reason
+		captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	-------------------------------------------------- Patient Cleanup ----------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Cleanup Patient1"
+	waitfor 25,"PCF/MillenniumApps/Button_CommandPrompt_Toolbar"
+	click imagelocation("PCF/MillenniumApps/Button_CommandPrompt_Toolbar")+(0,100)
+	typetext "pmlaunch",returnkey
+	waitfor 50, "PCF/MillenniumApps/Logo_Login_Popover"
+	run "Millennium_Login_window".LogIntoMillenniumApps username, password, domain
+	wait 3
+	typeText windowsKey & upArrow
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName,firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 1
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Catch
+	LogError "Exception encountered" & newline & "Exception Reason:" && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+--------------------------------------------------Zero State Script---------------------------------------
+
+run "Cleanup".ZeroStateCloseAllApps

@@ -1,0 +1,345 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=115295
+
+*)
+params domain
+Log "Test running in domain" && domain
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+Set encounterOrg to setup.encounterOrg
+Set encounterType to setup.encounterType
+Set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set doubleDashImage to common.doubleDashImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set minimum to fieldLabels.minimum
+set earliestRecommended to fieldLabels.earliestRecommended
+set latestRecommended to fieldLabels.latestRecommended
+set maximum to fieldLabels.maximum
+set notGivenDateField to fieldLabels.notGivenDateField
+set rescheduleDateField to fieldLabels.rescheduleDateField
+set reasonField to fieldLabels.reasonField
+set authorizedByField to fieldLabels.authorizedByField
+set notGiven to fieldLabels.notGiven
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set lastAdmin to textStrings.lastAdmin
+set seriesRefused to textStrings.seriesRefused
+set patientRefuses to textStrings.patientRefuses
+set due to textStrings.due
+set inRangeToday to textStrings.inRangeToday
+set earliestRecommendedWithoutColon to textStrings.earliestRecommendedWithoutColon
+
+set testData to JSONValue(file ResourcePath("VR/Influenza_Vaccine_Forecast/testData.json")).(value of domain)
+Set lastName to testData.Patient_Perm_Not_Given.lastName
+Set firstName to testData.Patient_Perm_Not_Given.firstName
+Set patientName to testData.Patient_Perm_Not_Given.nameFullFormatted
+Set newLastName to testData.Patient_Perm_Not_Given.newLastName
+Set sex to testData.Patient_Perm_Not_Given.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Perm_Not_Given.dob))
+set user to testData.User
+set vaccineName to testData.vaccineName
+set product1 to testData.product1
+set source to testData.source
+set notGivenType to testData.notGivenType
+set permNotGivenAction to testData.permNotGivenAction
+set notGivenReason to testData.notGivenReason
+set vis1 to testData.vis1
+set format to "%b %d, %Y"
+set dateFormat to testData.dateFormat
+set (fluSeasonStart, fluSeasonEnd) to "Immunizations/Util/Date".fluSeasonDateCalc(format)
+
+
+
+Try
+	#PATIENT RESET
+	run "Immunizations/PatientCreation".resetPatientToZeroState username, password, domain, lastName, firstName, dob
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/HLM-VR-Immunizations-Influenza_Perm_Not_Given"
+		
+		Log "Util".stepNumber & "ACTION: Open Powerchart.exe with User1, search for and open the chart for Patient2, and open the Immunizations Workflow component."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		Log "VERIFICATION: Ensure Status displays as 'In Range'."
+		//Influenza needs to appear above HIB in order to avoid OCR validating HIB since it contains Influenza as well. 
+		Click text: "status", searchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("status")
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, inRange
+		
+		Log "VERIFICATION: Ensure the Next recommended administration is 'Today - <End of Flu Season>'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "Today" && "-" && fluSeasonEnd
+		
+		Log "VERIFICATION: Ensure Administrations displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, doubleDashImage, false
+		
+		Log "VERIFICATION: Ensure  Last action displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure Last action date displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName, doubleDashImage
+		capturescreen (Name: "Step" & Global stepNumber & "-MPage Review")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Navigate to the forecaster"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: Ensure 'Dose 1' displays in the Today column."
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Dose 1", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangleToday)
+		
+		Log "VERIFICATION: Ensure no more doses are forecasted."
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set endDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-110", "-30", "50", "100")
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Dose", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		capturescreen (Name: "Step" & Global stepNumber & "-Forecaster review")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber &"ACTION: Click on the Influenza Header"
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName
+		
+		Log "VERIFICATION: In the right hand pane header, ensure that 'Dose 2 Due Today - Influenza' along with 'Recommended From <Flu Season Start> - <Flu Season End>' and 'In Range Today'."
+		set leftPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewleftPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName & return & notStarted, leftPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: In the right hand pane header, ensure that 'Dose 1 Due Today - Influenza' along with 'Recommended From <Flu Season Start> - <Flu Season End>' and 'In Range Today'."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Dose 1" && due && "Today -" && vaccineName & return & inRangeToday, rightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText earliestRecommendedWithoutColon && formattedTime("%m/%d/%y", fluSeasonStart) && "-" && formattedTime("%m/%d/%y", fluSeasonEnd), rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Ensure the VIS information displays in the body of the right hand side."
+		set rightPaneBodySearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneBodySearchRectangle 
+		run "Immunizations/Util/Validation".verifyText vis1, rightPaneBodySearchRectangle
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber &"ACTION: Click on Dose 1."
+		Click text: 1, SearchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		
+		Log "VERIFICATION: In the left hand pane, ensure dose 1 displays with a status of 'Due' and <Today's date> below it."
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers". expandedViewLeftPaneDoseSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText due & return & "Immunizations/Util/Date".todaysDate(format), leftPaneSearchRectangle
+		
+		Log "VERIFICATION: In the right hand pane ensure dose 1 displays."
+		set expandedViewRightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText "Dose 1", expandedViewRightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Earliest: Date and age for Flu Season Start."
+		set expandedViewBodyRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneBodySearchRectangle()
+		set minimumPatternRectangle to "Immunizations/Common/Helpers".fieldValueSearchRectangle(minimum, expandedViewBodyRectangle)
+		set age to "Immunizations/Util/Date".ageCalculator (dob, fluSeasonStart, false, false)
+		set pattern to "Immunizations/Util/Date".setPattern(age)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, minimumPatternRectangle 
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum, fluSeasonStart
+		
+		Log "VERIFICATION: Recommended From: Date and age for Flu Season Start."
+		set pattern to "Immunizations/Util/Date".setPattern(age)
+		set earliestPatternRectangle to "Immunizations/Common/Helpers".fieldValueSearchRectangle(earliestRecommended, expandedViewBodyRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, earliestPatternRectangle
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended, fluSeasonStart
+		
+		Log "VERIFICATION: Recommended Until: Date and age for Flu Season End."
+		set age to "Immunizations/Util/Date".ageCalculator (dob, fluSeasonEnd, false, false)
+		set pattern to "Immunizations/Util/Date".setPattern(age)
+		set latestPatternRectangle to "Immunizations/Common/Helpers".fieldValueSearchRectangle(latestRecommended, expandedViewBodyRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, latestPatternRectangle 
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended, fluSeasonEnd 
+		
+		Log "VERIFICATION: Latest: Date and age for Flu Season End."
+		set maximumPatternRectangle to "Immunizations/Common/Helpers".fieldValueSearchRectangle(maximum, expandedViewBodyRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, maximumPatternRectangle 
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField maximum, fluSeasonEnd 
+		
+		Log "VERIFICATION: Ensure only dose 1 is forecasted."
+		run "Immunizations/Util/Validation".verifyTextNotVisible "2", "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		capturescreen (Name: "Step" & Global stepNumber & "-Forecaster Expanded View Dose 1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart 2 doses at least 4 weeks apart with the second dose being on the last day of the previous season."
+		Click text: "Print", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, "Immunizations/Util/Date".adjustDate(fluSeasonStart, format, ("week": -4)), source, product1, "Submit"
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, "Immunizations/Util/Date".adjustDate(fluSeasonStart, format, ("day": -1)), source, product1, "Submit"	
+		
+		Log "VERIFICATION: In the CDC Schedule column, ensure 'Influenza' displays with 'Last Admin: <Previous Flu Season end> (3yrs 3m)'. "
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set firstcolumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName & return & lastAdmin && "Immunizations/Util/Date".adjustDate(fluSeasonStart, format, ("day": -1)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose 1 is displays as + 4 weeks from the previous dose administered."
+		set previousdose to "Immunizations/Util/Date".adjustDate(fluSeasonStart, format, ("day": -1))
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(previousdose, format, ("week": 4))
+		set endDateHeader to fluSeasonEnd
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-90", "-30", "75", "100")
+		run "Immunizations/Util/Validation".verifyText "Dose 1", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		capturescreen (Name: "Step" & Global stepNumber & "-Forecaster 2 doses charted")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on vaccine header and then click on Dose 1"
+		click text: vaccineName, SearchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, firstColumnSearchRectangle)
+		Click text: 1, SearchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		
+		Log "VERIFICATION: In the left hand pane, ensure dose 1 displays with a status of 'Due' and <Today's date> below it."
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers". expandedViewLeftPaneDoseSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText notDueUntil & return &  "Immunizations/Util/Date".adjustDate(previousdose, format, ("week": 4)), leftPaneSearchRectangle
+		
+		Log "VERIFICATION: Ensure Dose 1 is shown in the right hand pane header."
+		run "Immunizations/Util/Validation".verifyText "Dose 1", expandedViewRightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Earliest: <4 weeks from the last administered dose>."
+		set previousdose to "Immunizations/Util/Date".adjustDate(fluSeasonStart, format, ("day": -1))
+		set age to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".adjustDate(previousdose, format, ("week": 4)), false, false)
+		set pattern to "Immunizations/Util/Date".setPattern(age)
+		set expandedViewBodyRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneBodySearchRectangle()
+		set minimumPatternRectangle to "Immunizations/Common/Helpers".fieldValueSearchRectangle(minimum, expandedViewBodyRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, minimumPatternRectangle 
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum, "Immunizations/Util/Date".adjustDate(previousdose, format, ("week": 4)) 
+		
+		Log "VERIFICATION: Recommened From: <4 weeks from the last administered dose>."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended, "Immunizations/Util/Date".adjustDate(previousdose, format, ("week": 4))
+		set earliestPatternRectangle to "Immunizations/Common/Helpers".fieldValueSearchRectangle(earliestRecommended, expandedViewBodyRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, earliestPatternRectangle 
+		
+		Log "VERIFICATION: Recommended Until: Date and age for Flu Season End."
+		set age to "Immunizations/Util/Date".ageCalculator (dob, fluSeasonEnd, false, false)
+		set pattern to "Immunizations/Util/Date".setPattern(age)
+		set latestPatternRectangle to "Immunizations/Common/Helpers".fieldValueSearchRectangle(latestRecommended, expandedViewBodyRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, latestPatternRectangle 
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended, fluSeasonEnd 
+		
+		Log "VERIFICATION: Latest: Date and age for Flu Season End."
+		set maximumPatternRectangle to "Immunizations/Common/Helpers".fieldValueSearchRectangle(maximum, expandedViewBodyRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, maximumPatternRectangle 
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField maximum, fluSeasonEnd 
+		capturescreen (Name: "Step" & Global stepNumber & "-Forecaster Expanded View Dose 1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart a Not Given of type Refused, and Cancel Series/Forecasting."
+		Click text: "Print", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Common/ChartNotGiven/Task".chartRequiredInput vaccineName, notGivenType, permNotGivenAction, notGivenReason, "Submit"
+		
+		Log "VERIFICATION: In the CDC Schedule column, ensure 'Influenza' displays with a strikethrough and 'Series Refused'. "
+		set rowSearchRectangleStrikeThrough to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage("Immunizations/Forecaster-Common/InfluenzaStrikethrough")
+		run "Immunizations/Util/Validation".verifyText seriesRefused, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleStrikeThrough, firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure 'Series refused' & <Today's date> displays in the today column."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText seriesRefused & return & "Immunizations/Util/Date".todaysDate(format), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleStrikeThrough, columnSearchRectangleToday)
+		
+		Log "VERIFICATION: Ensure 'Series Refused' displays for the remainder of the timeline."
+		click imageLocation("Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarRightArrow")
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("year": 11))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("year": 17, "week": 4, "day": -1))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-110", "-30", "50", "100")
+		run "Immunizations/Util/Validation".verifyText seriesRefused, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleStrikeThrough, columnSearchRectangle)
+		capturescreen (Name: "Step" & Global stepNumber & "-Forecaster Not Given")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on Influenza."
+		click ImageLocation("Immunizations/Forecaster-Common/InfluenzaStrikethrough")
+		
+		Log "VERIFICATION: Ensure 'Series refused' & <Today's date> displays in the left hand column."
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewleftPaneSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText seriesRefused & return & "Immunizations/Util/Date".todaysDate(format), leftPaneSearchRectangle
+		
+		Log "VERIFICATION: In the right hand pane header, ensure that 'Series Refused On <Today's Date> - Patient Refuses' displays."
+		click text: seriesRefused, SearchRectangle: leftPaneSearchRectangle
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText seriesRefused && "On" && "Immunizations/Util/Date".todaysDate(format) && "-" && patientRefuses, rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Not given Date field displays in the right hand column."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField notGivenDateField, "Immunizations/Util/Date".todaysDate(format)
+		
+		Log "VERIFICATION: Reschedule field displays in the right hand column."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewFieldImage rescheduleDateField, doubleDashImage
+		
+		Log "VERIFICATION: Reason field displays in the right hand column."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField reasonField, notGivenReason
+		
+		Log "VERIFICATION: Authorized by field displays in the right hand column."
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField authorizedByField, user
+		capturescreen (Name: "Step" & Global stepNumber & "-Expanded View Not Given")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click out of the expanded view and navigate to the list view."
+		Click text: "Print", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews
+		
+		Log "VERIFICATION: Ensure Rotavirus Vaccine is displayed under Vaccine Column with 'Complete'."
+		set rowSearchRectangleStrikeThrough to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage("Immunizations/Forecaster-Common/InfluenzaStrikethrough")
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText seriesRefused, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleStrikeThrough, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure the Action Column1 displays Dose 1 with Product Name on top and administration date with age in parenthesis below it."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText product1 & return & "Immunizations/Util/Date".adjustDate(fluSeasonStart, format, ("week": -4)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleStrikeThrough, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure the Action Column2 displays Dose 2 with Product Name on top and administration date with age in parenthesis below it."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("2")
+		run "Immunizations/Util/Validation".verifyText product1 & return & "Immunizations/Util/Date".adjustDate(fluSeasonStart, format, ("day": -1)), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleStrikeThrough, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure the Action Column3 displays Dose 3 with Product Name on top and administration date with age in parenthesis below it."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("3")
+		run "Immunizations/Util/Validation".verifyText seriesRefused & return & "Immunizations/Util/Date".todaysDate(format), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleStrikeThrough, columnSearchRectangle)
+		capturescreen (Name: "Step" & Global stepNumber & "-List View patient2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Navigate to the workflow MPage"
+		run "Immunizations/Common/Actions".clickMPagesView viewPoint
+		
+		Log "VERIFICATION: Ensure Influenza displays in the historical section with a status of series refused"
+		Click text: "status", searchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("status") //Influenza needs to appear above Hib
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, seriesRefused
+		
+		Log "VERIFICATION: Ensure Influenza displays administrations of 2."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", false
+		
+		Log "VERIFICATION: Ensure Influenza displays a next recommended of '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure Influenza displays with a last action of 'Not Given'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, notGiven
+		capturescreen (Name: "Step" & Global stepNumber & "-Workflow MPage patient2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient's chart."
+		Run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/HLM-VR-Immunizations-Influenza_Perm_Not_Given"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+#SUT Cleanup
+run "Cleanup".ZeroStateCloseAllApps

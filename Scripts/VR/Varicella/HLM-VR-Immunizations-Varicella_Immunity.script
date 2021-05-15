@@ -1,0 +1,130 @@
+﻿-------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+------------------------------------------------------------------------------------------------------------------------------
+
+#RQM TEST CASE LINK: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=122834
+
+params domain 
+log "Test running in domain"&&domain
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set conversation to setup.conversation
+set encounterOrg to setup.EncounterOrg
+set  encounterType to setup.EncounterType
+
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set doubleDashImage to common.doubleDashImage
+set varicellaVaccineStrikeThroughImg to common.varicellaVaccineStrikeThroughImg
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set minimum to fieldLabels.minimum
+set earliestRecommended to fieldLabels.earliestRecommended
+set latestRecommended to fieldLabels.latestRecommended
+set maximum to fieldLabels.maximum
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set seriesUnnecessary to textStrings.seriesUnnecessary
+
+set testData to JSONValue(file resourcePath("VR/Varicella_Vaccine_Forecast/TestData.json")).(text of domain)
+set lastName to testData.Patient_Immunity.lastName
+set firstName to testData.Patient_Immunity.firstName
+set patientName to testData.Patient_Immunity.nameFullFormatted
+set newLastName to testData.Patient_Immunity.newLastName
+set sex to testData.Patient_Immunity.sex
+set dob to formattedTime("%m/%d/%Y",(testData.Patient_Immunity.dob))
+set source to testData.source
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set format to "%b %d, %Y"
+set dateFormat to testData.dateFormat
+
+
+
+Try
+	#PATIENT CREATION
+	log "Create patient1 (41 years old) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	
+	try
+		BeginTestCase "HLM-VR-Immunizations-Varicella_Immunity"
+		
+		log "Util".stepNumber & "ACTION: Open Patient's chart to Immunization Workflow MPage and navigate to Immunization section."
+		run "Immunizations/setup".LoginAndLoadComponentViaMenu Username, Password, Domain, patientName, Menu, SubMenu,  relationship
+		
+		Log "VERIFICATION: Ensure the Immunization Workflow MPage displays."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName1
+		
+		Log "VERIFICATION: Ensure Varicella is displayed in Status column as 'Series Unnecessary'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName1, seriesUnnecessary
+		
+		Log "VERIFICATION: Ensure Next Dose Recommended column displays as '--''."
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyNextRecommendedColumn vaccineName1, doubleDashImage
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Workflow mPage")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION:  Click on the View Forecast link within the MPage."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: Ensure Varicella vaccine displayed under CDC schedule column with a strikethrough line on the Vaccine group name with 'Unnecessary' below it. No doses are displayed within the timeline."
+		Set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(varicellaVaccineStrikeThroughImg)
+		Set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyImage  varicellaVaccineStrikeThroughImg,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText  seriesUnnecessary, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		Set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		Set endDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		Set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, -15, -15, 200, 900)
+		run "Immunizations/Util/Validation".VerifyText seriesUnnecessary,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Forecaster validation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "VERIFICATION: Verify no Aged-out vaccines display under List View."
+		run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Forecaster-Forecast/List"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-No Vaccine History")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber &"ACTION: Close Application."
+		run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "HLM-VR-Immunizations-Varicella_Immunity"
+		
+	catch
+		logError "Test Steps Exception: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	end try
+	#PATIENT CLEANUP
+	log "ACTION: Cleanup Patient."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName,firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+catch
+	logError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+end try
+---------------------------------------------------------------------------------------------------------------
+#SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

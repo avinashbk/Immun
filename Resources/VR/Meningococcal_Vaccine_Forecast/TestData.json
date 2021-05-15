@@ -1,0 +1,210 @@
+{
+	"SOLM64": {
+		"Patient_NewBorn": {
+			"lastName": "Meningococcal",
+			"firstName": "NewBornP1",
+			"nameFullFormatted": "Meningococcal,NewBornP1",
+			"newLastName": "Old1Meningococcal",
+			"sex": "Male",
+			"DOB": "Today"
+		},
+		"Patient_DidNotCount": {
+			"lastName": "Meningococcal",
+			"firstName": "11YrsP2",
+			"nameFullFormatted": "Meningococcal,11YrsP2",
+			"newLastName": "Old2Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 11 years"
+		},
+		"Patient_Status_Check": {
+			"lastName": "Meningococcal",
+			"firstName": "16YrsP3",
+			"nameFullFormatted": "Meningococcal,16YrsP3",
+			"newLastName": "Old3Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 16 years"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "Meningococcal",
+			"firstName": "19YrsP4",
+			"nameFullFormatted": "Meningococcal,19YrsP4",
+			"newLastName": "Old4Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 19 years - 1 day"
+		},
+		"Patient_Conditional_Skip": {
+			"lastName": "Meningococcal",
+			"firstName": "16YrsP5",
+			"nameFullFormatted": "Meningococcal,16YrsP5",
+			"newLastName": "Old4Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 16 years - 4 day"
+		},
+		"vaccineName": "Meningococcal",
+		"dateFormat": "Date",
+		"eventSet1": "meningococcal conjugate vaccine",
+		"eventSet2": "meningococcal polysaccharide vaccine",
+		"Source": "Device",
+		"visLink1": "Meningococcal (English)",
+		"user": "Maintenance, Health",
+		"notGivenType": "Contraindicated",
+		"action": "Cancel series and stop forecasting",
+		"notGivenReason": "Contraindicated - Do not give"
+	},
+	"S18VX": {
+		"Patient_NewBorn": {
+			"lastName": "Meningococcal",
+			"firstName": "NewBornP1",
+			"nameFullFormatted": "Meningococcal,NewBornP1",
+			"newLastName": "Old1Meningococcal",
+			"sex": "Male",
+			"DOB": "Today"
+		},
+		"Patient_DidNotCount": {
+			"lastName": "Meningococcal",
+			"firstName": "11YrsP2",
+			"nameFullFormatted": "Meningococcal,11YrsP2",
+			"newLastName": "Old2Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 11 years"
+		},
+		"Patient_Status_Check": {
+			"lastName": "Meningococcal",
+			"firstName": "16YrsP3",
+			"nameFullFormatted": "Meningococcal,16YrsP3",
+			"newLastName": "Old3Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 16 years"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "Meningococcal",
+			"firstName": "19YrsP4",
+			"nameFullFormatted": "Meningococcal,19YrsP4",
+			"newLastName": "Old4Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 19 years - 1 day"
+		},
+		"Patient_Conditional_Skip": {
+			"lastName": "Meningococcal",
+			"firstName": "16YrsP5",
+			"nameFullFormatted": "Meningococcal,16YrsP5",
+			"newLastName": "Old4Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 16 years - 4 day"
+		},
+		"vaccineName": "Meningococcal",
+		"dateFormat": "Date",
+		"eventSet1": "meningococcal conjugate vaccine",
+		"eventSet2": "meningococcal polysaccharide vaccine",
+		"Source": "Device",
+		"visLink1": "Meningococcal (English)",
+		"user": "Maintenance, Health",
+		"notGivenType": "Contraindicated",
+		"action": "Cancel series and stop forecasting",
+		"notGivenReason": "Contraindicated - Do not give"
+	},
+	"S18VA": {
+		"Patient_NewBorn": {
+			"lastName": "Meningococcal",
+			"firstName": "NewBornP1",
+			"nameFullFormatted": "Meningococcal,NewBornP1",
+			"newLastName": "Old1Meningococcal",
+			"sex": "Male",
+			"DOB": "Today"
+		},
+		"Patient_DidNotCount": {
+			"lastName": "Meningococcal",
+			"firstName": "11YrsP2",
+			"nameFullFormatted": "Meningococcal,11YrsP2",
+			"newLastName": "Old2Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 11 years"
+		},
+		"Patient_Status_Check": {
+			"lastName": "Meningococcal",
+			"firstName": "16YrsP3",
+			"nameFullFormatted": "Meningococcal,16YrsP3",
+			"newLastName": "Old3Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 16 years"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "Meningococcal",
+			"firstName": "19YrsP4",
+			"nameFullFormatted": "Meningococcal,19YrsP4",
+			"newLastName": "Old4Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 19 years - 1 day"
+		},
+		"Patient_Conditional_Skip": {
+			"lastName": "Meningococcal",
+			"firstName": "16YrsP5",
+			"nameFullFormatted": "Meningococcal,16YrsP5",
+			"newLastName": "Old4Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 16 years - 4 day"
+		},
+		"vaccineName": "Meningococcal",
+		"dateFormat": "Date",
+		"eventSet1": "meningococcal conjugate vaccine",
+		"eventSet2": "meningococcal polysaccharide vaccine",
+		"Source": "Device",
+		"visLink1": "Meningococcal (English)",
+		"user": "Maintenance, Health",
+		"notGivenType": "Contraindicated",
+		"action": "Cancel series and stop forecasting",
+		"notGivenReason": "Contraindicated - Do not give"
+	},
+	"S18VE": {
+		"Patient_NewBorn": {
+			"lastName": "Meningococcal",
+			"firstName": "NewBornP1",
+			"nameFullFormatted": "Meningococcal,NewBornP1",
+			"newLastName": "Old1Meningococcal",
+			"sex": "Male",
+			"DOB": "Today"
+		},
+		"Patient_DidNotCount": {
+			"lastName": "Meningococcal",
+			"firstName": "11YrsP2",
+			"nameFullFormatted": "Meningococcal,11YrsP2",
+			"newLastName": "Old2Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 11 years"
+		},
+		"Patient_Status_Check": {
+			"lastName": "Meningococcal",
+			"firstName": "16YrsP3",
+			"nameFullFormatted": "Meningococcal,16YrsP3",
+			"newLastName": "Old3Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 16 years"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "Meningococcal",
+			"firstName": "19YrsP4",
+			"nameFullFormatted": "Meningococcal,19YrsP4",
+			"newLastName": "Old4Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 19 years - 1 day"
+		},
+		"Patient_Conditional_Skip": {
+			"lastName": "Meningococcal",
+			"firstName": "16YrsP5",
+			"nameFullFormatted": "Meningococcal,16YrsP5",
+			"newLastName": "Old4Meningococcal",
+			"sex": "Male",
+			"DOB": "Today - 16 years - 4 day"
+		},
+		"vaccineName": "Meningococcal",
+		"dateFormat": "Date",
+		"eventSet1": "meningococcal conjugate vaccine",
+		"eventSet2": "meningococcal polysaccharide vaccine",
+		"Source": "Device",
+		"visLink1": "Meningococcal (English)",
+		"user": "Maintenance, Health",
+		"notGivenType": "Contraindicated",
+		"action": "Cancel series and stop forecasting",
+		"notGivenReason": "Contraindicated - Do not give"
+	}
+}

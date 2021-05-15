@@ -1,0 +1,161 @@
+{
+	"SOLM64": {
+		"Patient1": {
+			"lastName": "Rvirus",
+			"firstName": "Pat1",
+			"nameFullFormatted": "Rvirus,Pat1",
+			"newLastName": "OldRotaV1",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "Rvirus",
+			"firstName": "Pat2",
+			"nameFullFormatted": "Rvirus,Pat2",
+			"newLastName": "OldRotaV2",
+			"dob": "Today - 14 weeks",
+			"sex": "Male"
+		},
+		"Patient3": {
+			"lastName": "Rvirus",
+			"firstName": "Pat3",
+			"nameFullFormatted": "Rvirus,Pat3",
+			"newLastName": "OldRotaV3",
+			"dob": "Today - 15 weeks - 1 day",
+			"sex": "Male"
+		},
+		"Patient4": {
+			"lastName": "Rvirus",
+			"firstName": "Pat4",
+			"nameFullFormatted": "Rvirus,Pat4",
+			"newLastName": "OldRotaV4",
+			"dob": "Today - 8 months",
+			"sex": "Male"
+		},
+		"Patient5": {
+			"lastName": "Rvirus",
+			"firstName": "Pat5",
+			"nameFullFormatted": "Rvirus,Pat5",
+			"newLastName": "OldRotaV5",
+			"dob": "Today - 8 months - 1 day",
+			"sex": "Male"
+		},
+		"vaccineName": "Rotavirus",
+		"visLink1": "Rotavirus (English)",
+		"source": "Device",
+		"product": "RotaTeq",
+		"product2": "Rotarix",
+		"waitFor": "20",
+		"user": "maintenance, health",
+		"notGivenType": "Refused",
+		"action": "Cancel series and stop forecasting",
+		"notGivenReason": "Patient Refuses",
+		"dateFormat": "Date"
+	},
+	"S18VX": {
+		"Patient1": {
+			"lastName": "Rvirus",
+			"firstName": "Pat1",
+			"nameFullFormatted": "Rvirus,Pat1",
+			"newLastName": "OldRotaV1",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "Rvirus",
+			"firstName": "Pat2",
+			"nameFullFormatted": "Rvirus,Pat2",
+			"newLastName": "OldRotaV2",
+			"dob": "Today - 14 weeks",
+			"sex": "Male"
+		},
+		"Patient3": {
+			"lastName": "Rvirus",
+			"firstName": "Pat3",
+			"nameFullFormatted": "Rvirus,Pat3",
+			"newLastName": "OldRotaV3",
+			"dob": "Today - 15 weeks - 1 day",
+			"sex": "Male"
+		},
+		"Patient4": {
+			"lastName": "Rvirus",
+			"firstName": "Pat4",
+			"nameFullFormatted": "Rvirus,Pat4",
+			"newLastName": "OldRotaV4",
+			"dob": "Today - 8 months",
+			"sex": "Male"
+		},
+		"Patient5": {
+			"lastName": "Rvirus",
+			"firstName": "Pat5",
+			"nameFullFormatted": "Rvirus,Pat5",
+			"newLastName": "OldRotaV5",
+			"dob": "Today - 8 months - 1 day",
+			"sex": "Male"
+		},
+		"vaccineName": "Rotavirus",
+		"visLink1": "Rotavirus (English)",
+		"source": "Device",
+		"product": "RotaTeq",
+		"product2": "Rotarix",
+		"waitFor": "20",
+		"user": "maintenance, health",
+		"notGivenType": "Refused",
+		"action": "Cancel series and stop forecasting",
+		"notGivenReason": "Patient Refuses",
+		"dateFormat": "Date"
+	},
+	"ENG18": {
+		"Patient1": {
+			"lastName": "Rvirus",
+			"firstName": "Pat1",
+			"nameFullFormatted": "Rvirus,Pat1",
+			"newLastName": "OldRotaV1",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "Rvirus",
+			"firstName": "Pat2",
+			"nameFullFormatted": "Rvirus,Pat2",
+			"newLastName": "OldRotaV2",
+			"dob": "Today - 14 weeks",
+			"sex": "Male"
+		},
+		"Patient3": {
+			"lastName": "Rvirus",
+			"firstName": "Pat3",
+			"nameFullFormatted": "Rvirus,Pat3",
+			"newLastName": "OldRotaV3",
+			"dob": "Today - 15 weeks - 1 day",
+			"sex": "Male"
+		},
+		"Patient4": {
+			"lastName": "Rvirus",
+			"firstName": "Pat4",
+			"nameFullFormatted": "Rvirus,Pat4",
+			"newLastName": "OldRotaV4",
+			"dob": "Today - 8 months",
+			"sex": "Male"
+		},
+		"Patient5": {
+			"lastName": "Rvirus",
+			"firstName": "Pat5",
+			"nameFullFormatted": "Rvirus,Pat5",
+			"newLastName": "OldRotaV5",
+			"dob": "Today - 8 months - 1 day",
+			"sex": "Male"
+		},
+		"vaccineName": "Rotavirus",
+		"visLink1": "Rotavirus (English)",
+		"source": "Device",
+		"product": "RotaTeq",
+		"product2": "Rotarix",
+		"waitFor": "20",
+		"user": "maintenance, health",
+		"notGivenType": "Refused",
+		"action": "Cancel series and stop forecasting",
+		"notGivenReason": "Patient Refuses",
+		"dateFormat": "Date"
+	}
+}

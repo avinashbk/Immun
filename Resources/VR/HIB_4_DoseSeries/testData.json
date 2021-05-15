@@ -1,0 +1,117 @@
+{
+	"SOLM64": {
+		"Patient_New_Born": {
+			"lastName": "HIB4P1",
+			"firstName": "newBorn",
+			"nameFullFormatted": "HIB4P1,newBorn",
+			"newLastName": "oldHIB4",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Not_Given": {
+			"lastName": "HIB4P2",
+			"firstName": "notGiven",
+			"nameFullFormatted": "HIB4P2,notGiven",
+			"newLastName": "oldHIB4",
+			"dob": "Today - 2 months",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "HIB4P3",
+			"firstName": "Complete",
+			"nameFullFormatted": "HIB4P3,Complete",
+			"newLastName": "oldHIB4",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HIB4P4",
+			"firstName": "AgedOut",
+			"nameFullFormatted": "HIB4P4,AgedOut",
+			"newLastName": "oldHIB4",
+			"dob": "Today - 5 years",
+			"sex": "Male"
+		},
+		"Patient_Condition_Skip": {
+			"lastName": "HIB4P5",
+			"firstName": "Skip",
+			"nameFullFormatted": "HIB4P5,Skip",
+			"newLastName": "oldHIB5",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Haemophilus Influenzae Type B",
+		"vaccineName2": "Polio",
+		"vaccineName3": "Diphtheria, Tetanus, and Pertussis",
+		"vaccineName1StrikeThrough": "Immunizations/Forecaster-Common/HibStrikethrough",
+		"Product1": "Pentacel",
+		"Product2": "haemophilus b conjugate (PRP-T) vaccine",
+		"Product3": "Comvax",
+		"vis": "Haemophilus influenzae type b (English)",
+		"unchartedReason": "Test",
+		"notGivenType": "Contraindicated",
+		"tempNotGivenAction": "Reschedule Date",
+		"notGivenReason": "Current Fever, Moderate to Severe",
+		"rescheduleDate": "Today + 1 month",
+		"Source": "Device"
+	},
+	"S18VX": {
+		"Patient_New_Born": {
+			"lastName": "HIB4P1",
+			"firstName": "newBorn",
+			"nameFullFormatted": "HIB4P1,newBorn",
+			"newLastName": "oldHIB4",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Not_Given": {
+			"lastName": "HIB4P2",
+			"firstName": "notGiven",
+			"nameFullFormatted": "HIB4P2,notGiven",
+			"newLastName": "oldHIB4",
+			"dob": "Today - 2 months",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "HIB4P3",
+			"firstName": "Complete",
+			"nameFullFormatted": "HIB4P3,Complete",
+			"newLastName": "oldHIB4",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HIB4P4",
+			"firstName": "AgedOut",
+			"nameFullFormatted": "HIB4P4,AgedOut",
+			"newLastName": "oldHIB4",
+			"dob": "Today - 5 years",
+			"sex": "Male"
+		},
+		"Patient_Condition_Skip": {
+			"lastName": "HIB4P5",
+			"firstName": "Skip",
+			"nameFullFormatted": "HIB4P5,Skip",
+			"newLastName": "oldHIB5",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Haemophilus Influenzae Type B",
+		"vaccineName2": "Polio",
+		"vaccineName3": "Diphtheria, Tetanus, and Pertussis",
+		"vaccineName1StrikeThrough": "Immunizations/Forecaster-Common/HibStrikethrough",
+		"Product1": "Pentacel",
+		"Product2": "haemophilus b conjugate (PRP-T) vaccine",
+		"Product3": "Comvax",
+		"vis": "Haemophilus influenzae type b (English)",
+		"unchartedReason": "Test",
+		"notGivenType": "Contraindicated",
+		"tempNotGivenAction": "Reschedule Date",
+		"notGivenReason": "Current Fever, Moderate to Severe",
+		"rescheduleDate": "Today + 1 month",
+		"Source": "Device"
+	},
+	"dateFormat":"Date"
+}

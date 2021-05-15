@@ -1,0 +1,30 @@
+{
+   "DEFAULT":{
+      "HepB_Adolescent_Complete":{
+         "lastName":"HepB2",
+         "firstName":"P1",
+         "nameFullFormatted":"HepB2,P1",
+         "newLastName":"oldHepB2",
+         "dob":"Today - 12 years",
+         "sex":"Male"
+      },
+      "HepB_Adolescent_Not_Given":{
+         "lastName":"HepB2",
+         "firstName":"P2",
+         "nameFullFormatted":"HepB2,P2",
+         "newLastName":"oldHepB2",
+         "dob":"Today - 16 years",
+         "sex":"Male"
+      },
+      "User":"Maintenance, Health",
+      "vaccineName":"Hepatitis B",
+      "Product":"Recombivax HB Adult",
+      "Source":"Device",
+      "lotNumber":"thisIsaTestfor20Chars",
+      "notGivenType":"Refused",
+      "permNotGivenAction":"Cancel series and stop forecasting",
+      "notGivenReason":"Patient Refuses",
+      "vis":"Hepatitis B (English)"
+   },
+   "dateFormat":"Date"
+}

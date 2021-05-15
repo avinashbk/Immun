@@ -1,0 +1,62 @@
+{
+	"SOLM64":{
+		"Patient_Cond_skip2":{
+			"lastName":"HPVskip2",
+			"firstName":"1",
+			"nameFullFormatted":"HPVskip2,1",
+			"newLastName":"OldSkip2HPV1",
+			"dob":"Today - 11 years",
+			"sex":"Male"
+		},
+		"User":"Maintenance,Health",
+		"vaccineName":"Human Papillomavirus",
+		"product1":"Gardasil",
+		"product2":"Gardasil9",
+		"product3":"Cervarix",
+		"visLinkProduct1":"HPV (Gardasil) (English)",
+		"visLinkProduct2":"HPV (Gardasil-9) (English)",
+		"visLinkProduct3":"HPV (Cervarix) (English)",
+		"dateFormat":"Date",
+		"Source":"Clinician"
+	},
+	"S18VX":{
+		"Patient_Cond_skip2":{
+			"lastName":"HPVskip2",
+			"firstName":"1",
+			"nameFullFormatted":"HPVskip2,1",
+			"newLastName":"OldSkip2HPV1",
+			"dob":"Today - 11 years",
+			"sex":"Male"
+		},
+		"User":"Maintenance,Health",
+		"vaccineName":"Human Papillomavirus",
+		"product1":"Gardasil",
+		"product2":"Gardasil9",
+		"product3":"Cervarix",
+		"visLinkProduct1":"HPV (Gardasil) (English)",
+		"visLinkProduct2":"HPV (Gardasil-9) (English)",
+		"visLinkProduct3":"HPV (Cervarix) (English)",
+		"dateFormat":"Date",
+		"Source":"Clinician"
+	},
+	"S18VA":{
+		"Patient_Cond_skip2":{
+			"lastName":"HPVskip2",
+			"firstName":"1",
+			"nameFullFormatted":"HPVskip2,1",
+			"newLastName":"OldSkip2HPV1",
+			"dob":"Today - 11 years",
+			"sex":"Male"
+		},
+		"User":"Maintenance,Health",
+		"vaccineName":"Human Papillomavirus",
+		"product1":"Gardasil",
+		"product2":"Gardasil9",
+		"product3":"Cervarix",
+		"visLinkProduct1":"HPV (Gardasil) (English)",
+		"visLinkProduct2":"HPV (Gardasil-9) (English)",
+		"visLinkProduct3":"HPV (Cervarix) (English)",
+		"dateFormat":"Date",
+		"Source":"Clinician"
+	}
+}

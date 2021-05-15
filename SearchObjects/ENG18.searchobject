@@ -1,0 +1,48 @@
+{
+	"originalcapturelocation": [
+		745,
+		436,
+		29,
+		16
+	],
+	"lastmodifieddate": 1616094358.237,
+	"createddate": 1616094358.237,
+	"name": "ENG18",
+	"lastfounddate": 1616094359.608,
+	"ocrcapturestring": "<en",
+	"lastfoundlocation": [
+		745,
+		436,
+		29,
+		16
+	],
+	"testlocationdata": [
+		{
+				"connectionportnum": 3389,
+				"properties": {
+					"CropRectangle": "[0,0,0,0]",
+					"Rotate": 0,
+					"Scale": "    1",
+					"HotSpot": "[14,8]",
+					"Tolerance": "_45",
+					"Discrepancy": "_0",
+					"SearchType": "Tolerant of Background"
+				},
+				"sutinfo": {
+					"type": "Unknown RDP"
+				},
+				"name": "ENG18.png",
+				"connectionname": "Team VM",
+				"type": 1,
+				"connectionserverid": "10.171.44.21",
+				"capturerect": [
+					745,
+					436,
+					29,
+					16
+				],
+				"connectiontype": "RDP",
+				"capturedocrtext": "<en"
+			}
+	]
+}

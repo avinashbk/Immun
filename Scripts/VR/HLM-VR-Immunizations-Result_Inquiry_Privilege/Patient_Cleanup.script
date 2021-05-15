@@ -1,0 +1,67 @@
+﻿params domain 
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set testData to JSONValue(file ResourcePath("VR/Result_Inquiry_Privilege/testData.json")).(value of domain)
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set newLastName to testData.Patient1.newLastName
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set conversation to setup.conversation
+
+log "Util".stepNumber &"ACTION: Cleanup Patient1"
+run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+run "Immunizations/PatientCreation".openConversationContinuous conversation
+run "Immunizations/PatientCreation".searchPatient lastName,firstName
+run "Immunizations/PatientCreation".renamePatientSearched newLastName
+----------------------------------------------------------------------------------------------------------------
+set lastName to testData.Patient2.lastName
+set firstName to testData.Patient2.firstName
+set newLastName to testData.Patient2.newLastName
+
+log "Util".stepNumber &"ACTION: Cleanup Patient2"
+run "Immunizations/PatientCreation".searchPatient lastName,firstName
+run "Immunizations/PatientCreation".renamePatientSearched newLastName
+----------------------------------------------------------------------------------------------------------------
+set lastName to testData.Patient3.lastName
+set firstName to testData.Patient3.firstName
+set newLastName to testData.Patient3.newLastName
+
+log "Util".stepNumber &"ACTION: Cleanup Patient3"
+run "Immunizations/PatientCreation".searchPatient lastName,firstName
+run "Immunizations/PatientCreation".renamePatientSearched newLastName
+----------------------------------------------------------------------------------------------------------------
+set lastName to testData.Patient4.lastName
+set firstName to testData.Patient4.firstName
+set newLastName to testData.Patient4.newLastName
+
+log "Util".stepNumber &"ACTION: Cleanup Patient4"
+run "Immunizations/PatientCreation".searchPatient lastName,firstName
+run "Immunizations/PatientCreation".renamePatientSearched newLastName
+----------------------------------------------------------------------------------------------------------------
+set lastName to testData.Patient5.lastName
+set firstName to testData.Patient5.firstName
+set newLastName to testData.Patient5.newLastName
+
+log "Util".stepNumber &"ACTION: Cleanup Patient5"
+run "Immunizations/PatientCreation".searchPatient lastName,firstName
+run "Immunizations/PatientCreation".renamePatientSearched newLastName
+----------------------------------------------------------------------------------------------------------------
+set lastName to testData.Patient6.lastName
+set firstName to testData.Patient6.firstName
+set newLastName to testData.Patient6.newLastName
+
+log "Util".stepNumber &"ACTION: Cleanup Patient6"
+run "Immunizations/PatientCreation".searchPatient lastName,firstName
+run "Immunizations/PatientCreation".renamePatientSearched newLastName
+----------------------------------------------------------------------------------------------------------------
+set lastName to testData.Patient7.lastName
+set firstName to testData.Patient7.firstName
+set newLastName to testData.Patient7.newLastName
+
+log "Util".stepNumber &"ACTION: Cleanup Patient7"
+run "Immunizations/PatientCreation".searchPatient lastName,firstName
+run "Immunizations/PatientCreation".renamePatientSearched newLastName
+----------------------------------------------------------------------------------------------------------------
+run "Util".closeApplication 2

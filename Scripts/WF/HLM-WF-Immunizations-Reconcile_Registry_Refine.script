@@ -1,0 +1,37 @@
+﻿
+try 
+	Log "Util".stepNumber &"ACTION: Open's chart and navigate to the Immunizations workflow mPage and click on the 'View Records' button to open the reconciliation dialog."
+	run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, cleanup, relationship
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileBanners
+	
+	Log "VERIFICATION: No Results displays in the outside table."
+	Log "VERIFICATION: The *warning banner* displays in the header of the modal for redine "
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-mPage Table")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Fill in "& firstName && motherMaiden && lastName && motherFirst && middleName && motherMiddle && dob && phoneNumber && birthOrder && emailAddress && sex && homeAddress && addressLine2 && cityStateZip && country& " for each corresponding field to get a perfect match then click Refine."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".refineAllFieldsInput firstName, motherMaiden, lastName, motherFirst, middleName, motherMiddle, dob, phoneNumber, birthOrder, emailAddress, sex, homeAddress, addressLine2, city, state, zipCode, country
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".clickRefine
+	
+	Log "VERIFICATION: The search in progress banner is displayed."
+	
+	capturescreen (Name:"Step"&Global stepNumber&"- Patient Refined P3")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Once the refine has completed, click the refresh button in the banner."
+	
+	Log "VERIFICATION: The warning banner no longer displays indicating that you need to refine your search."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	run "Immunizations/Util/Validation".verifyImageNotVisible, rectangle
+	
+	Log "VERIFICATION: Patient Data displays in the outside record table."
+	
+	capturescreen (Name:"Step"&Global stepNumber&"- Patient Refined P3")
+	----------------------------------------------------------------------------------------------------------------
+	catch exception
+	logError "Exception encountered" && exception.reason
+	log "Exception Location:" && exception.location	
+	captureScreen"Exception" && "at" & Global stepNumber
+end try
+run "Cleanup".ZeroStateCloseAllApps

@@ -1,0 +1,52 @@
+﻿logWarning "remove prereqs after automating and update RQM test case if any are changed."
+(*
+
+Prereq Data Needed
+		1. Patient1 doesn't have any events charted for vaccineName1 or vaccineName2
+             2. vaccineName1NotGiven1Date1
+             a. PED Source Type
+             b. Null values for originating source and date
+             3. vaccineName2Admin1Date1
+             a. External Source Type
+             b. Null values for originating source and date
+
+*)
+
+
+
+
+
+
+params domain
+log "Test running in domain"&&domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+log "After handler to set domain, domain is" && domain
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set testData to JSONValue(file resourcePath("VR/Modify_Unchart_ForecastOff/testData.json")).(value of domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set relationship to setup.relationship
+set conversation to setup.conversation
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+
+set format to "%m/%d/%Y"
+
+Log "Create patient(s) for the test"
+log "patient1 - 30 years." 
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set dob to formattedTime(format, value(testData.Patient1.dob)) 
+set sex to testData.Patient1.sex
+run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+run "Immunizations/PatientCreation".openConversationContinuous conversation
+run "Immunizations/PatientCreation".searchPatient lastName, firstName
+run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, format, dob, encounterType
+run "Util".CloseApplication "2"
+----------------------------------------------------------------------------------------------------------------	

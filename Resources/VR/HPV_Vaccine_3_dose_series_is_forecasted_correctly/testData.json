@@ -1,0 +1,54 @@
+{
+   "DEFAULT":{
+      "Patient_Newborn":{
+         "lastName":"HPapillomavirus",
+         "firstName":"1",
+         "nameFullFormatted":"HPapillomavirus,1",
+         "newLastName":"OldHPV1",
+         "dob":"Today",
+         "sex":"Male"
+      },
+      "Patient_Adolescent":{
+         "lastName":"HPapillomavirus",
+         "firstName":"2",
+         "nameFullFormatted":"HPapillomavirus,2",
+         "newLastName":"OldHPV2",
+         "dob":"Today - 15 years",
+         "sex":"Female"
+      },
+      "Patient_Unknown":{
+         "lastName":"HPapillomavirus",
+         "firstName":"unknown",
+         "nameFullFormatted":"HPapillomavirus,unknown",
+         "newLastName":"OldHPV2",
+         "dob":"Today - 15 years",
+         "sex":"unknown"
+      },
+      "Patient_Complete":{
+         "lastName":"HPapillomavirus",
+         "firstName":"3",
+         "nameFullFormatted":"HPapillomavirus,3",
+         "newLastName":"OldHPV3",
+         "dob":"Today - 20 years",
+         "sex":"Male"
+      },
+      "Patient_Cessation_Date":{
+         "lastName":"HPapillomavirus",
+         "firstName":"4",
+         "nameFullFormatted":"HPapillomavirus,4",
+         "newLastName":"OldHPV4",
+         "dob":"2007-09-02",
+         "sex":"Male"
+      },
+      "User":"Maintenance,Health",
+      "vaccineName":"Human Papillomavirus",
+      "product1":"Gardasil",
+      "product2":"Gardasil9",
+      "product3":"Cervarix",
+      "visLinkProduct1":"HPV (Gardasil) (English)",
+      "visLinkProduct2":"HPV (Gardasil-9) (English)",
+      "visLinkProduct3":"HPV (Cervarix) (English)",
+      "dateFormat":"Date",
+      "Source":"Clinician"
+   }
+}

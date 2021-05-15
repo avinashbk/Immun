@@ -1,0 +1,334 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+------------------------------------------------------------------------------------------------------------------------------
+#RQM TEST CASE LINK: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=106854
+
+params domain
+log "Test running in domain"&&domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewingOutsideRecordsBannerImage to common.viewingOutsideRecordsBannerImage
+set refineButtonImage to common.refineButtonImage
+set moreDetailsButtonImage to common.moreDetailsButtonImage
+set lessDetailsButtonImage to common.lessDetailsButtonImage
+set errorWarningStackImage to common.errorWarningStackImage
+
+set testData to JSONValue(file ResourcePath("VR/Reconcile-Banners/testData.json")).(text of domain)
+set patient2Reg1Fail to testData.patient2Reg1Fail.nameFullFormatted
+set patient1RegFail to testData.patient1RegFail.nameFullFormatted
+set patient1Fail1TooManyMatches to testData.patient1Fail1TooManyMatches.nameFullFormatted
+set patient1Perfect1NoMatch to testData.patient1Perfect1NoMatch.nameFullFormatted
+set patient2TooManyMatches to testData.patient2TooManyMatches.nameFullFormatted
+set patient1Perfect1TooMany to testData.patient1Perfect1TooMany.nameFullFormatted
+set patientNoConnection to testData.patientNoConnection.nameFullFormatted
+set errorBannerImage1 to testData.errorBannerImage1
+set errorBannerImage2 to testData.errorBannerImage2
+set warningBannerImage1 to testData.warningBannerImage1
+set registryName1 to testData.registryName1
+set registryName2 to testData.registryName2
+set registryName3 to testData.registryName3
+
+
+
+try 
+	//PATIENT1 2REGISTRIES1FAIL
+	log "Util".stepNumber &"ACTION: Open Patient 1's chart and navigate to the Immunizations workflow mPage and click on 'View' within the Outside records available banner."
+	run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patient2Reg1Fail, menu, subMenu,  relationship
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+	
+	log "VERIFICATION: the reconciliation banner displays on the top of the table with the message 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'"
+	set headerRectangle to imageRectangle ("Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header") + (-100, 15, 1700, 125)
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, headerRectangle
+	
+	log "VERIFICATION: An error banner is displayed with the following text; 'Unble to Connect to Registry. If the problem persists, contatct your support team for assistance' with a refine button and the more details link is hidden."
+	run "Immunizations/Util/Validation".verifyImage errorBannerImage1, headerRectangle
+	
+	log "VERIFICATION: The Refine button is only displayed in the error banner."
+	set errorBannerRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Error_Banner_Icon") + (-10, -10, 1790,20)
+	run "Immunizations/Util/Validation".verifyImage refineButtonImage, errorBannerRectangle
+	
+	log "VERIFICATION: The Refine button is not displayed in the info banner."
+	set infoBannerRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Info_Banner_Icon") + (-10, -10, 1790,20)
+	run "Immunizations/Util/Validation".verifyImageNotVisible refineButtonImage, infoBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"-Initial Reconciliation Table")
+	--------------------------------------------------------------------------------------------------------------- 
+	
+	log "Util".stepNumber &"ACTION: Switch the source filter to 'External'."
+	run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Source/Header", "External"
+	
+	log "VERIFICATION: An information banner is displayed with the following text; 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'."
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, headerRectangle
+	
+	log "VERIFICATION: An error banner is displayed with the following text; 'Unable to Connect to Registry. If the problem persists, contatct your support team for assistance' with a refine button and the more details link is hidden."
+	run "Immunizations/Util/Validation".verifyImage errorBannerImage1, headerRectangle
+	
+	log "VERIFICATION: The Refine button is only displayed in the error banner."
+	logWarning "Ensure validations for refine button being hidden from information banner exist."
+	run "Immunizations/Util/Validation".verifyImage refineButtonImage, errorBannerRectangle
+	run "Immunizations/Util/Validation".verifyImageNotVisible refineButtonImage, infoBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"-Initial Reconciliation PED Source")
+	---------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber &"ACTION: Refresh the component, reopen the modal, then switch the source filter to 'External'."
+	run "Immunizations/WorkflowMPage/Reconciliation/Actions".refreshModalWindow
+	run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Source/Header", "External"
+	
+	log "VERIFICATION: An information banner is displayed with the following text; 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'."
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, headerRectangle
+	
+	log "VERIFICATION: An error banner is displayed with the following text; 'Unble to Connect to Registry. If the problem persists, contatct your support team for assistance' with a refine button and the more details link is hidden."
+	run "Immunizations/Util/Validation".verifyImage errorBannerImage1, headerRectangle
+	
+	log "VERIFICATION: The Refine button is only displayed in the error banner."
+	run "Immunizations/Util/Validation".verifyImage refineButtonImage, errorBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"-Info Banner Dismissed PED Source")
+	---------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber &"ACTION: Switch the source filter to 'Patient'."
+	run "Immunizations/WorkflowMPage/Reconciliation/Headers/Actions".setFilterValue "Immunizations/WorkflowMPage/Reconciliation/Filters/Source/Header", "Patient"
+	
+	log "VERIFICATION: An information banner is displayed with the following text; 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'"
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, headerRectangle
+	
+	log "VERIFICATION: An error banner is displayed with the following text; 'Unble to Connect to Registry. If the problem persists, contatct your support team for assistance' with a refine button and the more details link is hidden."
+	run "Immunizations/Util/Validation".verifyImage errorBannerImage1, headerRectangle
+	
+	log "VERIFICATION: The Refine button is only displayed in the error banner."
+	run "Immunizations/Util/Validation".verifyImage refineButtonImage, errorBannerRectangle
+	run "Immunizations/Util/Validation".verifyImageNotVisible refineButtonImage, infoBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"-Info Banner Visible External Source")
+	---------------------------------------------------------------------------------------------------------------
+	log "Util".stepNumber &"ACTION: Close Patient Chart."
+	run "Immunizations/setup".closeChartViaX
+	---------------------------------------------------------------------------------------------------------------
+	
+	//PATIENT 2 1REGISTRYFAIL
+	log "Util".stepNumber &"ACTION: Open Patient 2's chart and navigate to the Immunizations workflow mPage and click on 'View' within the Outside records available banner."
+	run "Immunizations/Setup".NavigateToImmunizationWorkflowViaMenu patient1RegFail, Menu, SubMenu, relationship
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+	
+	log "VERIFICATION: the reconciliation banner displays on the top of the table with the message 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'"
+	set headerRectangle to imageRectangle ("Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header") + (-100, 15, 1700, 125)
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, headerRectangle
+	
+	log "VERIFICATION: An error banner is displayed with the following text; 'Unble to Connect to Registry. If the problem persists, contatct your support team for assistance' with a refine button and the more details link is hidden."
+	run "Immunizations/Util/Validation".verifyImage errorBannerImage1, headerRectangle
+	
+	log "VERIFICATION: The Refine button is only displayed in the error banner."
+	set errorBannerRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Error_Banner_Icon") + (-10, -10, 1790,20)
+	run "Immunizations/Util/Validation".verifyImage refineButtonImage, errorBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"- Error Banner P2")
+	---------------------------------------------------------------------------------------------------------------
+	log "Util".stepNumber &"ACTION: Close Patient Chart."
+	run "Immunizations/setup".closeChartViaX
+	---------------------------------------------------------------------------------------------------------------
+	
+	//PATIENT 3 1FAIL1TOOMANYMATCH
+	log "Util".stepNumber &"ACTION: Open Patient 3's chart and navigate to the Immunizations workflow mPage and click on 'View' within the Outside records available banner."
+	run "Immunizations/Setup".NavigateToImmunizationWorkflowViaMenu patient1Fail1TooManyMatches, Menu, SubMenu, relationship
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+	
+	log "VERIFICATION: the reconciliation banner displays on the top of the table with the message 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'"
+	set headerRectangle to imageRectangle ("Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header") + (-100, 15, 1700, 175)
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, headerRectangle
+	
+	log "VERIFICATION: The error banner displays above the warning banner.'"
+	run "Immunizations/Util/Validation".verifyImage errorWarningStackImage, headerRectangle
+	
+	log "VERIFICATION: An error banner is displayed with the following text; 'Unable to connect to'."
+	set errorBannerRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Error_Banner_Icon") + (-10, -10, 1790,20)
+	run "Immunizations/Util/Validation".verifyText "Unable to connect to " & registryName2 & " registry. If the problem persists, contact your support team for assistance", errorBannerRectangle
+	
+	log "VERIFICATION: The Refine button is only displayed in the error banner."
+	run "Immunizations/Util/Validation".verifyImage refineButtonImage, errorBannerRectangle
+	set warningBannerRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Warning_Banner_Icon") + (-10, -10, 1790,20)
+	run "Immunizations/Util/Validation".verifyImageNotVisible refineButtonImage, warningBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"- ErrorWarnP3")
+	--------------------------------------------------------------------------------------------------------------- 
+	
+	log "Util".stepNumber &"ACTION: Click on the More Details Link in the warning Banner."
+	click image: moreDetailsButtonImage
+	
+	log "VERIFICATION: 'Search returned too many results for "& registryName1 &"'."
+	set warningBannerDetailsRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Warning_Banner_Icon") + (-10, 10, 1790,50)
+	run "Immunizations/Util/Validation".verifyText "Search returned too many results for " & registryName1, warningBannerDetailsRectangle
+	
+	log "VERIFICATION: 'Less Details' displays."
+	set warningBannerRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Warning_Banner_Icon") + (-10, -10, 1790,20)
+	run "Immunizations/Util/Validation".verifyImage lessDetailsButtonImage, warningBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"- warn More Details")
+	---------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber &"ACTION: Click on the Less Details Link in the warning Banner."
+	click image: lessDetailsButtonImage
+	waitFor 15, image: moreDetailsButtonImage
+	
+	log "VERIFICATION: 'Search returned too many results for "& registryName1 &"' is no longer present."
+	run "Immunizations/Util/Validation".verifyTextNotVisible "Search returned too many results for " & registryName1, warningBannerDetailsRectangle
+	
+	log "VERIFICATION: 'More Details' displays."
+	run "Immunizations/Util/Validation".verifyImage moreDetailsButtonImage, warningBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"- warn Less Details")
+	---------------------------------------------------------------------------------------------------------------
+	log "Util".stepNumber &"ACTION: Close Patient Chart."
+	run "Immunizations/setup".closeChartViaX
+	---------------------------------------------------------------------------------------------------------------
+	
+	//PATIENT 4 1PERFECT1NOMATCH
+	log "Util".stepNumber &"ACTION: Open Patient 4's chart and navigate to the Immunizations workflow mPage and click on 'View' within the Outside records available banner."
+	run "Immunizations/Setup".NavigateToImmunizationWorkflowViaMenu patient1Perfect1NoMatch, Menu, SubMenu, relationship
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+	
+	log "VERIFICATION: the reconciliation banner displays on the top of the table with the message 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'"
+	set headerRectangle to imageRectangle ("Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header") + (-100, 15, 1700, 125)
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, headerRectangle
+	
+	log "VERIFICATION: No Error Banner Displays."
+	run "Immunizations/Util/Validation".verifyImageNotVisible errorBannerImage1, headerRectangle
+	
+	log "VERIFICATION: No Warning Banner Displays."
+	run "Immunizations/Util/Validation".verifyImageNotVisible warningBannerImage1, headerRectangle
+	
+	log "VERIFICATION: No Refine Button is present."
+	run "Immunizations/Util/Validation".verifyImageNotVisible refineButtonImage, headerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"- Error Banner")
+	---------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber &"ACTION: Close Patient Chart."
+	run "Immunizations/setup".closeChartViaX
+	---------------------------------------------------------------------------------------------------------------
+	
+	//PATIENT 5 2TOOMANYMATCHES
+	log "Util".stepNumber &"ACTION: Open Patient 5's chart and navigate to the Immunizations workflow mPage and click on 'View' within the Outside records available banner."
+	run "Immunizations/Setup".NavigateToImmunizationWorkflowViaMenu patient2TooManyMatches, Menu, SubMenu, relationship
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+	
+	log "VERIFICATION: the reconciliation banner displays on the top of the table with the message 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'"
+	set headerRectangle to imageRectangle ("Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header") + (-100, 15, 1700, 125)
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, headerRectangle
+	
+	log "VERIFICATION: An warning banner is displayed with the following text; 'Search Should be refined due to the following reason(s)' with the more details link."
+	run "Immunizations/Util/Validation".verifyImage warningBannerImage1, headerRectangle
+	set warningBannerRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Warning_Banner_Icon") + (-10, -10, 1790,20)
+	run "Immunizations/Util/Validation".verifyImage moreDetailsButtonImage, warningBannerRectangle
+	
+	log "VERIFICATION: The Refine button is only displayed in the warning banner."
+	set infoBannerRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Info_Banner_Icon") + (-10, -10, 1790,20)
+	run "Immunizations/Util/Validation".verifyImage refineButtonImage, warningBannerRectangle
+	run "Immunizations/Util/Validation".verifyImageNotVisible refineButtonImage, infoBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"- warning Banner")
+	---------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber &"ACTION: Click on the More Details Link in the warning Banner."
+	click image: moreDetailsButtonImage
+	
+	log "VERIFICATION: 'Search returned too many results for "& registryName2 &"'."
+	set warningBannerDetailsRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Warning_Banner_Icon") + (-10, 10, 1790,50)
+	run "Immunizations/Util/Validation".verifyText "Search returned too many results for " & registryName2, warningBannerDetailsRectangle
+	
+	log "VERIFICATION: 'Less Details' displays."
+	run "Immunizations/Util/Validation".verifyImage lessDetailsButtonImage, warningBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"- warning Banner More Details")
+	---------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber &"ACTION: Click on the Less Details Link in the warning Banner."
+	click image: lessDetailsButtonImage
+	
+	log "VERIFICATION: 'Search returned too many results for "& registryName2 &"' is no longer present."
+	run "Immunizations/Util/Validation".verifyTextNotVisible "Search returned too many results for " & registryName2, warningBannerDetailsRectangle
+	
+	log "VERIFICATION: 'More Details' displays."
+	run "Immunizations/Util/Validation".verifyImage moreDetailsButtonImage, warningBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"- warning Banner Less Details")
+	---------------------------------------------------------------------------------------------------------------
+	log "Util".stepNumber &"ACTION: Close Patient Chart."
+	run "Immunizations/setup".closeChartViaX
+	---------------------------------------------------------------------------------------------------------------
+	
+	//PATIENT 6 1PERFECT1TOOMANYMATCHES
+	log "Util".stepNumber &"ACTION: Open Patient 6's chart and navigate to the Immunizations workflow mPage and click on 'View' within the Outside records available banner."
+	run "Immunizations/Setup".NavigateToImmunizationWorkflowViaMenu patient1Perfect1TooMany, Menu, SubMenu, relationship
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+	
+	log "VERIFICATION: the reconciliation banner displays on the top of the table with the message 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'"
+	set headerRectangle to imageRectangle ("Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header") + (-100, 15, 1700, 125)
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, headerRectangle
+	
+	log "VERIFICATION: An warning banner is displayed with the following text; 'Search Should be refined due to the following reason(s)' with the more details link."
+	run "Immunizations/Util/Validation".verifyImage warningBannerImage1, headerRectangle
+	set warningBannerRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Warning_Banner_Icon") + (-10, -10, 1790,20)
+	run "Immunizations/Util/Validation".verifyImage moreDetailsButtonImage, warningBannerRectangle
+	
+	log "VERIFICATION: The Refine button is only displayed in the warning banner."
+	set infoBannerRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Info_Banner_Icon") + (-10, -10, 1790,20)
+	run "Immunizations/Util/Validation".verifyImage refineButtonImage, warningBannerRectangle
+	run "Immunizations/Util/Validation".verifyImageNotVisible refineButtonImage, infoBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"- warning Banner")
+	---------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber &"ACTION: Click on the More Details Link in the warning Banner."
+	click image: moreDetailsButtonImage
+	
+	log "VERIFICATION: 'Search returned too many results for "& registryName3 &"'."
+	set warningBannerDetailsRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Warning_Banner_Icon") + (-10, 10, 1790,50)
+	run "Immunizations/Util/Validation".verifyText "Search returned too many results for " & registryName3, warningBannerDetailsRectangle
+	
+	log "VERIFICATION: 'Less Details' displays."
+	run "Immunizations/Util/Validation".verifyImage lessDetailsButtonImage, warningBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"- warning Banner More details P4")
+	---------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber &"ACTION: Click on the Less Details Link in the warning Banner."
+	click image: lessDetailsButtonImage
+	
+	log "VERIFICATION: 'Search returned too many results for "& registryName3 &"' is no longer present."
+	run "Immunizations/Util/Validation".verifyTextNotVisible "Search returned too many results for " & registryName3, warningBannerDetailsRectangle
+	
+	log "VERIFICATION: 'More Details' displays."
+	run "Immunizations/Util/Validation".verifyImage moreDetailsButtonImage, warningBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"- warning Banner P4")
+	---------------------------------------------------------------------------------------------------------------
+	log "Util".stepNumber &"ACTION: Close Patient Chart."
+	run "Immunizations/setup".closeChartViaX
+	---------------------------------------------------------------------------------------------------------------
+	//PATIENT7 ReconcileWF4
+	log "Util".stepNumber &"ACTION: Open Patient 7's chart and navigate to the Immunizations workflow mPage and click on 'View' within the Outside records available banner."
+	run "Immunizations/Setup".NavigateToImmunizationWorkflowViaMenu patientNoConnection, Menu, SubMenu, relationship
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+	
+	log "VERIFICATION: the reconciliation banner displays on the top of the table with the message 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'"
+	set headerRectangle to imageRectangle ("Immunizations/WorkflowMPage/Reconciliation/Headers/View_Outside_Records_Header") + (-100, 15, 1700, 125)
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, headerRectangle
+	
+	log "VERIFICATION: An error banner is displayed with the following text; 'Unble to Connect to Registry. If the problem persists, contatct your support team for assistance' with a refine button and the more details link is hidden."
+	run "Immunizations/Util/Validation".verifyImage errorBannerImage2, headerRectangle
+	
+	log "VERIFICATION: The Refine button is not displayed in the error banner."
+	set errorBannerRectangle to imageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Error_Banner_Icon") + (-10, -10, 1790,20)
+	run "Immunizations/Util/Validation".verifyImageNotVisible refineButtonImage, errorBannerRectangle
+	captureScreen(Name:"Step"&Global stepNumber&"-Initial Reconciliation Table")
+	--------------------------------------------------------------------------------------------------------------- 
+catch exception
+	logError "Exception encountered" && exception.reason
+	log "Exception Location:" && exception.location	
+	captureScreen"Exception" && "at" & Global stepNumber
+end try
+---------------------------------------------------------------------------------------------------------------	
+log "Util".stepNumber & "ACTION: Close the application."
+run "Immunizations/setup".closeApplication 
+run "Cleanup".ZeroStateCloseAllApps
+----------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,242 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+--------------------------------------------------RQM Test Script link-------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestScript&id=109322
+
+---------------------------------------Assigning Test Data to the Variables---------------------------------------
+
+params domain
+
+log "Test running in domain"&&domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set relationship to setup.relationship
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewpoint to common.viewpoint
+set didNotCountImage to common.didNotCountImage
+set doubleDashImage to common.doubleDashImage
+set noVaccineHistoryImage to common.noVaccineHistoryImage
+set sidePanelCloseButtonImage to common.sidePanelCloseButtonImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set performedDateField to fieldLabels.performedDateField
+set userField to fieldLabels.userField
+set sourceField to fieldLabels.sourceField
+set documentedDateField to fieldLabels.documentedDateField
+set productNameField to fieldLabels.productNameField
+set expirationDateField to fieldLabels.expirationDateField
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set agedOut to textStrings.agedOut 
+set administeredDidNotCount to textStrings.administeredDidNotCount
+set administeredOn to textStrings.administeredOn
+set immunizationForecast to textStrings.immunizationForecast
+
+set testData to JSONValue(file resourcePath("VR/HPV_Vaccine_Aged_Out/testData.json"))
+set dateFormat to testData.dateFormat  
+
+set testData to JSONValue(file resourcePath("VR/HPV_Vaccine_Aged_Out/testData.json")).(value of domain)
+set patientName1 to testData.AgedOut_Male.nameFullFormatted
+set lastName to testData.AgedOut_Male.lastName
+set firstName to testData.AgedOut_Male.firstName
+set dob to formattedTime("%m/%d/%Y", value(testData.AgedOut_Male.dob))
+set vaccineName to testData.vaccineName
+set source to testData.Source
+set user to testData.user
+set button to testData.button
+set productName to testData.productName1
+set administrationDialog to testData.administrationDialog
+set hpvStrikeThroughImage to testData.hpvStrikeThroughImage
+set format to "%b %d, %Y"
+
+
+try 
+	#PATIENT RESET
+	run "Immunizations/PatientCreation".resetPatientToZeroState username, password, domain, lastName, firstName, dob
+	
+	try
+		------------------------------------------------------Test Steps--------------------------------------------------------
+		BeginTestCase "VR/HPV/HLM-VR-Immunizations-HPV_AgedOut_Male_27years"
+		
+		Log "Util".stepNumber & "ACTION: Open Powerchart with User 1, search and select patient1, from TOC select Immunization workflow MPage and navigate to Immunization Section."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName1, menu, subMenu, relationship
+		
+		Log "VERIFICATION: Ensure the Immunization Workflow MPage displays."
+		Run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Review Human Papillomavirus vaccine is displayed within the Immunization Workflow MPage." 
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName
+		
+		Log "VERIFICATION: Verify Human Papillomavirus is within the history section with Status 'Aged Out'"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, agedOut 
+		
+		Log "VERIFICATION: Next Dose Recommended column as '--'"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, doubleDashImage 
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Workflow Mpage Validation")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Human Papillomavirus."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		Log "VERIFICATION: Ensure Human Papillomavirus Vaccine displays 'Aged Out' below Vaccine group name and No Vaccine history to display below the side panel header."
+		set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName, sidePanelHeaderRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyValidNextRecommendedDate agedOut,sidePanelHeaderRectangle
+		
+		Log "VERIFICATION: Ensure 'No vaccine history to display' is shown in the body of the Side Panel."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle()
+		run "Immunizations/Util/Validation".verifyimage noVaccineHistoryImage, sidePanelRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Side Panel Validation")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click on close(x) button."
+		Click sidePanelCloseButtonImage
+		
+		Log "VERIFICATION: Ensure side panel closes without error."
+		run "Immunizations/Util/Validation".verifyImageNotVisible sidePanelCloseButtonImage
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast (viewForecast)
+		
+		Log "VERIFICATION: Ensure the Immunization Forecaster opens as a new tab without any errors.Ensure Human Papillomavirus is displayed under CDC schedule column with a strikethrough line on the Vaccine group name with Aged Out below it. "
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(hpvStrikeThroughImage)
+		run "Immunizations/Util/Validation".verifyImage hpvStrikeThroughImage, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle), 
+		run "Immunizations/Util/Validation".verifyText  agedOut, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: No doses are displayed within the timeline."
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set endDateHeader to  "Immunizations/Util/Date".todaysDate(format)+1 day
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(hpvStrikeThroughImage)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,-15, -15, 200, 900)
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Dose", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Aged Out Forecaster Validation")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on document history button."
+		run "Immunizations/Common/DocumentHistory/Actions".openDialog
+		
+		Log "VERIFICATION: Ensure Immunization administration dialog is displayed."
+		set Rectangle to "Immunizations/Common/DocumentHistory/Helpers".DialogSearchRectangle
+		run "Immunizations/Util/Validation".verifyText administrationDialog , Rectangle
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on document history button. Click on Add Immunizations button and select Human Papillomavirus vaccine from the Select Immunizations dialog."
+		run "Immunizations/Common/SelectImmunizationsList".selectvaccineName vaccineName
+		
+		Log "VERIFICATION: Ensure Human Papillomavirus vaccine is selected and select button is enabled with count of 1(e.g. Select (1))."
+		run "Immunizations/Common/ChartingDiaLog/Validation".verifySelectButton True, "1" 
+		
+		Log "VERIFICATION: Ensure Human Papillomavirus vaccine is selected and displayed in the Immunization Administration dialog."
+		run "Immunizations/Common/SelectImmunizationsList".clickSelectButton
+		put imagerectangle("Immunizations/Common/Image_AddImmunizations").bottomleft() into addImmunizationsSearchRectangle
+		insert addImmunizationsSearchRectangle + (200,350) into addImmunizationsSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Human Papillomavir", addImmunizationsSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Histrocial Entry Validation")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: chart administration for Human Papillomavirus at 27 years from DOB using product Gardasil4 and expiration date, fill in all required fields, and click on the Submit button."
+		set dose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("Year":27))
+		run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineName, dateformat, dose1AdminDate, source
+		run "Immunizations/Common/DocumentHistory/Actions".productInput productName
+		//there is an exisiting handler to enter the deatils in details section of document history (run "Immunizations/Common/DocumentHistory/Actions".EnterDetailsInput Field, Value) and cannot be used as of now because of issue :https://jira2.cerner.com/browse/MPAGESCORE-34679 and below is the code added to enter expiration date which will be removed as soon as  the jira gets resolved
+		Set SearchArea to  "Immunizations/Common/DocumentHistory/Helpers".productSearchRectangle
+		Click(Text:"Details",SearchRectangle:SearchArea)  //Clicks on Details
+		wait 3
+		ScrollWheelDown 4
+		DoubleClick imageLocation(Text:"Expiration date", searchrectangle:("Immunizations/Common/DocumentHistory/Helpers".DialogSearchRectangle))+(-30,30)
+		set expirationDate to Today
+		typeText formattedTime("%m", expirationDate)
+		TypeText tabKey
+		TypeText formattedTime("%d", expirationDate)
+		TypeText tabKey
+		typetext today's year +1 
+		TypeText tabKey 
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Expiration Date")
+		run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton button
+		
+		Log "VERIFICATION: Ensure Immunization Administration dialog is disposed and user returns to Immunization Forecaster."
+		run "Immunizations/Util/Validation".verifyText immunizationForecast, "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure charted Dose is displayed within the administered dose column and event set has the 'Did Not Count' icon displaying with product name on top and administration date below."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(hpvStrikeThroughImage )
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText productName && return && dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage  didNotCountImage,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Forecast validation-Dose1 charted")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Vaccine Header. and click on dose 1"
+		click Image:hpvStrikeThroughImage
+		click Image:didNotCountImage, searchrectangle:"Immunizations/Forecaster-Forecast/Helpers".expandedViewDidNotCountIconSearchRectangle() 
+		
+		Log "VERIFICATION: Ensure the Expanded view displays the uncounted dose. The 'Did Not Count' icon displays in the left pane indicating the dose did not count, along with administered date and age in parenthesis."
+		set age to "Immunizations/Util/Date".ageCalculator(dob, dose1AdminDate, false, true)
+		run "Immunizations/Util/Validation".verifyImage didNotCountImage, "Immunizations/Forecaster-Forecast/Helpers".expandedViewDidNotCountIconSearchRectangle()
+		set leftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers". expandedViewLeftPaneDidNotCountSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText productName && return && dose1AdminDate && age, leftPaneSearchRectangle
+		set expirationDate to Today
+		
+		Log "VERIFICATION: Ensure in the right-hand pane header, Administered On (Did Not Count) -  Vaccine group name is displayed. Ensure all the details entered by the user display below the header."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText administeredOn && dose1AdminDate && "  (Did Not Count) -" && productName, rightPaneHeaderSearchRectangle
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, dose1AdminDate
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField userField, user
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField sourceField, source 
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField documentedDateField, "Immunizations/Util/Date".todaysDate(format)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField expirationDateField, "Immunizations/Util/Date".adjustDate(expirationDate, format, ("Year":1))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField productNameField, productName
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Expanded view validation")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click anywhere outside the expand view and Click on List View."
+		Click text:"Print", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews
+		
+		Log "VERIFICATION: Ensure Human Papillomavirus Vaccine is strikethrough under Vaccine column and displays 'Aged Out'. "
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		set rowSearchRectangleStrikeThrough to  "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(hpvStrikeThroughImage)
+		run "Immunizations/Util/Validation".verifyText agedOut, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangleStrikeThrough,firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure Human Papillomavirus Vaccine is displayed under Action column with 'Did Not Count' icon, administration date and age in parenthesis."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText productName && return && dose1AdminDate & age , "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleStrikeThrough,columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-List view validation")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Immunization workflow MPage Tab."
+		run "Immunizations/Common/Actions".clickMPagesView viewPoint
+		
+		Log "VERIFICATION: Verify Human Papillomavirus displays within History section with status 'Aged Out' and Dose Admin: 'Did Not Count icon with 1' and Last Action Date: 'Administration Date with age in parenthesis' Last Action: 'Administered – Did Not Count' and Next Dose Recommended: '--' "
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, agedOut
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "1",true
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, doubleDashImage 
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName,administeredDidNotCount
+		CaptureScreen(Name:"Step"&Global stepNumber&"-WorkflowMpage-Charted Dose1 Validation")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Close Patient-2's chart and exit application"
+		run "Immunizations/Setup".closeApplication 
+		-----------------------------------------------------------------------------------------------------------------------------
+		EndTestCase "VR/HPV/HLM-VR-Immunizations-HPV_AgedOut_Male_27years"
+		
+	Catch 	
+		LogError "Exception encountered" & newline & "Exception Reason:" && the exception.reason
+		captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+		
+	End try
+	
+Catch 
+	LogError "Exception encountered" & newline & "Exception Reason:" && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End try
+
+--SUTCleanup
+run "Cleanup".ZeroStateCloseAllApps

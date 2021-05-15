@@ -1,0 +1,179 @@
+{
+	"SOLM64": {
+		"Patient1_Full_Forecast": {
+			"lastName": "PneumoStandardSeriesP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP1,Bob",
+			"newLastName": "oldPneumoStandardSeriesP1",
+			"dob": "Today - 6 weeks",
+			"sex": "Female"
+		},
+		"Patient2_Complete_Series": {
+			"lastName": "PneumoStandardSeriesP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP2,Bob",
+			"newLastName": "oldPneumoStandardSeriesP2",
+			"dob": "Today - 3 years",
+			"sex": "Male"
+		},
+		"Patient3_Aged_Out": {
+			"lastName": "PneumoStandardSeriesP3",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP3,Bob",
+			"newLastName": "oldPneumoStandardSeriesP3",
+			"dob": "Today - 5 years",
+			"sex": "Female"
+		},
+		"Patient4_4Dose_Condition_Skip": {
+			"lastName": "PneumoStandardSeriesP4",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP4,Bob",
+			"newLastName": "oldPneumoStandardSeriesP4",
+			"dob": "Today - 3 years",
+			"sex": "Male"
+		},
+		"vaccineName": "Pneumococcal Conjugate",
+		"vaccineNameStrikethrough": "Immunizations/Forecaster-Common/PneumoStrikethrough",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)",
+		"notGivenType": "Contraindicated",
+		"notGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Chronic Disease"
+	},
+	"S18VX": {
+		"Patient1_Full_Forecast": {
+			"lastName": "PneumoStandardSeriesP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP1,Bob",
+			"newLastName": "oldPneumoStandardSeriesP1",
+			"dob": "Today - 6 weeks",
+			"sex": "Female"
+		},
+		"Patient2_Complete_Series": {
+			"lastName": "PneumoStandardSeriesP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP2,Bob",
+			"newLastName": "oldPneumoStandardSeriesP2",
+			"dob": "Today - 3 years",
+			"sex": "Male"
+		},
+		"Patient3_Aged_Out": {
+			"lastName": "PneumoStandardSeriesP3",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP3,Bob",
+			"newLastName": "oldPneumoStandardSeriesP3",
+			"dob": "Today - 5 years",
+			"sex": "Female"
+		},
+		"Patient4_4Dose_Condition_Skip": {
+			"lastName": "PneumoStandardSeriesP4",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP4,Bob",
+			"newLastName": "oldPneumoStandardSeriesP4",
+			"dob": "Today - 3 years",
+			"sex": "Male"
+		},
+		"vaccineName": "Pneumococcal Conjugate",
+		"vaccineNameStrikethrough": "Immunizations/Forecaster-Common/PneumoStrikethrough",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)",
+		"notGivenType": "Contraindicated",
+		"notGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Chronic Disease"
+	},
+	"SOLGM": {
+		"Patient1_Full_Forecast": {
+			"lastName": "Pneumo7MonthsP12",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP1,Bob",
+			"newLastName": "oldPneumo7MonthsP1",
+			"dob": "Today - 9 months",
+			"sex": "Male"
+		},
+		"Patient2_Complete_Series": {
+			"lastName": "Pneumo7MonthsP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP2,Bob",
+			"newLastName": "oldPneumo7MonthsP2",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"Patient3_Aged_Out": {
+			"lastName": "PneumoStandardSeriesP3",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP3,Bob",
+			"newLastName": "oldPneumoStandardSeriesP3",
+			"dob": "Today - 5 years",
+			"sex": "Female"
+		},
+		"Patient4_4Dose_Condition_Skip": {
+			"lastName": "PneumoStandardSeriesP4",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP4,Bob",
+			"newLastName": "oldPneumoStandardSeriesP4",
+			"dob": "Today - 3 years",
+			"sex": "Male"
+		},
+		"vaccineName": "Pneumococcal Conjugate",
+		"vaccineNameStrikethrough": "Immunizations/Forecaster-Common/PneumoStrikethrough",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)",
+		"notGivenType": "Contraindicated",
+		"notGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Chronic Disease"
+	},
+	"ENG18": {
+		"Patient1_Full_Forecast": {
+			"lastName": "Pneumo7MonthsP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP1,Bob",
+			"newLastName": "oldPneumo7MonthsP1",
+			"dob": "Today - 9 months",
+			"sex": "Male"
+		},
+		"Patient2_Complete_Series": {
+			"lastName": "Pneumo7MonthsP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP2,Bob",
+			"newLastName": "oldPneumo7MonthsP2",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"Patient3_Aged_Out": {
+			"lastName": "PneumoStandardSeriesP3",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP3,Bob",
+			"newLastName": "oldPneumoStandardSeriesP3",
+			"dob": "Today - 5 years",
+			"sex": "Female"
+		},
+		"Patient4_4Dose_Condition_Skip": {
+			"lastName": "PneumoStandardSeriesP4",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoStandardSeriesP4,Bob",
+			"newLastName": "oldPneumoStandardSeriesP4",
+			"dob": "Today - 3 years",
+			"sex": "Male"
+		},
+		"vaccineName": "Pneumococcal Conjugate",
+		"vaccineNameStrikethrough": "Immunizations/Forecaster-Common/PneumoStrikethrough",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)",
+		"notGivenType": "Contraindicated",
+		"notGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Chronic Disease"
+	},
+	"dateFormat": "Date"
+}

@@ -1,0 +1,82 @@
+{
+	"SOLM64": {
+		"Patient_Series_Complete": {
+			"lastName": "HIBPRP1",
+			"firstName": "Complete",
+			"nameFullFormatted": "HIBPRP1,Complete",
+			"newLastName": "OldHIBPRP1",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"Patient_Temp_Not_Given": {
+			"lastName": "HIBPRP2",
+			"firstName": "notGiven",
+			"nameFullFormatted": "HIBPRP2,notGiven",
+			"newLastName": "OldHIBPRP2",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HIBPRP3",
+			"firstName": "AgedOut",
+			"nameFullFormatted": "HIBPRP3,AgedOut",
+			"newLastName": "OldHIBPRP3",
+			"dob": "Today - 5 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName": "Haemophilus Influenzae Type B",
+		"Product1": "haemophilus b conjugate (PRP-OMP) vaccine",
+		"Product2": "haemophilus b conjugate (PRP-T) vaccine",
+		"vis": "Haemophilus influenzae type b (English)",
+		"unchartedReason": "Test",
+		"notGivenType1": "Refused",
+		"notGivenType2": "Contraindicated",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"tempNotGivenAction": "Reschedule Date",
+		"notGivenReason1": "Patient Refuses",
+		"notGivenReason2": "Temporary contraindication - reschedule",
+		"rescheduleDate": "Today + 1 month",
+		"Source": "Device"
+	},
+	"S18VX": {
+		"Patient_Series_Complete": {
+			"lastName": "HIBPRP1",
+			"firstName": "Complete",
+			"nameFullFormatted": "HIBPRP1,Complete",
+			"newLastName": "OldHIBPRP1",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"Patient_Temp_Not_Given": {
+			"lastName": "HIBPRP2",
+			"firstName": "notGiven",
+			"nameFullFormatted": "HIBPRP2,notGiven",
+			"newLastName": "OldHIBPRP2",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Aged_Out": {
+			"lastName": "HIBPRP3",
+			"firstName": "AgedOut",
+			"nameFullFormatted": "HIBPRP3,AgedOut",
+			"newLastName": "OldHIBPRP3",
+			"dob": "Today - 5 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName": "Haemophilus Influenzae Type B",
+		"Product1": "haemophilus b conjugate (PRP-OMP) vaccine",
+		"Product2": "haemophilus b conjugate (PRP-T) vaccine",
+		"vis": "Haemophilus influenzae type b (English)",
+		"unchartedReason": "Test",
+		"notGivenType1": "Refused",
+		"notGivenType2": "Contraindicated",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"tempNotGivenAction": "Reschedule Date",
+		"notGivenReason1": "Patient Refuses",
+		"notGivenReason2": "Temporary contraindication - reschedule",
+		"rescheduleDate": "Today + 1 month",
+		"Source": "Device"
+	}
+}

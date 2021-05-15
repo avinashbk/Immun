@@ -1,0 +1,419 @@
+﻿------------------------------------------------Helper Suite Information---------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+------------------------------------------------RQM TEST CASE LINK--------------------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=124381
+
+---------------------------------------Assigning Test Data to the Variables---------------------------------------
+params domain 
+
+Log "Test running in domain"&&domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set relationship to setup.relationship
+set conversation to setup.conversation
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set patientSexNotDocumentedBanner to common.patientSexNotDocumentedBanner
+set patientDOBNotDocumentedBanner to common.patientDOBNotDocumentedBanner
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set fieldLabelName to fieldLabels.name
+set fieldLabelDob to fieldLabels.dob
+set fieldLabelSex to fieldLabels.sex
+set fieldLabelReportRunOn to fieldLabels.reportRunOn
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set printRecord to textStrings.printRecord
+set viewForecast to textStrings.viewForecast
+set noResultsFound to textStrings.noResultsFound
+
+set testData to JSONValue(file ResourcePath("VR/Print_Immunization_Report_Gender_Undefined/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file ResourcePath("VR/Print_Immunization_Report_Gender_Undefined/testData.json")).(value of domain)
+set patientName1 to testData.Patient1.nameFullFormatted
+set patientName2 to testData.Patient2.nameFullFormatted
+set patientName3 to testData.Patient3.nameFullFormatted
+set patientName4 to testData.Patient4.nameFullFormatted
+set newLastName1 to testData.Patient1.newLastName
+set newLastName2 to testData.Patient2.newLastName
+set newLastName3 to testData.Patient3.newLastName
+set newLastName4 to testData.Patient4.newLastName
+set lastName1 to testData.Patient1.lastName
+set firstName1 to testData.Patient1.firstName
+set lastName2 to testData.Patient2.lastName
+set firstName2 to testData.Patient2.firstName
+set lastName3 to testData.Patient3.lastName
+set firstName3 to testData.Patient3.firstName
+set lastName4 to testData.Patient4.lastName
+set firstName4 to testData.Patient4.firstName
+set sex2 to testData.Patient2.sex
+set sex3 to testData.Patient3.sex
+set format to "%b %d, %Y"
+set dob1 to formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) 
+set dob2 to formattedTime("%m/%d/%Y", value(testData.Patient2.dob)) 
+set vaccineName to testData.vaccineName
+set product to testData.productName
+set source to testData.source
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+try
+	------------------------------------------------------Patient Setup---------------------------------------------------------
+	Log "Create patient1 - 20 years old with no gender defined"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName1, firstName1
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName1, "", "%m/%d/%Y", dob1, encounterType
+	----------------------------------------------------------------------------------------------------------------	
+	log " Create patient2 - 20 years old with gender as unkown"
+	run "Immunizations/PatientCreation".searchPatient lastName2, firstName2
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName2, sex2, "%m/%d/%Y", dob2, encounterType
+	----------------------------------------------------------------------------------------------------------------
+	log " Create patient3 - 20 years old with no date of birth defined"
+	run "Immunizations/PatientCreation".searchPatient lastName3, firstName3
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName3, sex3, "%m/%d/%Y", "", encounterType
+	----------------------------------------------------------------------------------------------------------------
+	log " Create patient4 - 20 years old with no gender and no date of birth"
+	run "Immunizations/PatientCreation".searchPatient lastName4, firstName4
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName4, "", "%m/%d/%Y", "", encounterType
+	run "Util".CloseApplication "2"
+	----------------------------------------------------------------------------------------------------------------	
+	try
+		------------------------------------------------------Test Steps---------------------------------------------------------
+		BeginTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-Print_ImmunizationReport_when_gender_is_undefined"
+		
+		Log "Util".stepNumber & "ACTION: Open Powerchart with User 1, search and select patient1, from TOC select Immunization workflow MPage and navigate to Immunization Section."
+		run "open_Application".run "powerchart"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		run "Millennium_LoadPatient_RecentSearch".LoadPatient patientName1
+		if(imageFound(15,"Immunizations/Setup/Text_AssignARelationship"))
+			click FoundimageLocation()
+			typetext relationship
+			click "Immunizations/Setup/Button_AssignARelationshipOK"
+		end if 
+		wait 5
+		run "Millennium_SelectMenu_SubMenu".selectMenuSubMenu "Task",menu,subMenu
+		WaitFor 500, text:noResultsFound
+		
+		Log "VERIFICATION: Ensure the Immunization Workflow MPage displays."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure the 'View forecast' button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible viewForecast, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the system shall display a banner message: 'Patient sex is not documented as either male or female. Forecasting information cannot be displayed.' in Workflow MPage ."
+		waitfor 15, "Immunizations/setup/Text_Immunizations"
+		run "Immunizations/Util/Validation".verifyImage patientSexNotDocumentedBanner
+		
+		Log "VERIFICATION: Ensure the system shall display 'No Results Found.' below the banner message ."
+		run "Immunizations/Util/Validation".verifyText noResultsFound, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the to the right Print Record button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible printRecord, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"WorkflowMpageBannerMsg-NoGender")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Plus icon and doucment an administartion by selecting any vaccine"
+		set dose1AdminDate to  "Immunizations/Util/Date".adjustDate(dob1, format, ("Year":10))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, dose1AdminDate, source, product,"submit"
+		
+		Log "VERIFICATION: Vaccine which has been charted from standard vaccine list will display under Vaccine column"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName
+		
+		Log "VERIFICATION: Ensure the 'View forecast' button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible viewForecast, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the to the right Print Record button is displayed"
+		run "Immunizations/Util/Validation".verifyText printRecord, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"WorkflowMpageChartedVaccine-NoGender")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Print Button."
+		run "Immunizations/Common/Print/Actions".clickPrintRecord(printRecord)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): a. Full formatted name,,c. Sex,d. Primary Care Provider,e. MRN,f.  Printed Date"
+		run  "Immunizations/Util/Validation".verifyText patientName1, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelName)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): b. Date of birth (age) as defined in prerequisites"
+		set age to "Immunizations/Util/Date".ageCalculator(dob1,"Immunizations/Util/Date".adjustDate(dob1, "%m/%d/%y", ("Year":19)), "true", "true")
+		run  "Immunizations/Util/Validation".verifyText  formattedTime("%m/%d/%y",dob1) && age, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelDob)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): c. Sex,d. Primary Care Provider (when available), e. MRN, f.Printed Date(Report Run On)"
+		run "Immunizations/Util/Validation".verifyValueEquals  "", ReadText(("Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle(fieldLabelSex)))
+		run  "Immunizations/Util/Validation".verifyText date, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelReportRunOn)
+		
+		Log "VERIFICATION: Vaccine name is displayed within the Vaccine column"
+		run "Immunizations/Util/Validation".verifyText vaccineName, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("true",1)
+		
+		Log "VERIFICATION: The administration for 10 years from DOB displays in the row for Meningococcal in the Date Given column."
+		set dose1AdminDate to  "Immunizations/Util/Date".adjustDate(dob1, format, ("Year":10))
+		run "Immunizations/Util/Validation".verifyText dose1AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true",1,1)
+		
+		Log "VERIFICATION: The product administered at 10 years from DOB is displayed in the Product column for Meningococcal"
+		run "Immunizations/Util/Validation".verifyText product, "Immunizations/Common/Print/Helpers".productSearchRectangle("true",1,1)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"PrintReport-NoGender")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Close the DiscernReportViewer and Open patient 2's chart, from the TOC select Immunization Workflow Mpage and navigate to Immunization section."
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Immunizations/setup".closeChartViaX
+		run "Millennium_LoadPatient_RecentSearch".LoadPatient patientName2
+		if(imageFound(15,"Immunizations/Setup/Text_AssignARelationship"))
+			click FoundimageLocation()
+			typetext relationship
+			click "Immunizations/Setup/Button_AssignARelationshipOK"
+		end if 
+		wait 5
+		run "Millennium_SelectMenu_SubMenu".selectMenuSubMenu "Task",menu,subMenu
+		WaitFor 500, text:noResultsFound
+		
+		Log "VERIFICATION: Ensure the Immunization Workflow MPage displays."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure the 'View forecast' button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible viewForecast, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the system shall display a banner message: 'Patient sex is not documented as either male or female. Forecasting information cannot be displayed.' in Workflow MPage ."
+		waitfor 15, "Immunizations/setup/Text_Immunizations"
+		run "Immunizations/Util/Validation".verifyImage patientSexNotDocumentedBanner
+		
+		Log "VERIFICATION: Ensure the system shall display 'No Results Found.' below the banner message ."
+		run "Immunizations/Util/Validation".verifyText noResultsFound, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the to the right Print Record button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible printRecord, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"WorkflowMpageBannerMsg-UknownGender")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Plus icon and doucment an administartion by selecting any vaccine"
+		set dose1AdminDate to  "Immunizations/Util/Date".adjustDate(dob1, format, ("Year":10))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, dose1AdminDate, source, product,"submit"
+		
+		Log "VERIFICATION: Vaccine which has been charted from standard vaccine list will display under Vaccine column"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName
+		
+		Log "VERIFICATION: Ensure the 'View forecast' button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible viewForecast, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the to the right Print Record button is displayed"
+		run "Immunizations/Util/Validation".verifyText printRecord, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"WorkflowMpageChartedVaccine-UknownGender")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Print Button."
+		run "Immunizations/Common/Print/Actions".clickPrintRecord(printRecord)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): a. Full formatted name,,c. Sex,d. Primary Care Provider,e. MRN,f.  Printed Date"
+		run  "Immunizations/Util/Validation".verifyText patientName2, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelName)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): b. Date of birth (age) as defined in prerequisites"
+		set age to "Immunizations/Util/Date".ageCalculator(dob1,"Immunizations/Util/Date".adjustDate(dob1, "%m/%d/%y", ("Year":19)), "true", "true")
+		run  "Immunizations/Util/Validation".verifyText  formattedTime("%m/%d/%y",dob1) && age, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelDob)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): c. Sex,d. Primary Care Provider (when available), e. MRN, f.Printed Date(Report Run On)"
+		run  "Immunizations/Util/Validation".verifyText sex2, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelSex)
+		run  "Immunizations/Util/Validation".verifyText date, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelReportRunOn)
+		
+		Log "VERIFICATION: Vaccine name is displayed within the Vaccine column"
+		run "Immunizations/Util/Validation".verifyText vaccineName, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("true",1)
+		
+		Log "VERIFICATION: The administration for 10 years from DOB displays in the row for Meningococcal in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText dose1AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true",1,1)
+		
+		Log "VERIFICATION: The product administered at 10 years from DOB is displayed in the Product column for Meningococcal"
+		run "Immunizations/Util/Validation".verifyText product, "Immunizations/Common/Print/Helpers".productSearchRectangle("true",1,1)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"PrintReport-UnknownGender")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Close the DiscernReportViewer and Open patient 3's chart, from the TOC select Immunization Workflow Mpage and navigate to Immunization section."
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Immunizations/setup".closeChartViaX
+		run "Millennium_LoadPatient_RecentSearch".LoadPatient patientName3
+		if(imageFound(15,"Immunizations/Setup/Text_AssignARelationship"))
+			click FoundimageLocation()
+			typetext relationship
+			click "Immunizations/Setup/Button_AssignARelationshipOK"
+		end if 
+		wait 5
+		run "Millennium_SelectMenu_SubMenu".selectMenuSubMenu "Task",menu,subMenu
+		WaitFor 500, text:noResultsFound
+		
+		Log "VERIFICATION: Ensure the Immunization Workflow MPage displays."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure the 'View forecast' button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible viewForecast, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the system shall display a banner message: 'Patient sex is not documented as either male or female. Forecasting information cannot be displayed.' in Workflow MPage ."
+		waitfor 15, "Immunizations/setup/Text_Immunizations"
+		run "Immunizations/Util/Validation".verifyImage patientDOBNotDocumentedBanner
+		
+		Log "VERIFICATION: Ensure the system shall display 'No Results Found.' below the banner message ."
+		run "Immunizations/Util/Validation".verifyText noResultsFound, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the to the right Print Record button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible printRecord, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"WorkflowMpageBannerMsg-NoDOB")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Plus icon and doucment an administartion by selecting any vaccine"
+		set dose1AdminDate to  "Immunizations/Util/Date".adjustDate(dob1, format, ("Year":10))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, dose1AdminDate, source, product,"submit"
+		
+		Log "VERIFICATION: Vaccine which has been charted from standard vaccine list will display under Vaccine column"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName
+		
+		Log "VERIFICATION: Ensure the 'View forecast' button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible viewForecast, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the to the right Print Record button is displayed"
+		run "Immunizations/Util/Validation".verifyText printRecord, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"WorkflowMpageChartedVaccine-NoDOB")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Print Button."
+		run "Immunizations/Common/Print/Actions".clickPrintRecord(printRecord)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): a. Full formatted name,,c. Sex,d. Primary Care Provider,e. MRN,f.  Printed Date"
+		run  "Immunizations/Util/Validation".verifyText patientName3, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelName)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): b. Date of birth (age) is not displayed"
+		run "Immunizations/Util/Validation".verifyValueEquals  "", ReadText(("Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle(fieldLabelDob)))
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): c. Sex,d. Primary Care Provider (when available), e. MRN, f.Printed Date(Report Run On)"
+		run  "Immunizations/Util/Validation".verifyText sex3, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelSex)
+		run  "Immunizations/Util/Validation".verifyText date, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelReportRunOn)
+		
+		Log "VERIFICATION: Vaccine name is displayed within the Vaccine column"
+		run "Immunizations/Util/Validation".verifyText vaccineName, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("true",1)
+		
+		Log "VERIFICATION: The administration for 10 years from DOB displays in the row for Meningococcal in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText dose1AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true",1,1)
+		
+		Log "VERIFICATION: The product administered at 10 years from DOB is displayed in the Product column for Meningococcal"
+		run "Immunizations/Util/Validation".verifyText product, "Immunizations/Common/Print/Helpers".productSearchRectangle("true",1,1)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"PrintReport-NoDOB")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Close the DiscernReportViewer and Open patient 4's chart, from the TOC select Immunization Workflow Mpage and navigate to Immunization section."
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Immunizations/setup".closeChartViaX
+		run "Millennium_LoadPatient_RecentSearch".LoadPatient patientName4
+		if(imageFound(15,"Immunizations/Setup/Text_AssignARelationship"))
+			click FoundimageLocation()
+			typetext relationship
+			click "Immunizations/Setup/Button_AssignARelationshipOK"
+		end if 
+		wait 5
+		run "Millennium_SelectMenu_SubMenu".selectMenuSubMenu "Task",menu,subMenu
+		WaitFor 500, text:noResultsFound
+		
+		Log "VERIFICATION: Ensure the Immunization Workflow MPage displays."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure the 'View forecast' button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible viewForecast, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the system shall display a banner message: 'Patient sex is not documented as either male or female. Forecasting information cannot be displayed.' in Workflow MPage ."
+		waitfor 15, "Immunizations/setup/Text_Immunizations"
+		run "Immunizations/Util/Validation".verifyImage patientSexNotDocumentedBanner
+		run "Immunizations/Util/Validation".verifyImage patientDOBNotDocumentedBanner
+		
+		Log "VERIFICATION: Ensure the system shall display 'No Results Found.' below the banner message ."
+		run "Immunizations/Util/Validation".verifyText noResultsFound, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the to the right Print Record button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible printRecord, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"WorkflowMpageBannerMsg-NoDOBNoGender")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Plus icon and doucment an administartion by selecting any vaccine"
+		set dose1AdminDate to  "Immunizations/Util/Date".adjustDate(dob1, format, ("Year":10))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, dose1AdminDate, source, product,"submit"
+		
+		Log "VERIFICATION: Vaccine which has been charted from standard vaccine list will display under Vaccine column"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName
+		
+		Log "VERIFICATION: Ensure the 'View forecast' button is not displayed"
+		run "Immunizations/Util/Validation".verifyTextNotVisible viewForecast, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		Log "VERIFICATION: Ensure the to the right Print Record button is displayed"
+		run "Immunizations/Util/Validation".verifyText printRecord, imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"WorkflowMpageChartedVaccine-NoDOBNoGender")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Print Button."
+		run "Immunizations/Common/Print/Actions".clickPrintRecord(printRecord)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): a. Full formatted name,,c. Sex,d. Primary Care Provider,e. MRN,f.  Printed Date"
+		run  "Immunizations/Util/Validation".verifyText patientName4, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelName)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): b. Date of birth (age) is not displayed"
+		run "Immunizations/Util/Validation".verifyValueEquals  "", ReadText(("Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle(fieldLabelDob)))
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): c. Sex - not displayed,d. Primary Care Provider (when available), e. MRN, f.Printed Date(Report Run On)"
+		run "Immunizations/Util/Validation".verifyValueEquals  "", ReadText(("Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle(fieldLabelSex)))
+		run  "Immunizations/Util/Validation".verifyText date, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelReportRunOn)
+		
+		Log "VERIFICATION: Vaccine name is displayed within the Vaccine column"
+		run "Immunizations/Util/Validation".verifyText vaccineName, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("true",1)
+		
+		Log "VERIFICATION: The administration for 10 years from DOB displays in the row for Meningococcal in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText dose1AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true",1,1)
+		
+		Log "VERIFICATION: The product administered at 10 years from DOB is displayed in the Product column for Meningococcal"
+		run "Immunizations/Util/Validation".verifyText product, "Immunizations/Common/Print/Helpers".productSearchRectangle("true",1,1)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"PrintReport-NoDOBNoGender")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Close the DiscernReportViewer and Exit PowerChart.exe"
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Immunizations/setup".closeApplication global Cleanup
+		-----------------------------------------------------------------------------------------------------------------------------
+		EndTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-Print_ImmunizationReport_when_gender_is_undefined"
+		
+	catch
+		LogError "Exception encountered" && the exception.reason
+		captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End try
+	
+	------------------------------------------------------Patient Cleanup---------------------------------------------------------
+	
+	Log "Cleanup Patient 1 – 20 years ."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName1, firstName1
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName1
+	----------------------------------------------------------------------------------------------------------------
+	Log "Cleanup Patient 2 – 20 years ."
+	run "Immunizations/PatientCreation".searchPatient lastName2, firstName2
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName2
+	----------------------------------------------------------------------------------------------------------------
+	Log "Cleanup Patient 3 – 20 years ."
+	run "Immunizations/PatientCreation".searchPatient lastName3, firstName3
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName3
+	----------------------------------------------------------------------------------------------------------------
+	Log "Cleanup Patient 4 – 20 years ."
+	run "Immunizations/PatientCreation".searchPatient lastName4, firstName4
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName4
+	run "Util".CloseApplication 2
+	----------------------------------------------------------------------------------------------------------------
+catch
+	LogError "Exception encountered" && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End try
+
+#SUT CLEANUP
+run "CommonModules".zeroStateScript

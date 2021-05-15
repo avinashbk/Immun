@@ -1,0 +1,170 @@
+{
+   "SOLM64":{
+      "Patient":{
+         "lastName":"Retrieve8",
+         "firstName":"Mnemonic",
+         "nameFullFormatted":"Retrieve8,Mnemonic",
+         "newLastName":"oldRetrieveMnemonic",
+         "dob":"Today - 20 years",
+         "sex":"Male"
+      
+	},
+	"user":"Maintenance, Health",
+	"mnemonicDisplayLevel":"MNEM_DISP_LEVEL",
+    	"vaccineName":"Measles, Mumps, Rubella",
+     	"productName":"measles/mumps/rubella virus vaccine",
+	"orderedAs" : "M-M-R II",
+	"orderMnemonic":"measles/mumps/rubella vims vaccine SubQ Inj",
+	"hnaOrdermnemonicdisplay0":"measles/mumps/rubella virus vaccine",
+	"hnaOrderedAsmnemonicdisplay1":"measles/mumps/rubella virus vaccine (M-M-R II)",
+	"hnaOrderedAsandOrdermnemonicdisplay2":"measles/mumps/rubella virus vaccine (M-M-R II)(measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaandOrdermnemonicdisplay3":"measles/mumps/rubella virus vaccine (measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaOrdermnemonic":"0-HNA Order mnemonic",
+	"hnaOrderedAsmnemonic":"1-HNA & Ordered As mnemonic",
+	"hnaOrderedAsandOrdermnemonic":"2-HNA. Ordered As. and Order mnemonic",
+	"hnaandOrdermnemonic":"4-HNA and Order mnemonic",
+	"phamedmgrAppltn":"Phamedmgr",
+	"lotNumber":"123456789",
+     	"source":"Device"
+   },
+    "S18VX":{
+         "Patient":{
+         "lastName":"Retrieve8",
+         "firstName":"Mnemonic",
+         "nameFullFormatted":"Retrieve8,Mnemonic",
+         "newLastName":"oldRetrieveMnemonic",
+         "dob":"Today - 20 years",
+         "sex":"Male"
+      
+	},
+	"user":"Maintenance, Health",
+	"mnemonicDisplayLevel":"MNEM_DISP_LEVEL",
+    	"vaccineName":"Measles, Mumps, Rubella",
+     	"productName":"measles/mumps/rubella virus vaccine",
+	"orderedAs" : "M-M-R II",
+	"orderMnemonic":"measles/mumps/rubella vims vaccine SubQ Inj",
+	"hnaOrdermnemonicdisplay0":"measles/mumps/rubella virus vaccine",
+	"hnaOrderedAsmnemonicdisplay1":"measles/mumps/rubella virus vaccine (M-M-R II)",
+	"hnaOrderedAsandOrdermnemonicdisplay2":"measles/mumps/rubella virus vaccine (M-M-R II)(measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaandOrdermnemonicdisplay3":"measles/mumps/rubella virus vaccine (measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaOrdermnemonic":"0-HNA Order mnemonic",
+	"hnaOrderedAsmnemonic":"1-HNA & Ordered As mnemonic",
+	"hnaOrderedAsandOrdermnemonic":"2-HNA. Ordered As. and Order mnemonic",
+	"hnaandOrdermnemonic":"4-HNA and Order mnemonic",
+	"phamedmgrAppltn":"Phamedmgr",
+	"lotNumber":"123456789",
+     	"source":"Device"
+   },
+    "ENG18":{
+         "Patient":{
+         "lastName":"Retrieve8",
+         "firstName":"Mnemonic",
+         "nameFullFormatted":"Retrieve8,Mnemonic",
+         "newLastName":"oldRetrieveMnemonic",
+         "dob":"Today - 20 years",
+         "sex":"Male"
+      
+	},
+	"user":"Maintenance, Health",
+	"mnemonicDisplayLevel":"MNEM_DISP_LEVEL",
+    	"vaccineName":"Measles, Mumps, Rubella",
+     	"productName":"measles/mumps/rubella virus vaccine",
+	"orderedAs" : "M-M-R II",
+	"orderMnemonic":"measles/mumps/rubella vims vaccine SubQ Inj",
+	"hnaOrdermnemonicdisplay0":"measles/mumps/rubella virus vaccine",
+	"hnaOrderedAsmnemonicdisplay1":"measles/mumps/rubella virus vaccine (M-M-R II)",
+	"hnaOrderedAsandOrdermnemonicdisplay2":"measles/mumps/rubella virus vaccine (M-M-R II)(measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaandOrdermnemonicdisplay3":"measles/mumps/rubella virus vaccine (measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaOrdermnemonic":"0-HNA Order mnemonic",
+	"hnaOrderedAsmnemonic":"1-HNA & Ordered As mnemonic",
+	"hnaOrderedAsandOrdermnemonic":"2-HNA. Ordered As. and Order mnemonic",
+	"hnaandOrdermnemonic":"4-HNA and Order mnemonic",
+	"phamedmgrAppltn":"Phamedmgr",
+	"lotNumber":"123456789",
+     	"source":"Device"
+   },
+    "INTGM":{
+         "Patient":{
+         "lastName":"Retrieve8",
+         "firstName":"Mnemonic",
+         "nameFullFormatted":"Retrieve8,Mnemonic",
+         "newLastName":"oldRetrieveMnemonic",
+         "dob":"Today - 20 years",
+         "sex":"Male"
+      
+	},
+	"user":"Maintenance, Health",
+	"mnemonicDisplayLevel":"MNEM_DISP_LEVEL",
+    	"vaccineName":"Measles, Mumps, Rubella",
+     	"productName":"measles/mumps/rubella virus vaccine",
+	"orderedAs" : "M-M-R II",
+	"orderMnemonic":"measles/mumps/rubella vims vaccine SubQ Inj",
+	"hnaOrdermnemonicdisplay0":"measles/mumps/rubella virus vaccine",
+	"hnaOrderedAsmnemonicdisplay1":"measles/mumps/rubella virus vaccine (M-M-R II)",
+	"hnaOrderedAsandOrdermnemonicdisplay2":"measles/mumps/rubella virus vaccine (M-M-R II)(measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaandOrdermnemonicdisplay3":"measles/mumps/rubella virus vaccine (measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaOrdermnemonic":"0-HNA Order mnemonic",
+	"hnaOrderedAsmnemonic":"1-HNA & Ordered As mnemonic",
+	"hnaOrderedAsandOrdermnemonic":"2-HNA. Ordered As. and Order mnemonic",
+	"hnaandOrdermnemonic":"4-HNA and Order mnemonic",
+	"phamedmgrAppltn":"Phamedmgr",
+	"lotNumber":"123456789",
+     	"source":"Device"
+   },
+    "SOLGM":{
+         "Patient":{
+         "lastName":"Retrieve8",
+         "firstName":"Mnemonic",
+         "nameFullFormatted":"Retrieve8,Mnemonic",
+         "newLastName":"oldRetrieveMnemonic",
+         "dob":"Today - 20 years",
+         "sex":"Male"
+      
+	},
+	"user":"Maintenance, Health",
+	"mnemonicDisplayLevel":"MNEM_DISP_LEVEL",
+    	"vaccineName":"Measles, Mumps, Rubella",
+     	"productName":"measles/mumps/rubella virus vaccine",
+	"orderedAs" : "M-M-R II",
+	"orderMnemonic":"measles/mumps/rubella vims vaccine SubQ Inj",
+	"hnaOrdermnemonicdisplay0":"measles/mumps/rubella virus vaccine",
+	"hnaOrderedAsmnemonicdisplay1":"measles/mumps/rubella virus vaccine (M-M-R II)",
+	"hnaOrderedAsandOrdermnemonicdisplay2":"measles/mumps/rubella virus vaccine (M-M-R II)(measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaandOrdermnemonicdisplay3":"measles/mumps/rubella virus vaccine (measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaOrdermnemonic":"0-HNA Order mnemonic",
+	"hnaOrderedAsmnemonic":"1-HNA & Ordered As mnemonic",
+	"hnaOrderedAsandOrdermnemonic":"2-HNA. Ordered As. and Order mnemonic",
+	"hnaandOrdermnemonic":"4-HNA and Order mnemonic",
+	"phamedmgrAppltn":"Phamedmgr",
+	"lotNumber":"123456789",
+     	"source":"Device"
+   },
+   "S18VA":{
+         "Patient":{
+         "lastName":"Retrieve8",
+         "firstName":"Mnemonic",
+         "nameFullFormatted":"Retrieve8,Mnemonic",
+         "newLastName":"oldRetrieveMnemonic",
+         "dob":"Today - 20 years",
+         "sex":"Male"
+      
+	},
+	"user":"Maintenance, Health",
+	"mnemonicDisplayLevel":"MNEM_DISP_LEVEL",
+    	"vaccineName":"Measles, Mumps, Rubella",
+     	"productName":"measles/mumps/rubella virus vaccine",
+	"orderedAs" : "M-M-R II",
+	"orderMnemonic":"measles/mumps/rubella vims vaccine SubQ Inj",
+	"hnaOrdermnemonicdisplay0":"measles/mumps/rubella virus vaccine",
+	"hnaOrderedAsmnemonicdisplay1":"measles/mumps/rubella virus vaccine (M-M-R II)",
+	"hnaOrderedAsandOrdermnemonicdisplay2":"measles/mumps/rubella virus vaccine (M-M-R II)(measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaandOrdermnemonicdisplay3":"measles/mumps/rubella virus vaccine (measles/mumps/rubella virus vaccine SubQ Inj)",
+	"hnaOrdermnemonic":"0-HNA Order mnemonic",
+	"hnaOrderedAsmnemonic":"1-HNA & Ordered As mnemonic",
+	"hnaOrderedAsandOrdermnemonic":"2-HNA. Ordered As. and Order mnemonic",
+	"hnaandOrdermnemonic":"4-HNA and Order mnemonic",
+	"phamedmgrAppltn":"Phamedmgr",
+	"lotNumber":"123456789",
+     	"source":"Device"
+        }
+}

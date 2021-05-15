@@ -1,0 +1,259 @@
+{
+	"SOLGM":{
+		"patient2Reg1Fail":{
+			"lastName":"2REGISTRIES1FAIL",
+			"firstName":"TEST",
+			"nameFullFormatted":"2REGISTRIES1FAIL,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1RegFail":{
+			"lastName":"1REGISTRYFAIL",
+			"firstName":"TEST",
+			"nameFullFormatted":"1REGISTRYFAIL,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Fail1TooManyMatches":{
+			"lastName":"1FAIL1TOOMANYMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1FAIL1TOOMANYMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Perfect1NoMatch":{
+			"lastName":"1PERFECT1NOMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1PERFECT1NOMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient2TooManyMatches":{
+			"lastName":"2TOOMANYMATCHES",
+			"firstName":"TEST",
+			"nameFullFormatted":"2TOOMANYMATCHES,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Perfect1TooMany":{
+			"lastName":"1PERFECT1TOOMANYMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1PERFECT1TOOMANYMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patientNoConnection":{
+			"lastName":"RECONCILEWF4",
+			"firstName":"PAT4",
+			"nameFullFormatted":"RECONCILEWF4, PAT4",
+			"sex":"Male"
+		},
+		"User":"Maintenance, Health",
+		"vaccineName1":"Polio",
+		"vaccineName1Status":"",
+		"vaccineName2":"Hepatitis B",
+		"jsonUrl1":"http://scm.health-maintenance.cerner.corp/svn/sandbox/jake.zimmerman/Interop_Mock_PED_Data/HLM-VR-Immunizations-Reconcile-Banners/64DEV/Reconcile-Banners_P3.json",
+		"errorBannerImage1":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Error",
+		"errorBannerImage2":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Error2",
+		"errorBanner3":"",
+		"warningBannerImage1":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Warning_Banner",
+		"warningBannerImageDetails":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Warning_Details",
+		"errorBannerDetails":"",
+		"registryName1":"FLSHOTS",
+		"registryName2":"NYSIIS6.1.1",
+		"registryName3":"USIIS"
+	},
+	"DEVENG":{
+		"patient2Reg1Fail":{
+			"lastName":"2REGISTRIES1FAIL",
+			"firstName":"TEST",
+			"nameFullFormatted":"2REGISTRIES1FAIL,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1RegFail":{
+			"lastName":"1REGISTRYFAIL",
+			"firstName":"TEST",
+			"nameFullFormatted":"1REGISTRYFAIL,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Fail1TooManyMatches":{
+			"lastName":"1FAIL1TOOMANYMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1FAIL1TOOMANYMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Perfect1NoMatch":{
+			"lastName":"1PERFECT1NOMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1PERFECT1NOMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient2TooManyMatches":{
+			"lastName":"2TOOMANYMATCHES",
+			"firstName":"TEST",
+			"nameFullFormatted":"2TOOMANYMATCHES,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Perfect1TooMany":{
+			"lastName":"1PERFECT1TOOMANYMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1PERFECT1TOOMANYMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patientNoConnection":{
+			"lastName":"RECONCILEWF4",
+			"firstName":"PAT4",
+			"nameFullFormatted":"RECONCILEWF4, PAT4",
+			"sex":"Male"
+		},
+		"User":"Maintenance, Health",
+		"vaccineName1":"Polio",
+		"vaccineName1Status":"",
+		"vaccineName2":"Hepatitis B",
+		"jsonUrl1":"http://scm.health-maintenance.cerner.corp/svn/sandbox/jake.zimmerman/Interop_Mock_PED_Data/HLM-VR-Immunizations-Reconcile-Banners/64DEV/Reconcile-Banners_P3.json",
+		"errorBannerImage1":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Error",
+		"errorBannerImage2":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Error2",
+		"errorBanner3":"",
+		"warningBannerImage1":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Warning_Banner",
+		"warningBannerImageDetails":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Warning_Details",
+		"errorBannerDetails":"",
+		"registryName1":"FLSHOTS",
+		"registryName2":"NYSIIS6.1.1",
+		"registryName3":"USIIS"
+	},
+	"64DEV":{
+		"patient2Reg1Fail":{
+			"lastName":"2REGISTRIES1FAIL",
+			"firstName":"TEST",
+			"nameFullFormatted":"2REGISTRIES1FAIL,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1RegFail":{
+			"lastName":"1REGISTRYFAIL",
+			"firstName":"TEST",
+			"nameFullFormatted":"1REGISTRYFAIL,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Fail1TooManyMatches":{
+			"lastName":"1FAIL1TOOMANYMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1FAIL1TOOMANYMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Perfect1NoMatch":{
+			"lastName":"1PERFECT1NOMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1PERFECT1NOMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient2TooManyMatches":{
+			"lastName":"2TOOMANYMATCHES",
+			"firstName":"TEST",
+			"nameFullFormatted":"2TOOMANYMATCHES,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Perfect1TooMany":{
+			"lastName":"1PERFECT1TOOMANYMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1PERFECT1TOOMANYMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patientNoConnection":{
+			"lastName":"RECONCILEWF4",
+			"firstName":"PAT4",
+			"nameFullFormatted":"RECONCILEWF4, PAT4",
+			"sex":"Male"
+		},
+		"User":"Maintenance, Health",
+		"vaccineName1":"Polio",
+		"vaccineName1Status":"",
+		"vaccineName2":"Hepatitis B",
+		"jsonUrl1":"http://scm.health-maintenance.cerner.corp/svn/sandbox/jake.zimmerman/Interop_Mock_PED_Data/HLM-VR-Immunizations-Reconcile-Banners/64DEV/Reconcile-Banners_P3.json",
+		"errorBannerImage1":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Error",
+		"errorBannerImage2":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Error2",
+		"errorBanner3":"",
+		"warningBannerImage1":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Warning_Banner",
+		"warningBannerImageDetails":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Warning_Details",
+		"errorBannerDetails":"",
+		"registryName1":"FLSHOTS",
+		"registryName2":"NYSIIS6.1.1",
+		"registryName3":"USIIS"
+	},
+	"S18VX":{
+		"patient2Reg1Fail":{
+			"lastName":"2REGISTRIES1FAIL",
+			"firstName":"TEST",
+			"nameFullFormatted":"2REGISTRIES1FAIL,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1RegFail":{
+			"lastName":"1REGISTRYFAIL",
+			"firstName":"TEST",
+			"nameFullFormatted":"1REGISTRYFAIL,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Fail1TooManyMatches":{
+			"lastName":"1FAIL1TOOMANYMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1FAIL1TOOMANYMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Perfect1NoMatch":{
+			"lastName":"1PERFECT1NOMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1PERFECT1NOMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient2TooManyMatches":{
+			"lastName":"2TOOMANYMATCHES",
+			"firstName":"TEST",
+			"nameFullFormatted":"2TOOMANYMATCHES,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patient1Perfect1TooMany":{
+			"lastName":"1PERFECT1TOOMANYMATCH",
+			"firstName":"TEST",
+			"nameFullFormatted":"1PERFECT1TOOMANYMATCH,TEST",
+			"dob":"Today - 10 years",
+			"sex":"Male"
+		},
+		"patientNoConnection":{
+			"lastName":"RECONCILEWF4",
+			"firstName":"PAT4",
+			"nameFullFormatted":"RECONCILEWF4, PAT4",
+			"sex":"Male"
+		},
+		"User":"Maintenance, Health",
+		"vaccineName1":"Polio",
+		"vaccineName1Status":"",
+		"vaccineName2":"Hepatitis B",
+		"jsonUrl1":"http://scm.health-maintenance.cerner.corp/svn/sandbox/jake.zimmerman/Interop_Mock_PED_Data/HLM-VR-Immunizations-Reconcile-Banners/64DEV/Reconcile-Banners_P3.json",
+		"errorBannerImage1":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Error",
+		"errorBannerImage2":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Error2",
+		"errorBanner3":"",
+		"warningBannerImage1":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Warning_Banner",
+		"warningBannerImageDetails":"Immunizations/WorkflowMPage/Reconciliation/Headers/Registry_Warning_Details",
+		"errorBannerDetails":"",
+		"registryName1":"FLSHOTS",
+		"registryName2":"NYSIIS6.1.1",
+		"registryName3":"USIIS"
+	},
+		"dateFormat":"Date"
+}

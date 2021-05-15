@@ -1,0 +1,49 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+
+------------------------------------------------------------------------------------------------------------------------------
+#RQM Test case: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=62060
+
+------------------------------------------------------------------------------------------------------------------------------
+Params domain
+
+Log "Test running in domain"&&domain
+Set domain to "Immunizations/Util/Setup".domainRun(domain)
+
+Try
+	BeginTestCase "VR/HLM-VR-Immunizations-Administration_Date_Precision/Patient_Setup"
+	Run "VR/HLM-VR-Immunizations-Administration_Date_Precision/Patient_Setup" domain
+	EndTestCase "VR/HLM-VR-Immunizations-Administration_Date_Precision/Patient_Setup"
+	
+	BeginTestCase "VR/HLM-VR-Immunizations-Administration_Date_Precision/Prefmaint_Preference"
+	Run "VR/HLM-VR-Immunizations-Administration_Date_Precision/Prefmaint_Preference" domain
+	EndTestCase  "VR/HLM-VR-Immunizations-Administration_Date_Precision/Prefmaint_Preference"
+	
+	BeginTestCase  "VR/HLM-VR-Immunizations-Administration_Date_Precision/HLM-VR-Immunization-Patient1"
+	Run "VR/HLM-VR-Immunizations-Administration_Date_Precision/HLM-VR-Immunization-Patient1" domain
+	EndTestCase  "VR/HLM-VR-Immunizations-Administration_Date_Precision/HLM-VR-Immunization-Patient1"
+	
+	BeginTestCase  "VR/HLM-VR-Immunizations-Administration_Date_Precision/HLM-VR-Immunization-Patient2"
+	Run "VR/HLM-VR-Immunizations-Administration_Date_Precision/HLM-VR-Immunization-Patient2" domain
+	EndTestCase  "VR/HLM-VR-Immunizations-Administration_Date_Precision/HLM-VR-Immunization-Patient2"
+	
+	BeginTestCase  "VR/HLM-VR-Immunizations-Administration_Date_Precision/HLM-VR-Immunization-Patient3"
+	Run "VR/HLM-VR-Immunizations-Administration_Date_Precision/HLM-VR-Immunization-Patient3" domain	
+	EndTestCase  "VR/HLM-VR-Immunizations-Administration_Date_Precision/HLM-VR-Immunization-Patient3"
+	
+	BeginTestCase  "VR/HLM-VR-Immunizations-Administration_Date_Precision/Patient_Cleanup"
+	Run "VR/HLM-VR-Immunizations-Administration_Date_Precision/Patient_Cleanup" domain
+	EndTestCase  "VR/HLM-VR-Immunizations-Administration_Date_Precision/Patient_Cleanup"
+	
+Catch theException
+	LogError "Exception encountered" & newline & "Exception Reason:" && theException.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	
+End try
+
+run "Cleanup".ZeroStateCloseAllApps
+
+

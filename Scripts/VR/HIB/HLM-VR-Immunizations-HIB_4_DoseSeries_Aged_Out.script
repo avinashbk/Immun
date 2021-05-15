@@ -1,0 +1,164 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=115827
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set doubleDashImage to common.doubleDashImage
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set agedOut to textStrings.agedOut
+set viewForecast to textStrings.viewForecast
+
+set testData to JSONValue(file ResourcePath("VR/HIB_4_DoseSeries/testData.json")).(value of domain)
+Set lastName to testData.Patient_Aged_Out.lastName
+Set firstName to testData.Patient_Aged_Out.firstName
+Set patientName to testData.Patient_Aged_Out.nameFullFormatted
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Aged_Out.dob))
+set vaccineName1 to testData.vaccineName1
+set vaccineName1StrikeThrough to testData.vaccineName1StrikeThrough
+set Product2 to testData.Product2
+set Source to testData.Source
+
+set format to "%b %d, %Y"
+
+
+Try
+	#PATIENT RESET
+	run "Immunizations/PatientCreation".resetPatientToZeroState username, password, domain, lastName, firstName, dob
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/HIB/HLM-VR-Immunizations-HIB_4_DoseSeries_Aged_Out"
+		
+		Log "Util".stepNumber &"ACTION: Open Patient 4's chart, navigate to the immunization component and review the MPage."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		Log "VERIFICATION: Ensure HIB displays in the historical section with a status of 'Aged Out'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName1, agedOut
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName1
+		
+		Log "VERIFICATION: Ensure the Administrations Column displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, doubleDashImage, false
+		
+		Log "VERIFICATION: Ensure the Next Recommneded Column displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, doubleDashImage
+		
+		Log "VERIFICATION: Ensure Last action displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, doubleDashImage
+		
+		Log "VERIFICATION: Ensure Last action Date displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName1, doubleDashImage
+		capturescreen (Name:"Step"&Global stepNumber&"- Aged out MPage View P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION:Chart a dose at <DOB + 2 months>."
+		set dose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("month":2))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, "Date",  dose1AdminDate, source, product2, "submit"
+		
+		Log "VERIFICATION: Ensure HIB remains in the historical section with a status of 'Aged Out'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName1, agedOut
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName1
+		
+		Log "VERIFICATION: Ensure the Administrations Column displays with '1'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "1"
+		
+		Log "VERIFICATION: Ensure the Next Recommneded Column displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, doubleDashImage
+		
+		Log "VERIFICATION: Ensure Last action displays with 'Administered'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, "Administered"
+		
+		Log "VERIFICATION: Ensure Last action Date displays with <Date and age for DOB +2 months>."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName1, dose1AdminDate, "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, false)
+		capturescreen (Name:"Step"&Global stepNumber&"-MPage Did Not Count P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on HIB."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		
+		Log "VERIFICATION: Ensure in the header of the side panel, HIB displays with a status of 'Aged Out'."
+		set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1, sidePanelHeaderRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyValidNextRecommendedDate agedOut,sidePanelHeaderRectangle
+		capturescreen (Name:"Step"&Global stepNumber&"- Dose1 Aged out side panel P4")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on the View Forecast button."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: Ensure HIB displays with a strikethrough and a status of 'Aged Out'."
+		set vaccineName1StrikeThroughRowSearchRectangle to  "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(vaccineName1StrikeThrough)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText agedOut, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1StrikeThroughRowSearchRectangle,firstColumnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"- Aged out Forecast View P4")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click on HIB."
+		click ImageLocation("Immunizations/Forecaster-Common/HibStrikethrough")
+		
+		Log "VERIFICATION: In the right hand pane, ensure 'Not Started - HIB' and 'Recommended from <2 months form DOB> - <3 months + 4 weeks - 1 day from DOB>' displays in the top section."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText agedOut && "-" && VaccineName1, rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION:  Ensure HIB displays with a status of 'Aged Out' below it."
+		Click text: "1", validCharacters: "*", SearchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle() //when the HIB header is in focus, it can't find the status 'Aged Out'
+		set LeftPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText agedOut, LeftPaneHeaderSearchRectangle
+		capturescreen (Name:"Step"&Global stepNumber&"- Aged out Expanded View P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click out of the expanded view and click on the List View."
+		Click text:"Print", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+		
+		Log "VERIFICATION: Ensure HIB shows in the vaccine column with a status of 'Aged Out'."
+		set vaccineName1StrikeThroughRowSearchRectangle to  "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(vaccineName1StrikeThrough)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".largeFirstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText agedOut, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1StrikeThroughRowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: In the action column 1, ensure dose 1 displays for HIB <DOB + 2 months >(2m)."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".VerifyText "1 " & product2 &return& dose1AdminDate && "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, true),"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(vaccineName1StrikeThroughRowSearchRectangle,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"- Aged out List View P4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient 4's chart."
+		Run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/HIB/HLM-VR-Immunizations-HIB_4_DoseSeries_Aged_Out"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "cleanup".zeroStateCloseAllApps

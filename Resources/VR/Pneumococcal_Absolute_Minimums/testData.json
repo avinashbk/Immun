@@ -1,0 +1,135 @@
+{
+	"SOLM64": {
+		"Patient1_Stnd_Series": {
+			"lastName": "PneumoAbMinStandSeries",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMinStandSeries,Bob",
+			"newLastName": "oldPneumoAbMinStandSeries",
+			"dob": "Today - 16 months",
+			"sex": "Female"
+		},
+		"Patient2_7Months_Series": {
+			"lastName": "PneumoAbMin7MSeries",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMin7MSeries,Bob",
+			"newLastName": "oldPneumoAbMin7MSeries",
+			"dob": "Today - 16 months",
+			"sex": "Male"
+		},
+		"Patient3_65_Years_Series": {
+			"lastName": "PneumoAbMin65+Series",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMin65+Series,Bob",
+			"newLastName": "oldPneumoAbMin65+Series",
+			"dob": "Today - 66 years",
+			"sex": "Female"
+		},
+		"vaccineName1": "Pneumococcal Conjugate",
+		"vaccineName2": "Pneumococcal Polysaccharide",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"product3": "Pneumovax 23"
+	},
+	"S18VX": {
+		"Patient1_Stnd_Series": {
+			"lastName": "PneumoAbMinStandSeries",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMinStandSeries,Bob",
+			"newLastName": "oldPneumoAbMinStandSeries",
+			"dob": "Today - 16 months",
+			"sex": "Female"
+		},
+		"Patient2_7Months_Series": {
+			"lastName": "PneumoAbMin7MSeries",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMin7MSeries,Bob",
+			"newLastName": "oldPneumoAbMin7MSeries",
+			"dob": "Today - 16 months",
+			"sex": "Male"
+		},
+		"Patient3_65_Years_Series": {
+			"lastName": "PneumoAbMin65+Series",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMin65+Series,Bob",
+			"newLastName": "oldPneumoAbMin65+Series",
+			"dob": "Today - 66 years",
+			"sex": "Female"
+		},
+		"vaccineName1": "Pneumococcal Conjugate",
+		"vaccineName2": "Pneumococcal Polysaccharide",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"product3": "Pneumovax 23"
+	},
+	"SOLGM": {
+		"Patient1_Stnd_Series": {
+			"lastName": "PneumoAbMinStandSeries",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMinStandSeries,Bob",
+			"newLastName": "oldPneumoAbMinStandSeries",
+			"dob": "Today - 16 months",
+			"sex": "Female"
+		},
+		"Patient2_7Months_Series": {
+			"lastName": "PneumoAbMin7MSeries",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMin7MSeries,Bob",
+			"newLastName": "oldPneumoAbMin7MSeries",
+			"dob": "Today - 16 months",
+			"sex": "Male"
+		},
+		"Patient3_65_Years_Series": {
+			"lastName": "PneumoAbMin65+Series",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMin65+Series,Bob",
+			"newLastName": "oldPneumoAbMin65+Series",
+			"dob": "Today - 66 years",
+			"sex": "Female"
+		},
+		"vaccineName1": "Pneumococcal Conjugate",
+		"vaccineName2": "Pneumococcal Polysaccharide",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"product3": "Pneumovax 23"
+	},
+	"ENG18": {
+		"Patient1_Stnd_Series": {
+			"lastName": "PneumoAbMinStandSeries",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMinStandSeries,Bob",
+			"newLastName": "oldPneumoAbMinStandSeries",
+			"dob": "Today - 16 months",
+			"sex": "Female"
+		},
+		"Patient2_7Months_Series": {
+			"lastName": "PneumoAbMin7MSeries",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMin7MSeries,Bob",
+			"newLastName": "oldPneumoAbMin7MSeries",
+			"dob": "Today - 16 months",
+			"sex": "Male"
+		},
+		"Patient3_65_Years_Series": {
+			"lastName": "PneumoAbMin65+Series",
+			"firstName": "Bob",
+			"nameFullFormatted": "PneumoAbMin65+Series,Bob",
+			"newLastName": "oldPneumoAbMin65+Series",
+			"dob": "Today - 66 years",
+			"sex": "Female"
+		},
+		"vaccineName1": "Pneumococcal Conjugate",
+		"vaccineName2": "Pneumococcal Polysaccharide",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"product3": "Pneumovax 23"
+	},
+	"dateFormat": "Date"
+}

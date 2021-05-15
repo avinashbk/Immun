@@ -1,0 +1,269 @@
+{
+  	"SOLM64":{
+		"Patient1_Newborn":{
+			"lastName":"HepatitisAP1",
+			"firstName":"1",
+			"nameFullFormatted":"HepatitisAP1,1",
+			"newLastName":"oldHepatitisAP1",
+			"dob":"Today",
+			"sex":"Male"
+		},
+		"Patient2_Overdue":{
+			"lastName":"HepAP2",
+			"firstName":"2",
+			"nameFullFormatted":"HepAP2,2",
+			"newLastName":"oldHepAP2",
+			"dob":"Today - 12 years",
+			"sex":"Male"
+		},
+		"Patient3_Aged_Out":{
+			"lastName":"H3",
+			"firstName":"3",
+			"nameFullFormatted":"H3,3",
+			"newLastName":"oldH3",
+			"dob":"Today - 19 years - 1 month",
+			"sex":"Male"
+		},
+	"vaccineName":"Hepatitis A",
+	"user":"Maintenance,Health",
+	"source":"Device",
+	"eventSet":"hepatitis A adult vaccine",
+	"product1":"hepatitis A-hepatitis B vaccine",
+	"vis1":"Hepatitis A (English)",
+	"unchartedReason":"Test",
+	"index":"1",
+	"notGivenType":"Refused",
+    "permNotGivenAction":"Cancel series and stop forecasting",
+    "notGivenReason":"Patient Refuses",
+	"notGivenComment":"Refused Series"
+	},
+	"S18VX":{
+                "Patient1_Newborn":{
+			"lastName":"HepatitisAP1",
+			"firstName":"1",
+			"nameFullFormatted":"HepatitisAP1,1",
+			"newLastName":"oldHepatitisAP1",
+			"dob":"Today",
+			"sex":"Male"
+		},
+		"Patient2_Overdue":{
+			"lastName":"HepAP2",
+			"firstName":"2",
+			"nameFullFormatted":"HepAP2,2",
+			"newLastName":"oldHepAP2",
+			"dob":"Today - 12 years",
+			"sex":"Male"
+		},
+		"Patient3_Aged_Out":{
+			"lastName":"H3",
+			"firstName":"3",
+			"nameFullFormatted":"H3,3",
+			"newLastName":"oldH3",
+			"dob":"Today - 19 years - 1 month",
+			"sex":"Male"
+		},
+	"vaccineName":"Hepatitis A",
+	"user":"Maintenance,Health",
+	"source":"Device",
+	"eventSet":"hepatitis A adult vaccine",
+	"product1":"hepatitis A-hepatitis B vaccine",
+	"vis1":"Hepatitis A (English)",
+	"unchartedReason":"Test",
+	"index":"1",
+	"notGivenType":"Refused",
+    "permNotGivenAction":"Cancel series and stop forecasting",
+    "notGivenReason":"Patient Refuses",
+	"notGivenComment":"Refused Series"
+	},
+	"S18VE":{
+                "Patient1_Newborn":{
+			"lastName":"HepatitisAP1",
+			"firstName":"1",
+			"nameFullFormatted":"HepatitisAP1,1",
+			"newLastName":"oldHepatitisAP1",
+			"dob":"Today",
+			"sex":"Male"
+		},
+		"Patient2_Overdue":{
+			"lastName":"HepAP2",
+			"firstName":"2",
+			"nameFullFormatted":"HepAP2,2",
+			"newLastName":"oldHepAP2",
+			"dob":"Today - 12 years",
+			"sex":"Male"
+		},
+		"Patient3_Aged_Out":{
+			"lastName":"H3",
+			"firstName":"3",
+			"nameFullFormatted":"H3,3",
+			"newLastName":"oldH3",
+			"dob":"Today - 19 years - 1 month",
+			"sex":"Male"
+		},
+	"vaccineName":"Hepatitis A",
+	"user":"Maintenance,Health",
+	"source":"Device",
+	"eventSet":"hepatitis A adult vaccine",
+	"product1":"hepatitis A-hepatitis B vaccine",
+	"vis1":"Hepatitis A (English)",
+	"unchartedReason":"Test",
+	"index":"1",
+	"notGivenType":"Refused",
+    "permNotGivenAction":"Cancel series and stop forecasting",
+    "notGivenReason":"Patient Refuses",
+	"notGivenComment":"Refused Series"
+	},
+	"S18DB":{
+                "Patient1_Newborn":{
+			"lastName":"HepatitisAP1",
+			"firstName":"1",
+			"nameFullFormatted":"HepatitisAP1,1",
+			"newLastName":"oldHepatitisAP1",
+			"dob":"Today",
+			"sex":"Male"
+		},
+		"Patient2_Overdue":{
+			"lastName":"HepAP2",
+			"firstName":"2",
+			"nameFullFormatted":"HepAP2,2",
+			"newLastName":"oldHepAP2",
+			"dob":"Today - 12 years",
+			"sex":"Male"
+		},
+		"Patient3_Aged_Out":{
+			"lastName":"H3",
+			"firstName":"3",
+			"nameFullFormatted":"H3,3",
+			"newLastName":"oldH3",
+			"dob":"Today - 19 years - 1 month",
+			"sex":"Male"
+		},
+	"vaccineName":"Hepatitis A",
+	"user":"Maintenance,Health",
+	"source":"Device",
+	"eventSet":"hepatitis A adult vaccine",
+	"product1":"hepatitis A-hepatitis B vaccine",
+	"vis1":"Hepatitis A (English)",
+	"unchartedReason":"Test",
+	"index":"1",
+	"notGivenType":"Refused",
+    "permNotGivenAction":"Cancel series and stop forecasting",
+    "notGivenReason":"Patient Refuses",
+	"notGivenComment":"Refused Series"
+	},
+	"S18DC":{
+                "Patient1_Newborn":{
+			"lastName":"HepatitisAP1",
+			"firstName":"1",
+			"nameFullFormatted":"HepatitisAP1,1",
+			"newLastName":"oldHepatitisAP1",
+			"dob":"Today",
+			"sex":"Male"
+		},
+		"Patient2_Overdue":{
+			"lastName":"HepAP2",
+			"firstName":"2",
+			"nameFullFormatted":"HepAP2,2",
+			"newLastName":"oldHepAP2",
+			"dob":"Today - 12 years",
+			"sex":"Male"
+		},
+		"Patient3_Aged_Out":{
+			"lastName":"H3",
+			"firstName":"3",
+			"nameFullFormatted":"H3,3",
+			"newLastName":"oldH3",
+			"dob":"Today - 19 years - 1 month",
+			"sex":"Male"
+		},
+	"vaccineName":"Hepatitis A",
+	"user":"Maintenance,Health",
+	"source":"Device",
+	"eventSet":"hepatitis A adult vaccine",
+	"product1":"hepatitis A-hepatitis B vaccine",
+	"vis1":"Hepatitis A (English)",
+	"unchartedReason":"Test",
+	"index":"1",
+	"notGivenType":"Refused",
+    "permNotGivenAction":"Cancel series and stop forecasting",
+    "notGivenReason":"Patient Refuses",
+	"notGivenComment":"Refused Series"
+	},
+	"INTGM":{
+                "Patient1_Newborn":{
+			"lastName":"HepatitisAP1",
+			"firstName":"1",
+			"nameFullFormatted":"HepatitisAP1,1",
+			"newLastName":"oldHepatitisAP1",
+			"dob":"Today",
+			"sex":"Male"
+		},
+		"Patient2_Overdue":{
+			"lastName":"HepAP2",
+			"firstName":"2",
+			"nameFullFormatted":"HepAP2,2",
+			"newLastName":"oldHepAP2",
+			"dob":"Today - 12 years",
+			"sex":"Male"
+		},
+		"Patient3_Aged_Out":{
+			"lastName":"H3",
+			"firstName":"3",
+			"nameFullFormatted":"H3,3",
+			"newLastName":"oldH3",
+			"dob":"Today - 19 years - 1 month",
+			"sex":"Male"
+		},
+	"vaccineName":"Hepatitis A",
+	"user":"Maintenance,Health",
+	"source":"Device",
+	"eventSet":"hepatitis A adult vaccine",
+	"product1":"hepatitis A-hepatitis B vaccine",
+	"vis1":"Hepatitis A (English)",
+	"unchartedReason":"Test",
+	"index":"1",
+	"notGivenType":"Refused",
+    "permNotGivenAction":"Cancel series and stop forecasting",
+    "notGivenReason":"Patient Refuses",
+	"notGivenComment":"Refused Series"
+	},
+	"ENG18":{
+               "Patient1_Newborn":{
+			"lastName":"HepatitisAP1",
+			"firstName":"1",
+			"nameFullFormatted":"HepatitisAP1,1",
+			"newLastName":"oldHepatitisAP1",
+			"dob":"Today",
+			"sex":"Male"
+		},
+		"Patient2_Overdue":{
+			"lastName":"HepAP2",
+			"firstName":"2",
+			"nameFullFormatted":"HepAP2,2",
+			"newLastName":"oldHepAP2",
+			"dob":"Today - 12 years",
+			"sex":"Male"
+		},
+		"Patient3_Aged_Out":{
+			"lastName":"H3",
+			"firstName":"3",
+			"nameFullFormatted":"H3,3",
+			"newLastName":"oldH3",
+			"dob":"Today - 19 years - 1 month",
+			"sex":"Male"
+		},
+	"vaccineName":"Hepatitis A",
+	"user":"Maintenance,Health",
+	"source":"Device",
+	"eventSet":"hepatitis A adult vaccine",
+	"product1":"hepatitis A-hepatitis B vaccine",
+	"vis1":"Hepatitis A (English)",
+	"unchartedReason":"Test",
+	"index":"1",
+	"notGivenType":"Refused",
+    "permNotGivenAction":"Cancel series and stop forecasting",
+    "notGivenReason":"Patient Refuses",
+	"notGivenComment":"Refused Series"
+	},
+	"dateFormat":"Date"
+}

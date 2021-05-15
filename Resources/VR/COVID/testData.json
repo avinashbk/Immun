@@ -1,0 +1,45 @@
+{
+   "DEFAULT":{
+      "Patient1":{
+         "lastName":"CovidPfizer",
+         "firstName":"2Dose",
+         "nameFullFormatted":"CovidPfizer,2Dose",
+         "newLastName":"oldHEPBMIN1",
+         "dob":"Today - 16 years",
+         "sex":"Male"
+      },
+      "Patient2":{
+         "lastName":"CovidModerna",
+         "firstName":"Pat2",
+         "nameFullFormatted":"CovidModerna,Pat2",
+         "newLastName":"oldHEPBMIN2",
+         "dob":"Today - 18 years",
+         "sex":"Male"
+      },
+      "Patient3":{
+         "lastName":"CovidmRNA",
+         "firstName":"Pat2",
+         "nameFullFormatted":"CovidmRNA,Pat2",
+         "newLastName":"oldHEPBMIN2",
+         "dob":"Today - 18 years",
+         "sex":"Male"
+      },
+      "Patient4":{
+         "lastName":"CovidJanssen",
+         "firstName":"Pat",
+         "nameFullFormatted":"CovidJanssen,Pat",
+         "newLastName":"oldCovidJanssen2",
+         "dob":"Today - 18 years",
+         "sex":"Male"
+      },
+      "User":"Maintenance, Health",
+      "vaccineName":"COVID-19",
+      "Product1":"Covid 19 Pfizer",
+      "Product2":"Covid 19 MODERNA",
+      "Product3":"Covid 19 Unspecified",
+      "Product4":"Covid 19 Janssen",
+      "Source":"Device",
+      "unchartReason":"test"
+   },
+   "dateFormat":"Date"
+}

@@ -1,0 +1,106 @@
+{
+	"SOLM64":
+	{
+		"Patient1":
+		{
+			"lastName":"adminDatePrecn",
+			"firstName":"Pat1",
+			"nameFullFormatted":"adminDatePrecn,Pat1",	
+			"newLastName":"oldadminDatePrecnP1",
+			"dob":"Today - 17 months",
+			"sex":"Male"	
+		},
+		"Patient2":
+		{
+			"lastName":"adminDatePrecn",
+			"firstName":"Pat2",
+			"nameFullFormatted":"adminDatePrecn,Pat2",	
+			"newLastName":"oldadminDatePrecnP2",
+			"dob":"Today - 10 years",
+			"sex":"Male"		
+		},
+		"Patient3":
+		{
+			"lastName":"adminDatePrecn",
+			"firstName":"Pat3",
+			"nameFullFormatted":"adminDatePrecn,Pat3",
+			"newLastName":"oldadminDatePrecnP3",
+			"dob":"Today - 3 years",
+			"sex":"Male"
+		},
+	"User":"Maintenance, Health",
+	"vaccineName11":"Hepatitis A",
+	"vaccineName1":"Influenza",
+	"vaccineName2":"Cholera",
+	"vaccineName3":"Haemophilus Influenzae Type B",
+	"vaccine3AssociateVaccine": "Hepatitis B",
+	"vaccineName4":"Rotavirus",
+	"dateFormat":"Date",
+	"product11":"hepatitis A adult vaccine",
+	"product1":"influenza virus vaccine, live",
+	"product2":"cholera vaccine",
+	"product3":"Comvax",
+	"product4":"rotavirus vaccine",
+	"product33":"haemophilus b-hepatitis B vaccine",
+	"Source":"Device",
+	"tempNotGivenType":"Contraindicated",
+    "tempNotGivenAction":"Reschedule Date",
+    "tempNotGivenReason":"Current Fever, Moderate to Severe",
+	"permNotGivenType":"Refused",
+    "permNotGivenAction":"Cancel series and stop forecasting",
+ 	"permNotGivenReason":"Patient Refuses",
+
+	},	 	  
+	"S18VX":
+	{
+		"Patient1":
+		{
+			"lastName":"adminDatePrecn",
+			"firstName":"Pat1",
+			"nameFullFormatted":"adminDatePrecn,Pat1",	
+			"newLastName":"oldadminDatePrecnP1",
+			"dob":"Today - 17 months",
+			"sex":"Male"	
+		},
+		"Patient2":
+		{
+			"lastName":"adminDatePrecn",
+			"firstName":"Pat2",
+			"nameFullFormatted":"adminDatePrecn,Pat2",	
+			"newLastName":"oldadminDatePrecnP2",
+			"dob":"Today - 10 years",
+			"sex":"Male"		
+		},
+		"Patient3":
+		{
+			"lastName":"adminDatePrecn",
+			"firstName":"Pat3",
+			"nameFullFormatted":"adminDatePrecn,Pat3",
+			"newLastName":"oldadminDatePrecnP3",
+			"dob":"Today - 3 years",
+			"sex":"Male"
+		},
+	"User":"Maintenance, Health",
+	"vaccineName11":"Hepatitis A",
+	"vaccineName1":"Influenza",
+	"vaccineName2":"Cholera",
+	"vaccineName3":"Haemophilus Influenzae Type B",
+	"vaccine3AssociateVaccine": "Hepatitis B",
+	"vaccineName4":"Rotavirus",
+	"dateFormat":"Date",
+	"product11":"hepatitis A adult vaccine",
+	"product1":"influenza virus vaccine, inactivated",
+	"product2":"cholera vaccine",
+	"product3":"Comvax",
+	"product4":"rotavirus vaccine",
+	"product33":"haemophilus b-hepatitis B vaccine",
+	"Source":"Device",
+	"tempNotGivenType":"Contraindicated",
+    "tempNotGivenAction":"Reschedule Date",
+    "tempNotGivenReason":"Current Fever, Moderate to Severe",
+	"permNotGivenType":"Refused",
+    "permNotGivenAction":"Cancel series and stop forecasting",
+ 	"permNotGivenReason":"Patient Refuses",
+
+	},	 	  
+}

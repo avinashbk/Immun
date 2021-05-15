@@ -1,0 +1,133 @@
+{
+  "SOLM64":{
+		"Patient1":{
+			"lastName":"Default",
+			"firstName":"eventcode",
+			"nameFullFormatted":"Default,eventcode",
+			"newLastName":"oldDefaultevent",
+			"sex":"Male",
+			"DOB":"Today - 20 years"
+			},
+		"vaccineName1":"Varicella",
+		"vaccineName2":"Cholera",
+		"vaccineName3":"Anthrax",
+		"product1":"varicella virus vaccine",
+		"product2":"cholera vaccine",
+		"product3":"anthrax vaccine adsorbed",
+		"Source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"
+				
+	},
+	"S18VX":{
+ 		"Patient1":{
+			"lastName":"Default",
+			"firstName":"eventcode",
+			"nameFullFormatted":"Default,eventcode",
+			"newLastName":"oldDefaultevent",
+			"sex":"Male",
+			"DOB":"Today - 20 years"
+			},
+		"vaccineName1":"Varicella",
+		"vaccineName2":"Cholera",
+		"vaccineName3":"Anthrax",
+		"product1":"varicella virus vaccine",
+		"product2":"cholera vaccine",
+		"product3":"anthrax vaccine adsorbed",
+		"Source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"
+				
+	},
+	"SOLGM":{
+ 		"Patient1":{
+			"lastName":"Default",
+			"firstName":"eventcode",
+			"nameFullFormatted":"Default,eventcode",
+			"newLastName":"oldDefaultevent",
+			"sex":"Male",
+			"DOB":"Today - 20 years"
+			},
+		"vaccineName1":"Varicella",
+		"vaccineName2":"Cholera",
+		"vaccineName3":"Anthrax",
+		"product1":"varicella virus vaccine",
+		"product2":"cholera vaccine",
+		"product3":"anthrax vaccine adsorbed",
+		"Source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"
+					
+	},
+	"S18VE":{
+ 		"Patient1":{
+			"lastName":"Default",
+			"firstName":"eventcode",
+			"nameFullFormatted":"Default,eventcode",
+			"newLastName":"oldDefaultevent",
+			"sex":"Male",
+			"DOB":"Today - 20 years"
+			},
+		"vaccineName1":"Varicella",
+		"vaccineName2":"Cholera",
+		"vaccineName3":"Anthrax",
+		"product1":"varicella virus vaccine",
+		"product2":"cholera vaccine",
+		"product3":"anthrax vaccine adsorbed",
+		"Source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"
+		
+		},
+
+	"S18VA":{
+ 		"Patient1":{
+			"lastName":"Default",
+			"firstName":"eventcode",
+			"nameFullFormatted":"Default,eventcode",
+			"newLastName":"oldDefaultevent",
+			"sex":"Male",
+			"DOB":"Today - 20 years"
+			},
+		"vaccineName1":"Varicella",
+		"vaccineName2":"Cholera",
+		"vaccineName3":"Anthrax",
+		"product1":"varicella virus vaccine",
+		"product2":"cholera vaccine",
+		"product3":"anthrax vaccine adsorbed",
+		"Source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"
+		
+		},
+
+	"INTGM":{
+ 		"Patient1":{
+			"lastName":"Default",
+			"firstName":"eventcode",
+			"nameFullFormatted":"Default,eventcode",
+			"newLastName":"oldDefaultevent",
+			"sex":"Male",
+			"DOB":"Today - 20 years"
+			},
+		"vaccineName1":"Varicella",
+		"vaccineName2":"Cholera",
+		"vaccineName3":"Anthrax",
+		"product1":"varicella virus vaccine",
+		"product2":"cholera vaccine",
+		"product3":"anthrax vaccine adsorbed",
+		"Source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"
+		
+		},
+
+		"dateFormat":"Date"
+
+}

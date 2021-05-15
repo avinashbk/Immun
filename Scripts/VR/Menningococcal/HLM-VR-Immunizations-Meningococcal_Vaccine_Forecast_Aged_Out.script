@@ -1,0 +1,284 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST SCRIPT LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestScript&id=108814
+
+*)
+params domain
+
+log "Test running in domain" && domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set encounterorg to setup.encounterorg
+set relationship to setup.relationship
+set conversation to setup.conversation
+set encounterType to setup.encounterType
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewpoint to common.viewpoint
+set meningococcalVaccineStrikeThroughImg to common.meningococcalVaccineStrikeThroughImg
+set didNotCountImage to common.didNotCountImage
+set unchartIconImage to common.unchartIconImage
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set agedOut to textStrings.agedOut
+set viewForecast to textStrings.viewForecast
+set complete to textStrings.complete
+set uncharted to textStrings.uncharted
+set printRecord to textStrings.printRecord
+set administered to textStrings.administered
+
+set testData to JSONValue(file resourcePath("VR/Meningococcal_Vaccine_Forecast/testData.json")).(value of domain)
+set lastName to testData.Patient_Aged_Out.lastName
+set firstName to testData.Patient_Aged_Out.firstName
+set patientName to testData.Patient_Aged_Out.nameFullFormatted
+set newLastName to testData.Patient_Aged_Out.newLastName
+set sex to testData.Patient_Aged_Out.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Aged_Out.dob))
+set vaccineName to testData.vaccineName
+set product1 to testData.eventSet1
+set product2 to testData.eventSet2
+set Source to testData.Source
+
+set format to "%b %d, %Y"
+
+
+Try
+	---------------------------------------------------------------------------------------------------------------
+	# PATIENT SETUP
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	Run "Util".closeApplication 2
+	
+	----------------------------------------------------------------------------------------------------------------
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/Meningococcal/HLM-VR-Immunizations-Meningococcal_Vaccine_Forecast_Aged_Out"
+		
+		Log "Util".stepNumber & "ACTION: Ensure Patient 4's chart opens within Immunization workflow MPage and navigate to Immunization section."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		Log "VERIFICATION: Ensure the Immunization Workflow MPage displays." 
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName
+		
+		Log "VERIFICATION: Verify Meningococcal displays under History section with status 'Aged Out'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, agedOut
+		
+		Log "VERIFICATION: Verify that Next Dose Recommended column displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "--"
+		CaptureScreen(Name: "Step" & Global stepNumber & "Workflow Mpage Validation-Patient4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link within the MPage.."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Meningococcal is displayed under CDC schedule column with a strikethrough line on the Vaccine group name with 'Aged Out' below it."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(meningococcalVaccineStrikeThroughImg)
+		run "Immunizations/Util/Validation".verifyText agedOut, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure no doses are displayed within the timeline for Meningococcal Vaccine."
+		//Validating dose does not display in Today's column
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(meningococcalVaccineStrikeThroughImg)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Dose", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set endDateHeader to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Year": 50, "month": 1)), false, false)
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(meningococcalVaccineStrikeThroughImg)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, -15, -15, 200, 900)
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Dose", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name: "Step" & Global stepNumber & "-Forecaster Validation Patient4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart Dose 1 at 19 Years +1 day from DOB, fill in all required fields, and click on the Document button."
+		set dose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("Year": 19, "Day": 1))
+		run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName, "Date", dose1AdminDate, Source, "Submit" 
+		
+		Log "VERIFICATION: Ensure the charted Dose 1 displays the 'Did Not Count' icon along with administration date at the bottom within the timeline."
+		Set startDateHeader to dose1AdminDate
+		Set endDateHeader to dose1AdminDate
+		Set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(meningococcalVaccineStrikeThroughImg)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText product1 & return & dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name: "Step" & Global stepNumber & "-Dose 1 Didnotcount Validation Patient4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on Immunization Workflow MPage and Unchart Dose 1 for Meningococcal Vaccine and chart Dose 1 with administration date of 11 years from DOB and navigate to Immunization Forecaster."
+		run "Immunizations/Common/Actions".clickMPagesView viewPoint
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkflowMPage/SidePanel/Task".unchart dose1AdminDate, "1", "test"
+		set dose1NewAdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("Year": 11))
+		run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName, "Date", dose1NewAdminDate, Source, "Submit" 
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Meningococcal is displayed in Status column as 'Aged Out'."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(meningococcalVaccineStrikeThroughImg)
+		run "Immunizations/Util/Validation".verifyText agedOut, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure Dose 1 displays charted in the time line with Product name on the top and Dose number and administration date below it."
+		Set startDateHeader to dose1NewAdminDate
+		Set endDateHeader to dose1NewAdminDate
+		Set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(meningococcalVaccineStrikeThroughImg)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-140", "-30", "50", "100")
+		run "Immunizations/Util/Validation".verifyText product1 & return & "Dose 1" && "-" && dose1NewAdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		set dose1NewAdminAge to "Immunizations/Util/Date".ageCalculator(dob, dose1NewAdminDate, false, false) 
+		Set startDateHeader to dose1NewAdminAge
+		Set endDateHeader to dose1NewAdminAge
+		Set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(meningococcalVaccineStrikeThroughImg)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-140", "-30", "50", "100")
+		run "Immunizations/Util/Validation".verifyText product1 & return & "Dose 1" && "-" && dose1NewAdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name: "Step" & Global stepNumber & "-Dose 1 Charted Validation Patient4")
+		--------------------------------------------------------------------------------------------------------------- 
+		
+		Log "Util".stepNumber & "ACTION: Chart an administration at 16 years from DOB using Meningococcal Polysaccharide vaccine as a product."
+		set dose2AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("Year": 16))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, "Date", dose2AdminDate, Source, product2, "Submit"
+		
+		Log "VERIFICATION: Ensure charted Dose 2 is displayed within the administered dose column and event set has the 'Did Not Count' icon displaying and administration date below (i.e. 16 years from dob)."
+		Set startDateHeader to dose2AdminDate
+		Set endDateHeader to dose2AdminDate
+		Set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(meningococcalVaccineStrikeThroughImg)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-160", "-30", "100", "100")
+		run "Immunizations/Util/Validation".verifyText product2 & return & dose2AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure charted Dose 2 is displayed within the administered dose column and event set has the 'Did Not Count' icon displaying with age 16years from DOB."
+		set dose2AdminAge to "Immunizations/Util/Date".ageCalculator(dob, dose2AdminDate, false, false)
+		Set startDateHeader to dose2AdminAge
+		Set endDateHeader to dose2AdminAge
+		Set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(meningococcalVaccineStrikeThroughImg)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-160", "-30", "100", "100")
+		run "Immunizations/Util/Validation".verifyText product2 & return & dose2AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure Vaccine group has status aged out."
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(meningococcalVaccineStrikeThroughImg)
+		run "Immunizations/Util/Validation".verifyText agedOut, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name: "Step" & Global stepNumber & "-Dose 2 Didnotcount Validation Patient4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Navigate to the Immunizations MPage and unchart the administration of Meningococcal Polysaccharide vaccine that was charted at 16 years from DOB. chart an administration at 16 years from DOB using Meningococcal Conjugate vaccine as a product."
+		run "Immunizations/Common/Actions".clickMPagesView viewPoint
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkflowMPage/SidePanel/Task".unchart dose1AdminDate, "1", "test"
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, "Date", dose2AdminDate, Source, product1, "Submit"
+		
+		Log "VERIFICATION: Verify Meningococcal Vaccine displays in History section."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName
+		
+		Log "VERIFICATION: Ensure the column for Meningococcal displays as complete."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, complete
+		
+		Log "VERIFICATION: Verify the Administrations displays 2."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2"
+		
+		Log "VERIFICATION: Verify Next Dose Recommended displays '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "--"
+		
+		Log "VERIFICATION: Verify Last Action column displays 'Administered'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administered
+		
+		Log "VERIFICATION: Verify Last Action Date column displays with the last charting event date."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName, uppercase(dose2AdminDate), dose2AdminAge
+		CaptureScreen(Name: "Step" & Global stepNumber & "-MPage Validation Patient4") 
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the Immunization Forecaster link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Dose charted displays in the time line with '2 items documented'. Verify Meningococcal Vaccine under CDC schedule column displays complete under Vaccine name."
+		Set columnSearchrectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName & return & complete, columnSearchRectangle
+		
+		Set startDateHeader to dose2AdminAge
+		Set endDateHeader to dose2AdminAge
+		Set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-140", "-30", "50", "100")
+		run "Immunizations/Util/Validation".verifyText uncharted & return & "2 items documented" , "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage unchartIconImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Set startDateHeader to dose2AdminDate
+		Set endDateHeader to dose2AdminDate
+		Set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, "-140", "-30", "50", "100")
+		run "Immunizations/Util/Validation".verifyText uncharted & return & "2 items documented" , "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage unchartIconImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name: "Step" & Global stepNumber & "-Forecaster Complete Validation Patient4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click outside expanded view and click on 'Print Record'."
+		run "Immunizations/Common/Print/Actions".clickPrintRecord(printRecord)
+		
+		//Meningococcal Dose 1 Date Given Validations
+		Log "VERIFICATION: Meningococcal is displayed within the Vaccine column"
+		run "Immunizations/Util/Validation".verifyText vaccineName, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("true", 1)
+		
+		Log "VERIFICATION: The administration for 11 years from DOB displays in the row for Meningococcal in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText dose1NewAdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true", 1, 1)
+		
+		//Meningococcal Dose 2 Date Given Validations
+		Log "VERIFICATION: The administration for 16 years from DOB displays in the row for Meningococcal in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText dose2AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true", 1, 2)
+		
+		//Meningococcal Product Validations
+		Log "VERIFICATION: The product administered at 16 years from DOB is displayed in the Product column for Meningococcal"
+		run "Immunizations/Util/Validation".verifyText product1, "Immunizations/Common/Print/Helpers".productSearchRectangle("true", 1, 2)	
+		CaptureScreen(Name: "Step" & Global stepNumber & "- Print Report Patient4")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close the print record."
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "Close Patient 4's chart."
+		run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/Meningococcal/HLM-VR-Immunizations-Meningococcal_Vaccine_Forecast_Aged_Out"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+	#################################################################################
+	# PATIENT CLEANUP
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".zeroStateCloseAllApps

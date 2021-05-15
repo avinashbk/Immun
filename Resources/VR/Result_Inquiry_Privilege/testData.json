@@ -1,0 +1,299 @@
+{
+	"SOLM64":{
+		"patient1":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat1",
+			"nameFullFormatted":"ResultInquiry, Pat1",	
+			"newLastName":"OLDResultInquiryP1",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient2":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat2",
+			"nameFullFormatted":"ResultInquiry, Pat2",	
+			"newLastName":"OLDResultInquiryP2",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient3":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat3",
+			"nameFullFormatted":"ResultInquiry, Pat3",	
+			"newLastName":"OLDResultInquiryP3",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient4":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat4",
+			"nameFullFormatted":"ResultInquiry, Pat4",	
+			"newLastName":"OLDResultInquiryP4",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient5":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat5",
+			"nameFullFormatted":"ResultInquiry, Pat5",	
+			"newLastName":"OLDResultInquiryP5",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient6":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat6",
+			"nameFullFormatted":"ResultInquiry, Pat6",	
+			"newLastName":"OLDResultInquiryP6",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient7":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat7",
+			"nameFullFormatted":"ResultInquiry, Pat7",	
+			"newLastName":"OLDResultInquiryP7",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+	"user":"Maintenance, Health",
+	"user1":"SYSTEM, SYSTEM",
+	"vaccineName1":"Hepatitis B",
+	"vaccineName2":"Rotavirus",
+	"product1":"Comvax",
+	"product2":"HepB-CpG",
+	"source":"Device",
+	"relationship2":"HMAUTO1", //relationship1 is located in setup.json
+	"relationship3":"HMAUTO2",
+	"relationship4":"HMAUTO3",
+	"relationship5":"HMAUTO4",
+	"relationship6":"HMAUTO5",
+	"relationship7":"HMAUTO6",	
+	"relationship8":"HMAUTO7",	
+    "username1":"SYSTEM",
+	"password1":"<FA=2;"	
+	},
+	"S18VX":{
+		"patient1":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat1",
+			"nameFullFormatted":"ResultInquiry, Pat1",	
+			"newLastName":"OLDResultInquiryP1",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient2":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat2",
+			"nameFullFormatted":"ResultInquiry, Pat2",	
+			"newLastName":"OLDResultInquiryP2",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient3":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat3",
+			"nameFullFormatted":"ResultInquiry, Pat3",	
+			"newLastName":"OLDResultInquiryP3",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient4":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat4",
+			"nameFullFormatted":"ResultInquiry, Pat4",	
+			"newLastName":"OLDResultInquiryP4",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient5":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat5",
+			"nameFullFormatted":"ResultInquiry, Pat5",	
+			"newLastName":"OLDResultInquiryP5",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient6":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat6",
+			"nameFullFormatted":"ResultInquiry, Pat6",	
+			"newLastName":"OLDResultInquiryP6",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient7":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat7",
+			"nameFullFormatted":"ResultInquiry, Pat7",	
+			"newLastName":"OLDResultInquiryP7",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+	"user":"Maintenance, Health",
+	"user1":"SYSTEM, SYSTEM",
+	"vaccineName1":"Hepatitis B",
+	"vaccineName2":"Rotavirus",
+	"product1":"Comvax",
+	"product2":"HepB-CpG",
+	"source":"Device",
+	"relationship2":"HMAUTO1", //relationship1 is located in setup.json
+	"relationship3":"HMAUTO2",
+	"relationship4":"HMAUTO3",
+	"relationship5":"HMAUTO4",
+	"relationship6":"HMAUTO5",
+	"relationship7":"HMAUTO6",	
+	"relationship8":"HMAUTO7",	
+    "username1":"SYSTEM",
+	"password1":"<FA=2;"	
+	},
+	"INTGM":{
+		"patient1":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat1",
+			"nameFullFormatted":"ResultInquiry, Pat1",	
+			"newLastName":"OLDResultInquiryP1",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient2":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat2",
+			"nameFullFormatted":"ResultInquiry, Pat2",	
+			"newLastName":"OLDResultInquiryP2",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient3":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat3",
+			"nameFullFormatted":"ResultInquiry, Pat3",	
+			"newLastName":"OLDResultInquiryP3",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient4":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat4",
+			"nameFullFormatted":"ResultInquiry, Pat4",	
+			"newLastName":"OLDResultInquiryP4",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient5":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat5",
+			"nameFullFormatted":"ResultInquiry, Pat5",	
+			"newLastName":"OLDResultInquiryP5",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient6":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat6",
+			"nameFullFormatted":"ResultInquiry, Pat6",	
+			"newLastName":"OLDResultInquiryP6",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient7":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat7",
+			"nameFullFormatted":"ResultInquiry, Pat7",	
+			"newLastName":"OLDResultInquiryP7",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+	"user":"Maintenance, Health",
+	"user1":"SYSTEM, SYSTEM",
+	"vaccineName1":"Hepatitis B",
+	"vaccineName2":"Rotavirus",
+	"product1":"Comvax",
+	"product2":"HepB-CpG",
+	"source":"Device",
+	"relationship2":"HMAUTO1", //relationship1 is located in setup.json
+	"relationship3":"HMAUTO2",
+	"relationship4":"HMAUTO3",
+	"relationship5":"HMAUTO4",
+	"relationship6":"HMAUTO5",
+	"relationship7":"HMAUTO6",	
+	"relationship8":"HMAUTO7",	
+    "username1":"SYSTEM",
+	"password1":"<FA=2;"
+	},
+	"ENG18":{
+		"patient1":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat1",
+			"nameFullFormatted":"ResultInquiry, Pat1",	
+			"newLastName":"OLDResultInquiryP1",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient2":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat2",
+			"nameFullFormatted":"ResultInquiry, Pat2",	
+			"newLastName":"OLDResultInquiryP2",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient3":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat3",
+			"nameFullFormatted":"ResultInquiry, Pat3",	
+			"newLastName":"OLDResultInquiryP3",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient4":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat4",
+			"nameFullFormatted":"ResultInquiry, Pat4",	
+			"newLastName":"OLDResultInquiryP4",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient5":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat5",
+			"nameFullFormatted":"ResultInquiry, Pat5",	
+			"newLastName":"OLDResultInquiryP5",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient6":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat6",
+			"nameFullFormatted":"ResultInquiry, Pat6",	
+			"newLastName":"OLDResultInquiryP6",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+		"patient7":{
+			"lastName":"ResultInquiry",
+			"firstName":"Pat7",
+			"nameFullFormatted":"ResultInquiry, Pat7",	
+			"newLastName":"OLDResultInquiryP7",
+			"dob":"Today - 16 months",
+			"sex":"Male"	
+		},
+	"user":"Maintenance, Health",
+	"user1":"SYSTEM, SYSTEM",
+	"vaccineName1":"Hepatitis B",
+	"vaccineName2":"Rotavirus",
+	"product1":"Comvax",
+	"product2":"HepB-CpG",
+	"source":"Device",
+	"relationship2":"HMAUTO1", //relationship1 is located in setup.json
+	"relationship3":"HMAUTO2",
+	"relationship4":"HMAUTO3",
+	"relationship5":"HMAUTO4",
+	"relationship6":"HMAUTO5",
+	"relationship7":"HMAUTO6",	
+	"relationship8":"HMAUTO7",	
+    "username1":"SYSTEM",
+	"password1":"<FA=2;"	
+	},
+	"dateFormat":"Date"
+}

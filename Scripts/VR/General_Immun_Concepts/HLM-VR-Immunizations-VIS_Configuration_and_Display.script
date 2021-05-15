@@ -1,0 +1,473 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+------------------------------------------------RQM TEST CASE LINK--------------------------------------------------------
+
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=62064
+
+---------------------------------------Assigning Test Data to the Variables---------------------------------------
+params domain
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set conversation to setup.conversation
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set format to "%b %d, %Y"
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewpoint to common.viewpoint
+set modifyButtonEnabledImage to common.modifyButtonEnabledImage
+set unchartedButtonEnabledImage to common.unchartedButtonEnabledImage
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set immunizationForecast to textStrings.immunizationForecast
+set noVaccineInformation to textStrings.noVaccineInformation
+set overdue to textStrings.overdue
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set otherVaccines to fieldLabels.otherVaccines
+set visPublished to fieldLabels.visPublished
+set visPublishedWithColon to fieldLabels.visPublishedWithColon
+set vis to fieldLabels.vis
+set visWithColon to fieldLabels.visWithColon
+set otherVaccines to fieldLabels.otherVaccines
+set expirationDateFieldWithColon to fieldLabels.expirationDateField
+set expirationDateField to fieldLabels.expirationDateField1
+
+set testData to JSONValue(file ResourcePath("VR/VIS_Configuration_and_Display/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file ResourcePath("VR/VIS_Configuration_and_Display/testData.json")).(value of domain)
+set lastName to testData.lastName
+set firstName to testData.firstName
+set patientName to testData.nameFullFormated
+set dob to formattedTime(format, value(testData.dob)) 
+set sex to testData.sex
+set newLastName to testData.newLastName
+set source1 to testdata.source1
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set vaccineName3 to testData.vaccineName3
+set vaccineName4 to testData.vaccineName4
+set source3 to testdata.source3
+set vis1 to testData.vis1
+set vis1PublishedDate to testData.vis1PublishedDate
+set beginEffectiveDate1 to testData.BeginEffectiveDate1
+set vis2 to testData.vis2
+
+set global cleanup to "Immunizations/setup".setCleanup()
+
+try
+	------------------------------------------------------Patient setup---------------------------------------------------------
+	Log "PATIENT CREATION: Open PmLaunch and Create 5 Years old patient(s) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	----------------------------------------------------------------------------------------------------------------------------------
+	
+	try
+		------------------------------------------------------Test Steps---------------------------------------------------------
+		BeginTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-VIS_Configuration_and_Display"
+		
+		Log "Util".stepNumber &"ACTION: Open Powerchart.exe with User1, search for and open the chart for Patient1, and open the Immunizations Workflow Mpage, select the View Forecast link."
+		run "Immunizations/setup".loginAndLoadComponentViaMenu Username, Password, Domain, patientName, Menu, subMenu,global Cleanup, relationship
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION:Ensure the Immunization Forecaster loads without error."
+		run "Immunizations/Util/Validation".verifyText immunizationForecast, "Immunizations/Common/Helpers".tabListSearchRectangle
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION:Click on Document History button. Select vaccineName1 (e.g.Cholera ) and fill in all required fields and click the Submit button."
+		set dose1V1AdminDate to "Immunizations/Util/Date".adjustDate(dob,"%m/%d/%Y", ("year":1,"Month":-3,"Day":-25))
+		run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, dateFormat, dose1V1AdminDate, source1, "Submit"
+		
+		Log "VERIFICATION: Ensure vaccineName1 is charted"
+		Waitfor 30, text:immunizationForecast
+		Click Text:otherVaccines,SearchRectangle:"Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		ScrollWheelDown 2
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/Forecaster-Common/Helpers".otherVaccinesColumnSearchRectangle(otherVaccines)
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Select Vaccine1 (e.g.Cholera) from the first column."
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName1
+		
+		Log "VERIFICATION: Verify a message displays 'There is no associated Vaccine Information Statement to be displayed. Contact your help desk' with the appropriate icon."
+		set rightPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneSearchRectangle
+		run "Immunizations/Util/Validation".verifyText noVaccineInformation, rightPaneSearchRectangle
+		CaptureScreen(Name:"Step "&Global stepNumber&"-No associated VIS for vaccineName1")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click outside expanded view and select Vaccine2 (e.g. Polio) from the first column."
+		set topPaneRectangle to "Immunizations/Common/Helpers".tabListSearchrectangle
+		click text:immunizationForecast, searchrectangle:topPaneRectangle //Clickling outside expanded view
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName2
+		
+		Log "VERIFICATION: Verify a message displays with the appropriate icon 'There is no associated Vaccine Information Statement to be displayed. Contact your help desk.''"
+		set rightPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneSearchRectangle
+		run "Immunizations/Util/Validation".verifyText noVaccineInformation, rightPaneSearchRectangle
+		CaptureScreen(Name:"Step "&Global stepNumber&"-No associated VIS for vaccineName2")
+		----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION:  Click outside expanded view and Select Vaccine3 (e.g. Hepatitis A) from the first column."
+		click text:immunizationForecast, searchrectangle:topPaneRectangle //Clickling outside expanded view
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName3
+		
+		Log "VERIFICATION: Verify VIS1 displays."
+		run "Immunizations/Util/Validation".verifyText vis1, "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneSearchRectangle
+		CaptureScreen(Name:"Step "&Global stepNumber&"-VIS1 displays")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click outside expanded view and select VaccineName4 (e.g. Meningococcal) from the first column."
+		click text:immunizationForecast, searchrectangle:topPaneRectangle //Clickling outside expanded view
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName4
+		
+		Log "VERIFICATION: Verify VIS2 displays with only 1 entry."
+		run "Immunizations/Util/Validation".verifyText vis2, "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneSearchRectangle
+		captureScreen(Name:"Step "&Global stepNumber&"-VIS2 displays with only 1 entry")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Navigate to Immunization workflow Mpage."
+		run "Immunizations/Common/Actions".clickMPagesView viewpoint
+		
+		Log "VERIFICATION: Ensure Immunization workflow opens"
+		run "Immunizations/Util/Validation".verifyText viewForecast, "Immunizations/Common/Helpers".tabListSearchRectangle
+		captureScreen(Name:"Step "&Global stepNumber&"-Immunization workflow opens")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Chart a historical administration without selecting VIS Statement for VaccineName 3."
+		set dose1V3AdminDate to "Immunizations/Util/Date".adjustDate(dose1V1AdminDate,"%m/%d/%Y", ("Month":2,"day":12))
+		run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName3, dateFormat, dose1V3AdminDate, source3, "Submit"
+		
+		Log "VERIFICATION: Ensure dose is charted and user returns to Immunization Workflow MPage."
+		Waitfor 15, "Immunizations/WorkflowMPage/Table/Overdue"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName3, "1"
+		captureScreen(Name:"Step "&Global stepNumber&"-Dose is charted")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on VaccineName 3"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName3
+		
+		Log "VERIFICATION: Ensure the side panel opens to the right with the Unchart and Modify buttons enabled, and the Vaccine group name below."
+		//Side panel opens
+		run "Immunizations/Util/Validation".verifyimage "Immunizations/WorkflowMPage/SidePanel", "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+		//Unchart button is enabled
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyUnchartButtonEnabled vaccineName3, "Immunizations/WorkflowMPage/SidePanel/Button_UnchartEnabled"
+		//Modify button is enabled
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyModifyButtonEnabled vaccineName3, "Immunizations/WorkflowMPage/SidePanel/Button_ModifyEnabled"
+		//Vaccine group name is displayed
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyvaccineNameGroup vaccineName3
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Side panel buttons enabled") 
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on modify button"
+		set sidePanel to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle
+		Click (Text:"Modify",searchRectangle:sidePanel)
+		
+		Log "VERIFICATION: Ensure charted details displays correctly. Verify the VIS statement and VIS Published Date is not selected. Verify the Expiration Date is not selected."
+		set the defaultTextPlatform.OCRStyles.Default.ignoreSpaces to True
+		//Validate administration date 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, "Administration Date", sidePanel, dose1V3AdminDate
+		//Validate Source
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, "Source", sidePanel, source3
+		//Validate VIS statement is not selected
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyEmptyField vaccineName3,vis
+		//Validate VIS published date is not selected
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, visPublished, sidePanel, "mm/dd/yyy"
+		//Validate Expiration Date is not selected
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, expirationDateField, sidePanel, "mm/dd/yyy"
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Charted details displays")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Select VIS statement"
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".modifySidePanelFields vis, vis1
+		
+		Log "VERIFICATION: Ensure VIS statement is selected and VIS published date is populated and is same as the BEGIN_EFFECTIVE_DT_TM value identified in the prerequisites"
+		//VIS statement is selected
+		TypeText shiftKey&tabKey
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, vis, sidePanel, vis1
+		//VIS published date is same as the BEGIN_EFFECTIVE_DT_TM value
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, visPublished, sidePanel, beginEffectiveDate1
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Published date is correct")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Modify VIS published date to a day prior to existing date, Modify Expiration date to a future date and click on save button."
+		set the timeformat's date to "%m/%d/%y"
+		set modifiedVIS1 to (vis1PublishedDate - 3 day)
+		DoubleClick imageLocation(Text:visPublished, searchrectangle:("Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle))+(8,30)
+		Typetext day of modifiedVIS1, tabKey, tabKey, tabKey
+		set modifiedExpirationDate to (today's date + 3 days)
+		DoubleClick imageLocation(Text:expirationDateField, searchrectangle:("Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle))+(-30,30)
+		typeText month of modifiedExpirationDate, tabKey
+		typeText day of modifiedExpirationDate, tabKey
+		typeText year of modifiedExpirationDate, tabKey
+		
+		Log "VERIFICATION: Ensure VIS Published Date and Expiration Date are modified successfully"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, visPublished, sidePanel, modifiedVIS1
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, expirationDateField, sidePanel, modifiedExpirationDate
+		run "Immunizations/WorkflowMPage/SidePanel/Actions".clickSave
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Published date modifed")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on the Details which is below the product field within the side panel."
+		Waitfor 15, "Immunizations/WorkflowMPage/Table/Button/PlusSign"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName3
+		run "Immunizations/WorkflowMPage/SidePanel/Actions".clickDetails
+		
+		Log "VERIFICATION: Verify the VIS Statement, VIS Published Date and Expiration Date field display with modified values."
+		//VIS Statement field display the modified value
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, vis, sidePanel, vis1
+		//VIS Published Date field display the modified value
+		set modifiedVIS1 to formattedTime(format, modifiedVIS1) 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, visPublished, sidePanel, modifiedVIS1
+		set modifiedExpirationDate to formattedTime(format, modifiedExpirationDate)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, expirationDateField, sidePanel, modifiedExpirationDate
+		CaptureScreen(Name:"Step "&Global stepNumber&"-VIS values displays")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on close (X) button"
+		set rectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".closeSidePanel rectangle, vaccineName3
+		
+		Log "VERIFICATION: Ensure side panel closes without any error."
+		set topPaneRectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyimageNotVisible "Immunizations/WorkflowMPage/SidePanel", topPaneRectangle
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Side panel closes")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on View Forecaster and Click on administered dose for Vaccine 3 within the timeline and review modified administration."
+		run "Immunizations/Common/Actions".temporaryRefreshClick
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		//Waitfor 25,"Immunizations/Forecast-List"
+		run "Immunizations/Util/Validation".verifyText immunizationForecast, "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName3
+		Click text: "0", validWords:"*", SearchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		
+		Log "VERIFICATION: Verify modified value input displays for VIS Statement, VIS Published Date and Expiration Date display correctly."
+		//VIS Statement value displays correctly
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField visWithColon, vis1
+		// VIS Publish Date displays correctly
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField visPublishedWithColon, modifiedVIS1
+		// Expiration Date displays correctly
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField expirationDateFieldWithColon, modifiedExpirationDate
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Modified VIS displayed")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click outside the expand view"
+		click text:immunizationForecast, searchrectangle:topPaneRectangle //Clickling outside expanded view
+		waitfor 10, "Immunizations/Forecaster-Common/Search/BR_FirstColumn"
+		
+		Log "VERIFICATION: Ensure expand view collapse without any error."
+		run "Immunizations/Util/Validation".verifyimageNotVisible "Immunizations/Forecaster-Forecast/ExpandedView/TL_LeftPane", "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click the MPage View tab and click on Vaccine 3 and select the Unchart button."
+		run "Immunizations/Common/Actions".clickMPagesView viewpoint
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName3
+		Click (Text:"Unchart",searchRectangle:"Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle)
+		
+		Log "VERIFICATION: Ensure the Save button is dithered and a Cancel button is enabled at the top, an X in the upper right corner and the Administered Date is displayed in the side panel"
+		//Save button is dithered
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySidePanelButtonStatus "Save", "Disabled"
+		//Cancel button is enabled
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySidePanelButtonStatus "Cancel", "Enabled"
+		//An X in the upper right corner
+		set sidePanelArea to (imageLocation("Immunizations/WorkflowMPage/SidePanel/TL_Window"), imageLocation("Immunizations/WorkflowMPage/SidePanel/TL_Window") + (500,800))
+		run "Immunizations/Util/Validation".verifyimage "Immunizations/WorkflowMPage/SidePanel/BR_Header", sidePanelArea
+		//Administered Date is displayed
+		set dose1V3AdminDate to formattedTime(format, dose1V3AdminDate)
+		run "Immunizations/Util/Validation".verifyText dose1V3AdminDate, sidePanelArea
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Admin date displayed")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Type something in the *Reason for Uncharting field."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle 
+		Click imageLocation(Text:"Reason for Uncharting",searchRectangle:sidePanelRectangle)+(0,30)
+		TypeText "Not applicable"
+		
+		Log "VERIFICATION: Ensure the Save button is enabled"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifySidePanelButtonStatus "Save", "Enabled"
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Save button enabled")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Select save button"
+		run "Immunizations/WorkflowMPage/SidePanel/Actions".clickSave
+		
+		Log "VERIFICATION: Verify the modified administration has been uncharted. Verify Vaccine 3 displays with original values for Status. Ensure the Last Action and Last Action Date columns display with --"
+		Waitfor 20,"Immunizations/WorkflowMPage/Table/Overdue"
+		//Verify the modified administration has been uncharted.
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName3, "0"
+		//Verify Vaccine 3 displays with original values for Status
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName3, overdue
+		//Ensure the Last Action and Last Action Date columns display with --"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName3, "0"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName3, "0"
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Administration uncharted")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on View Forecast"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster view opens without any error."
+		run "Immunizations/Util/Validation".verifyText immunizationForecast, "Immunizations/Common/Helpers".tabListSearchRectangle
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on Document history button select Vaccine 3 from the selected Immunization list, click on select button. Enter Administration Date and select the Source"
+		run "Immunizations/Common/DocumentHistory/Actions".openDialog
+		run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineName3
+		run "Immunizations/Common/SelectImmunizationsList".clickSelectButton
+		run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineName3, dateFormat, dose1V1AdminDate, source1
+		
+		Log "VERIFICATION: Ensure the Administration date and source is selected"
+		//Verify Source value
+		set searchArea to "Immunizations/Common/DocumentHistory/Helpers".DialogSearchRectangle
+		run "Immunizations/Common/DocumentHistory/Validations".verifyInputValueInHistoricalEntry "Source", source1, searchArea
+		//Verify Administration Date value
+		set the defaultTextPlatform.OCRStyles.Default.ignoreSpaces to True
+		run "Immunizations/Util/Validation".verifyText dose1V1AdminDate, "Immunizations/Common/DocumentHistory/Helpers".DialogSearchRectangle  
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Admin date n source is selected")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on Details and select VIS statement and add Expiration Date as a future date."
+		set searchArea to  "Immunizations/Common/DocumentHistory/Helpers".productSearchRectangle
+		Click(Text:"Details",searchRectangle:searchArea)  //Clicks on Details
+		run "Immunizations/Common/DocumentHistory/Actions".enterDetailsInput vis, vis1
+		click imageLocation(text:expirationDateField, SearchRectangle:"Immunizations/Common/DocumentHistory/Helpers".DialogSearchRectangle)+(-30,23)
+		typeText month of modifiedExpirationDate, tabKey
+		typeText day of modifiedExpirationDate, tabKey
+		typeText year of modifiedExpirationDate, tabKey
+		click imageLocation(text:vis, SearchRectangle:"Immunizations/Common/DocumentHistory/Helpers".DialogSearchRectangle)
+		
+		Log "VERIFICATION: Ensure the VIS published date is populated and is same as the BEGIN_EFFECTIVE_DT_TM value identified in the prerequisites and the Expiration Date as entered before."
+		Put "Immunizations/Common/DocumentHistory/Helpers".DialogSearchRectangle into searchArea
+		run "Immunizations/Common/DocumentHistory/Validations".verifyInputValueInHistoricalEntry visPublished, beginEffectiveDate1, searchArea
+		set modifiedExpirationDate to formattedTime("%m/%d/%y", modifiedExpirationDate)
+		run "Immunizations/Common/DocumentHistory/Validations".verifyInputValueInHistoricalEntry expirationDateField, modifiedExpirationDate, searchArea
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Published date is correct")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on Submit button."
+		run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton "Submit"
+		
+		Log "VERIFICATION: Ensure dose is charted and user returns to Immunization Forecaster"
+		run "Immunizations/Util/Validation".verifyText immunizationForecast, "Immunizations/Common/Helpers".tabListSearchRectangle
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on charted dose within the timeline to open in expand view."
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName3
+		Click text: "0", validWords:"*", SearchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		
+		Log "VERIFICATION: Ensure the expand with opens and VIS Statement, VIS Published Date and Expiration Date displays correctly."
+		//VIS Statement value displays correctly
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField visWithColon, vis1
+		// VIS Publish Date displays correctly
+		set vis1FormatedPublishedDate to formattedTime(format, vis1PublishedDate) 
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField visPublishedWithColon, vis1FormatedPublishedDate
+		// Expiration Date dispalys correctly
+		set expirationDateFormatedDate to formattedTime(format, modifiedExpirationDate)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField expirationDateFieldWithColon, expirationDateFormatedDate
+		captureScreen(Name:"Step "&Global stepNumber&"-VIS values displays")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on Immunization workflow MPage and click on Vaccine 3"
+		run "Immunizations/Common/Actions".clickMPagesView viewpoint 
+		Waitfor 15,"Immunizations/WorkflowMPage/Table/Overdue"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName3
+		
+		Log "VERIFICATION: Ensure the side panel opens to the right with the Unchart and Modify buttons enabled, and the Vaccine group name below."
+		//Side panel opens
+		run "Immunizations/Util/Validation".verifyimage "Immunizations/WorkflowMPage/SidePanel", "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+		//Unchart button is enabled
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyUnchartButtonEnabled vaccineName3, unchartedButtonEnabledImage
+		//Modify button is enabled
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyModifyButtonEnabled vaccineName3, modifyButtonEnabledImage
+		//Vaccine group name is displayed
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyvaccineNameGroup vaccineName3
+		captureScreen(Name:"Step "&Global stepNumber&"-Side panel buttons enabled")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on the Details which is below the product field within the side panel"
+		run "Immunizations/WorkflowMPage/SidePanel/Actions".clickDetails
+		
+		Log "VERIFICATION: Verify the VIS Statement is selected and VIS Published Date and Expiration Date displays correctly"
+		//VIS Statement field display the modified value
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, vis, sidePanel, vis1
+		//VIS Published Date field display the modified value
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, visPublished, sidePanel, vis1FormatedPublishedDate
+		//Expiration Date field display the modified value
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, expirationDateField, sidePanel, expirationDateFormatedDate
+		CaptureScreen(Name:"Step "&Global stepNumber&"-VIS values displays")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on modify button and modify VIS publish day prior to existing date, Modify Expiration date to a future date and click on save button."
+		Click (Text:"Modify",searchRectangle:"Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle)
+		set the timeformat's date to "%m/%d/%y"
+		set modifiedVis1 to (vis1PublishedDate - 3 day)
+		DoubleClick imageLocation(Text:visPublished, searchrectangle:("Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle))+(8,30)
+		Typetext day of modifiedVis1, tabKey, tabKey, tabkey
+		DoubleClick imageLocation(Text:expirationDateField, searchrectangle:("Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle))+(-30,30)
+		typeText month of modifiedExpirationDate, tabKey
+		typeText day of modifiedExpirationDate, tabKey
+		typeText year of modifiedExpirationDate, tabKey
+		Click imageLocation(Text:visPublished, searchrectangle:("Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle))
+		
+		Log "VERIFICATION: Ensure VIS Published Date is modified successfully"
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, visPublished, sidePanel, modifiedVis1
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, expirationDateField, sidePanel, modifiedExpirationDate
+		run "Immunizations/WorkflowMPage/SidePanel/Actions".clickSave
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Publish Date modified")
+		---------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on the Details which is below the product field within the side panel"
+		Waitfor 15, "Immunizations/WorkflowMPage/Table/Button/PlusSign"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName3
+		run "Immunizations/WorkflowMPage/SidePanel/Actions".clickDetails
+		
+		Log "VERIFICATION: Ensure VIS Published Date displays with correct modified date"
+		set modifiedVis1 to formattedTime(format, modifiedVis1) 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, visPublished, sidePanel, modifiedVis1
+		set modifiedExpirationDate to formattedTime(format, modifiedExpirationDate)
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue 1, expirationDateField, sidePanel, modifiedExpirationDate
+		CaptureScreen(Name:"Step "&Global stepNumber&"-Publish Date displays")
+		-----------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Close Application."
+		run "Immunizations/setup".closeApplication Global Cleanup
+		
+		EndTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-VIS_Configuration_and_Display"
+		---------------------------------------------------------------------------------------------------------------
+		
+	catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		CaptureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	end try
+	------------------------------------------------------Patient Cleanup----------------------------------------------
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+catch
+	LogError "Exception encountered" && the exception.reason
+	CaptureScreen"Exception"
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps	

@@ -1,0 +1,357 @@
+{
+	"SOLM64": {
+		"Patient_New_Born": {
+			"lastName": "MMR",
+			"firstName": "Pat1",
+			"nameFullFormatted": "MMR,Pat1",
+			"newLastName": "oldMMRP1",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "MMR",
+			"firstName": "Pat2",
+			"nameFullFormatted": "MMR,Pat2",
+			"newLastName": "oldMMRP2",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Live_Virus": {
+			"lastName": "MMR",
+			"firstName": "Pat3",
+			"nameFullFormatted": "MMR,Pat3",
+			"newLastName": "oldMMRP3",
+			"dob": "Today - 8 years",
+			"sex": "Male"
+		},
+		"Patient_Not_Given": {
+			"lastName": "MMR",
+			"firstName": "Pat4",
+			"nameFullFormatted": "MMR,Pat4",
+			"newLastName": "oldMMRP4",
+			"dob": "Today - 19 years + 4 days",
+			"sex": "Male"
+		},
+		"Patient_Immunity": {
+			"lastName": "MMR",
+			"firstName": "Pat5",
+			"nameFullFormatted": "MMR,Pat5",
+			"newLastName": "oldMMRP5",
+			"dob": "1956-12-31",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Measles, Mumps, Rubella",
+		"vaccineName2": "Measles",
+		"vaccineName3": "Mumps",
+		"vaccineName4": "Rubella",
+		"vaccineName1StrikeThrough": "Immunizations/Forecaster-Common/MMRStrikethrough",
+		"dateFormat": "Date",
+		"Product1": "measles/mumps/rubella virus vaccine",
+		"Product2": "Attenuvax",
+		"Product3": "Mumpsvax",
+		"Product4": "Meruvax II",
+		"Source": "Device",
+		"unchartedReason": "Test",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Patient Refuses",
+		"vis": "Measles, Mumps, Rubella (English)"
+	},
+	"S18VX": {
+		"Patient_New_Born": {
+			"lastName": "MMR",
+			"firstName": "Pat1",
+			"nameFullFormatted": "MMR,Pat1",
+			"newLastName": "oldMMRP1",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "MMR",
+			"firstName": "Pat2",
+			"nameFullFormatted": "MMR,Pat2",
+			"newLastName": "oldMMRP2",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Live_Virus": {
+			"lastName": "MMR",
+			"firstName": "Pat3",
+			"nameFullFormatted": "MMR,Pat3",
+			"newLastName": "oldMMRP3",
+			"dob": "Today - 8 years",
+			"sex": "Male"
+		},
+		"Patient_Not_Given": {
+			"lastName": "MMR",
+			"firstName": "Pat4",
+			"nameFullFormatted": "MMR,Pat4",
+			"newLastName": "oldMMRP4",
+			"dob": "Today - 19 years + 4 days",
+			"sex": "Male"
+		},
+		"Patient_Immunity": {
+			"lastName": "MMR",
+			"firstName": "Pat5",
+			"nameFullFormatted": "MMR,Pat5",
+			"newLastName": "oldMMRP5",
+			"dob": "1956-12-31",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Measles, Mumps, Rubella",
+		"vaccineName2": "Measles",
+		"vaccineName3": "Mumps",
+		"vaccineName4": "Rubella",
+		"vaccineName1StrikeThrough": "Immunizations/Forecaster-Common/MMRStrikethrough",
+		"dateFormat": "Date",
+		"Product1": "measles/mumps/rubella virus vaccine",
+		"Product2": "Attenuvax",
+		"Product3": "Mumpsvax",
+		"Product4": "Meruvax II",
+		"Source": "Device",
+		"unchartedReason": "Test",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Patient Refuses",
+		"vis": "Measles, Mumps, Rubella (English)"
+	},
+	"S18VE": {
+		"Patient_New_Born": {
+			"lastName": "MMR",
+			"firstName": "Pat1",
+			"nameFullFormatted": "MMR,Pat1",
+			"newLastName": "oldMMRP1",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "MMR",
+			"firstName": "Pat2",
+			"nameFullFormatted": "MMR,Pat2",
+			"newLastName": "oldMMRP2",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Live_Virus": {
+			"lastName": "MMR",
+			"firstName": "Pat3",
+			"nameFullFormatted": "MMR,Pat3",
+			"newLastName": "oldMMRP3",
+			"dob": "Today - 8 years",
+			"sex": "Male"
+		},
+		"Patient_Not_Given": {
+			"lastName": "MMR",
+			"firstName": "Pat4",
+			"nameFullFormatted": "MMR,Pat4",
+			"newLastName": "oldMMRP4",
+			"dob": "Today - 19 years + 4 days",
+			"sex": "Male"
+		},
+		"Patient_Immunity": {
+			"lastName": "MMR",
+			"firstName": "Pat5",
+			"nameFullFormatted": "MMR,Pat5",
+			"newLastName": "oldMMRP5",
+			"dob": "1956-12-31",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Measles, Mumps, Rubella",
+		"vaccineName2": "Measles",
+		"vaccineName3": "Mumps",
+		"vaccineName4": "Rubella",
+		"vaccineName1StrikeThrough": "Immunizations/Forecaster-Common/MMRStrikethrough",
+		"dateFormat": "Date",
+		"Product1": "measles/mumps/rubella virus vaccine",
+		"Product2": "Attenuvax",
+		"Product3": "Mumpsvax",
+		"Product4": "Meruvax II",
+		"Source": "Device",
+		"unchartedReason": "Test",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Patient Refuses",
+		"vis": "Measles, Mumps, Rubella (English)"
+	},
+	"S18VA": {
+		"Patient_New_Born": {
+			"lastName": "MMR",
+			"firstName": "Pat1",
+			"nameFullFormatted": "MMR,Pat1",
+			"newLastName": "oldMMRP1",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "MMR",
+			"firstName": "Pat2",
+			"nameFullFormatted": "MMR,Pat2",
+			"newLastName": "oldMMRP2",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Live_Virus": {
+			"lastName": "MMR",
+			"firstName": "Pat3",
+			"nameFullFormatted": "MMR,Pat3",
+			"newLastName": "oldMMRP3",
+			"dob": "Today - 8 years",
+			"sex": "Male"
+		},
+		"Patient_Not_Given": {
+			"lastName": "MMR",
+			"firstName": "Pat4",
+			"nameFullFormatted": "MMR,Pat4",
+			"newLastName": "oldMMRP4",
+			"dob": "Today - 19 years + 4 days",
+			"sex": "Male"
+		},
+		"Patient_Immunity": {
+			"lastName": "MMR",
+			"firstName": "Pat5",
+			"nameFullFormatted": "MMR,Pat5",
+			"newLastName": "oldMMRP5",
+			"dob": "1956-12-31",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Measles, Mumps, Rubella",
+		"vaccineName2": "Measles",
+		"vaccineName3": "Mumps",
+		"vaccineName4": "Rubella",
+		"vaccineName1StrikeThrough": "Immunizations/Forecaster-Common/MMRStrikethrough",
+		"dateFormat": "Date",
+		"Product1": "measles/mumps/rubella virus vaccine",
+		"Product2": "Attenuvax",
+		"Product3": "Mumpsvax",
+		"Product4": "Meruvax II",
+		"Source": "Device",
+		"unchartedReason": "Test",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Patient Refuses",
+		"vis": "Measles, Mumps, Rubella (English)"
+	},
+	"INTGM": {
+		"Patient_New_Born": {
+			"lastName": "MMR",
+			"firstName": "Pat1",
+			"nameFullFormatted": "MMR,Pat1",
+			"newLastName": "oldMMRP1",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "MMR",
+			"firstName": "Pat2",
+			"nameFullFormatted": "MMR,Pat2",
+			"newLastName": "oldMMRP2",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Live_Virus": {
+			"lastName": "MMR",
+			"firstName": "Pat3",
+			"nameFullFormatted": "MMR,Pat3",
+			"newLastName": "oldMMRP3",
+			"dob": "Today - 8 years",
+			"sex": "Male"
+		},
+		"Patient_Not_Given": {
+			"lastName": "MMR",
+			"firstName": "Pat4",
+			"nameFullFormatted": "MMR,Pat4",
+			"newLastName": "oldMMRP4",
+			"dob": "Today - 19 years + 4 days",
+			"sex": "Male"
+		},
+		"Patient_Immunity": {
+			"lastName": "MMR",
+			"firstName": "Pat5",
+			"nameFullFormatted": "MMR,Pat5",
+			"newLastName": "oldMMRP5",
+			"dob": "1956-12-31",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Measles, Mumps, Rubella",
+		"vaccineName2": "Measles",
+		"vaccineName3": "Mumps",
+		"vaccineName4": "Rubella",
+		"vaccineName1StrikeThrough": "Immunizations/Forecaster-Common/MMRStrikethrough",
+		"dateFormat": "Date",
+		"Product1": "measles/mumps/rubella virus vaccine",
+		"Product2": "Attenuvax",
+		"Product3": "Mumpsvax",
+		"Product4": "Meruvax II",
+		"Source": "Device",
+		"unchartedReason": "Test",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Patient Refuses",
+		"vis": "Measles, Mumps, Rubella (English)"
+	},
+	"ENG18": {
+		"Patient_New_Born": {
+			"lastName": "MMR",
+			"firstName": "Pat1",
+			"nameFullFormatted": "MMR,Pat1",
+			"newLastName": "oldMMRP1",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "MMR",
+			"firstName": "Pat2",
+			"nameFullFormatted": "MMR,Pat2",
+			"newLastName": "oldMMRP2",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient_Live_Virus": {
+			"lastName": "MMR",
+			"firstName": "Pat3",
+			"nameFullFormatted": "MMR,Pat3",
+			"newLastName": "oldMMRP3",
+			"dob": "Today - 8 years",
+			"sex": "Male"
+		},
+		"Patient_Not_Given": {
+			"lastName": "MMR",
+			"firstName": "Pat4",
+			"nameFullFormatted": "MMR,Pat4",
+			"newLastName": "oldMMRP4",
+			"dob": "Today - 19 years + 4 days",
+			"sex": "Male"
+		},
+		"Patient_Immunity": {
+			"lastName": "MMR",
+			"firstName": "Pat5",
+			"nameFullFormatted": "MMR,Pat5",
+			"newLastName": "oldMMRP5",
+			"dob": "1956-12-31",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Measles, Mumps, Rubella",
+		"vaccineName2": "Measles",
+		"vaccineName3": "Mumps",
+		"vaccineName4": "Rubella",
+		"vaccineName1StrikeThrough": "Immunizations/Forecaster-Common/MMRStrikethrough",
+		"dateFormat": "Date",
+		"Product1": "measles/mumps/rubella virus vaccine",
+		"Product2": "Attenuvax",
+		"Product3": "Mumpsvax",
+		"Product4": "Meruvax II",
+		"Source": "Device",
+		"unchartedReason": "Test",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"notGivenReason": "Patient Refuses",
+		"vis": "Measles, Mumps, Rubella (English)"
+	},
+	"dateFormat": "Date"
+}

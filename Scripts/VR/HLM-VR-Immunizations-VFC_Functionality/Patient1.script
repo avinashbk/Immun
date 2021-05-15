@@ -1,0 +1,115 @@
+﻿params domain
+
+set domain to "Immunizations/Util/setup".domainRun(domain)
+log "Test running in domain"&&domain
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set userName to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set global cleanup to "Immunizations/setup".setCleanup()
+
+set testData to JSONValue (file ResourcePath("VR/HLM-VR-Immunizations-VFC_Functionality/testData.json")).(value of domain)
+set patient1 to testData.Patient1.nameFullFormatted
+set race to testData.Patient1.race
+set ethnicity to testData.Patient1.ethnicity
+set financialClass to testData.Patient1.financialClass
+set historyVFCStatus to testData.Patient1.historyVFCStatus
+set historyReason to testData.Patient1.historyReason
+set historyDate to testData.Patient1.historyDate
+set finNumber1 to testData.Patient1.finNumber1
+set finNumber2 to testData.Patient1.finNumber2
+set newVFCStatus to testData.Patient1.newVFCStatus
+set newReason to testData.Patient1.newReason
+set encounter2VFCStatus to testData.Patient1.encounter2VFCStatus
+set user to testData.User1
+
+
+Try
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Launch Powerchart with User1, open Patient1's first Encounter chart and navigate to the page which contains the VFC component"
+	Run "Open_Application".run "Powerchart"
+	Run "Millennium_Login_window".LogIntoMillenniumApps userName, password, domain
+	waitfor 20, "Immunizations/Setup/Icon_Search"
+	Run "Immunizations/Setup".LoadPatientWithEncounterAndLoadComponent patient1, finNumber1, menu, subMenu, relationship
+	
+	Log "VERIFICATION: Ensure that Powerchart launches, VFC status shows as 'Eligible' and View/Modify button is displayed next to the VFC status"
+	Run "Immunizations/Util/Validation".verifyText "VFC Status: "&historyVFCStatus, "Immunizations/Common/Helpers".tabListSearchRectangle
+	Run "Immunizations/Util/Validation".Verifyimage "Immunizations/Common/Button_ViewModify", "Immunizations/Common/Helpers".tabListSearchRectangle
+	
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on View/Modify."
+	Click "Immunizations/Common/Button_ViewModify"
+	
+	Log "VERIFICATION: Window launches. Window shows VFC status, as well as the patient's Financial Class, Race and Ethnicity."
+	Run "Immunizations/Util/Validation".verifyText ("VFC Status" & Return & historyVFCStatus), "Immunizations/Common/Helpers".vfcWindowSearchRectangle
+	Run "Immunizations/Util/Validation".verifyText ("Race" & Return & race), "Immunizations/Common/Helpers".vfcWindowSearchRectangle
+	Run "Immunizations/Util/Validation".verifyText ("Financial Class" & Return & financialClass), "Immunizations/Common/Helpers".vfcWindowSearchRectangle
+	Run "Immunizations/Util/Validation".verifyText ("Ethnicity" & Return & ethnicity), "Immunizations/Common/Helpers".vfcWindowSearchRectangle
+	
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on Show History"
+	Click Text:"Show History",SearchRectangle: "Immunizations/Common/Helpers".vfcWindowSearchRectangle
+	
+	Log "VERIFICATION: Ensure that the History of VFC statuses is shown"
+	Set history to "Eligible "&historyDate&Return&"Override: "&historyReason&Return&"By "&User
+	Run "Immunizations/Common/Validation".validateVFCHistory(history)
+	
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on Override"
+	Click "Immunizations/Common/Button_Override"
+	
+	Log "VERIFICATION: Ensure the Override VFC status window is display"
+	Run "Immunizations/Util/Validation".Verifyimage "Immunizations/Common/Label_OverrideVFCStatus", "Immunizations/Common/Helpers".overrideVfcStatusWindowSearchRectangle
+	
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Select a new status and input a reason for that status. Click on Confirm"
+	Run "Immunizations/Common/Actions".enterOverrideVFCStatusWindowFields "Vaccines for Children Status",newVFCStatus
+	Run "Immunizations/Common/Actions".enterOverrideVFCStatusWindowFields "Reason for Change",newReason
+	Click Text:"Confirm",SearchRectangle:"Immunizations/Common/Helpers".overrideVfcStatusWindowSearchRectangle
+	wait 5
+	waitfor 10,"Immunizations/Common/Button_ViewModify"
+	
+	Log "VERIFICATION: Enure the Patient is shown with the new VFC status"
+	Run "Immunizations/Util/Validation".verifyText "VFC Status: "&newVFCStatus, "Immunizations/Common/Helpers".tabListSearchRectangle
+	
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Refresh page."
+	Run "Millennium_SelectMenu_SubMenu".SelectMenuSubMenu "Task","Task","Refresh"
+	
+	Log "VERIFICATION: Ensure the Status selected during override is still shown."
+	Run "Immunizations/Util/Validation".verifyText "VFC Status: "&newVFCStatus, "Immunizations/Common/Helpers".tabListSearchRectangle
+	
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Open Patient 1's second encounter chart and Navigate to tab containing the VFC status."
+	Run "Immunizations/Setup".LoadPatientWithEncounterAndLoadComponent patient1, finNumber2, menu, subMenu, relationship
+	
+	Log "VERIFICATION: Ensure the Status based on patient inputs, rather than the overriden status is shown"
+	Run "Immunizations/Util/Validation".verifyText "VFC Status: "&encounter2VFCStatus, "Immunizations/Common/Helpers".tabListSearchRectangle
+	
+	---------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click on View/Modify and click on show history"
+	Click "Immunizations/Common/Button_ViewModify"
+	Click Text:"Show History",SearchRectangle: "Immunizations/Common/Helpers".vfcWindowSearchRectangle
+	
+	Log "VERIFICATION: Ensure the previously overriden status is shown in the history."
+	Set history to "Eligible "&historyDate&Return&"Override: "&historyReason&Return&"By "&User
+	Run "Immunizations/Common/Validation".validateVFCHistory(history)
+	
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch theException
+	
+	LogError "Exception encountered" & newline & "Exception Reason:" && theException.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	
+End Try
+
+---------------------------------------------------------------------------------------------------------------	
+Log "Util".stepNumber & "Close Patient 1's chart."
+run "Immunizations/setup".closeChartViaX

@@ -1,0 +1,76 @@
+{
+	"SOLM64": {
+		"Patient1": {
+			"lastName": "HIB2P1",
+			"firstName": "notGiven",
+			"nameFullFormatted": "HIB2P1,notGiven",
+			"newLastName": "OldHIB2",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "HIB2P2",
+			"firstName": "Complete",
+			"nameFullFormatted": "HIB2P2,Complete",
+			"newLastName": "oldHIB2",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient3": {
+			"lastName": "HIB2P3",
+			"firstName": "AgedOut",
+			"nameFullFormatted": "HIB2P3,AgedOut",
+			"newLastName": "oldHIB2",
+			"dob": "Today - 5 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Haemophilus Influenzae Type B",
+		"vaccineName2": "Hepatitis B",
+		"dateFormat": "Date",
+		"Product": "Comvax",
+		"vis": "Haemophilus influenzae type b (English)",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"tempNotGivenAction": "This Season Only",
+		"notGivenReason": "Patient Refuses",
+		"Source": "Device"
+	},
+	"S18VX": {
+		"Patient1": {
+			"lastName": "HIB2P1",
+			"firstName": "notGiven",
+			"nameFullFormatted": "HIB2P1,notGiven",
+			"newLastName": "OldHIB2",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"Patient2": {
+			"lastName": "HIB2P2",
+			"firstName": "Complete",
+			"nameFullFormatted": "HIB2P2,Complete",
+			"newLastName": "oldHIB2",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"Patient3": {
+			"lastName": "HIB2P3",
+			"firstName": "AgedOut",
+			"nameFullFormatted": "HIB2P3,AgedOut",
+			"newLastName": "oldHIB2",
+			"dob": "Today - 5 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName1": "Haemophilus Influenzae Type B",
+		"vaccineName2": "Hepatitis B",
+		"dateFormat": "Date",
+		"Product": "Comvax",
+		"vis": "Haemophilus influenzae type b (English)",
+		"notGivenType": "Refused",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"tempNotGivenAction": "This Season Only",
+		"notGivenReason": "Patient Refuses",
+		"Source": "Device"
+	}
+}

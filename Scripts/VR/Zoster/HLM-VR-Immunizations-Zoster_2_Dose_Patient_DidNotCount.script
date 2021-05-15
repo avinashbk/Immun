@@ -1,0 +1,189 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+------------------------------------------------RQM TEST CASE LINK--------------------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=62069
+
+---------------------------------------Assigning Test Data to the Variables---------------------------------------
+
+params domain 
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+Log "commonData:" && setup
+set username to setup.username
+set conversation to setup.conversation
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set didNotCountImage to common.didNotCountImage
+set doubleDashImage to common.doubleDashImage
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set lastAdmin to textStrings.lastAdmin
+set administeredDidNotCount to textStrings.administeredDidNotCount
+
+set testData to JSONValue(file resourcePath("VR/Zoster_2_Dose_Series/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file resourcePath("VR/Zoster_2_Dose_Series/testData.json")).(value of domain)
+set lastName to testData.Patient1_DidNotCount.lastName
+set firstName to testData.Patient1_DidNotCount.firstName
+set patientName to testData.Patient1_DidNotCount.nameFullFormatted
+set newLastName to testData.Patient1_DidNotCount.newLastName
+set sex to  testData.Patient1_DidNotCount.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient1_DidNotCount.dob))
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set product1 to testData.product1
+set source to testData.source
+set format to "%b %d, %Y"
+
+try
+	------------------------------------------------------Patient Setup---------------------------------------------------------
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	----------------------------------------------------------------------------------------------------------------------------------	
+	try
+		------------------------------------------------------Test Steps---------------------------------------------------------		
+		BeginTestCase "VR/Zoster/HLM-VR-Immunizations-Zoster_2_Dose_Patient_DidNotCount"	
+		
+		Log "Util".stepNumber &"ACTION: Open Powerchart.exe with User1, search for and open the chart for Patient1, and open the Immunizations Workflow component."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, relationship
+		
+		Log "VERIFICATION: Verify Zoster vaccine is not listed within the listed Vaccines Column."
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Vaccine")
+		CaptureScreen(Name:"Step"&Global stepNumber&"- MPage Zoster Not Visible Validation-Patient1")
+		----------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber &"ACTION: Click on the view forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		if ImageFound("Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarDownArrow")
+			run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		end if 
+		Log "VERIFICATION:  Verify Zoster is not listed on the CDC Schedule Column."
+		set rectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1, rectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Forecaster Zoster Not Visible Validation-Patient1")
+		----------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber &"ACTION: Click on document history button and chart Dose 1 with administration date at 12 months- 4 days from DOB with CVX(121)."
+		set dose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "day": -4))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, dose1AdminDate, Source, product1, "submit"
+		ScrollWheelDown 1	
+		
+		Log "VERIFICATION: In the CDC Schedule column, ensure 'Did not Count' icon displays with 'last admin:<last admin date> (age at administration)' displays below the vaccine name."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set  columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		set age to "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, false)
+		set pattern to "Immunizations/Util/Date".setPattern(age)
+		run "Immunizations/Util/Validation".verifyText vaccineName1,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage  didNotCountImage,   "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText  lastAdmin && dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,ColumnSearchRectangle) 
+		
+		Log "VERIFICATION: Ensure dose charted for Zoster is counted towards series and displays under Varicella row with product name on top along with the dose number and administration date below it. "
+		set startDateHeader to  dose1AdminDate
+		set endDateHeader to  dose1AdminDate
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,"-180", "-30", "100","100")
+		run "Immunizations/Forecaster-Forecast/Validations".verifyColumnHeaderAges startDateHeader, endDateHeader, dob
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 1" && "-" && dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose charted for Zoster is also displayed under Zoster row within administered dose column and event set has the 'Did Not Count' icon displaying and administration date below."
+		set startDateHeader to  dose1AdminDate
+		set endDateHeader to dose1AdminDate
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,"-180", "-30", "100","100")
+		run "Immunizations/Util/Validation".verifyText product1 &return& dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"- Forecaster Did Not Count Validation-Patient1")
+		----------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber &"ACTION: Click on List View."
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews
+		
+		Log "VERIFICATION: Ensure Vaccine Column displays Varicella Vaccine with 'Last Admin: Administration Date and Age in parenthesis' below vaccine name."
+		set vaccineName2RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".largeFirstColumnSearchRectangle()
+		set dose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("month": 12, "day": -4))
+		set age to "Immunizations/Util/Date".ageCalculator(dob, dose1AdminDate, false, false)
+		set pattern to "Immunizations/Util/Date".setPattern(age)
+		run "Immunizations/Util/Validation".verifyText vaccineName2 &return& lastAdmin && dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)		
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure that for Varicella, Action Column1 displays with dose number along with Product Name and administration date with age in parenthesis below it."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText "1" & product1 &return& dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName2RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure that Zoster displays under Vaccines section with 'did not count' icon and Last Admin: Administration date and Age in parenthesis below vaccine name."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".largeFirstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText lastAdmin && dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Enaure that for Zoster Action Column1 displays with 'Did not count' icon along with Product Name and administration date with age in parenthesis below it."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText product1 &return& dose1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle,columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"- List View Validation-Patient1")
+		----------------------------------------------------------------------------------------------------------------	
+		Log "Util".stepNumber &"ACTION: Click on Immunization MPage."
+		run "Immunizations/Common/Actions".clickMPagesView viewPoint
+		
+		Log "VERIFICATION: Verify Zoster Vaccine displays with status '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName1, doubleDashImage
+		
+		Log "VERIFICATION: Ensure Zoster displays with Dose Admin of 'Did not count' icon with 1."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "1", true
+		
+		Log "VERIFICATION: Ensure Zoster displays with Next Dose Recommended as '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, doubleDashImage
+		
+		Log "VERIFICATION: Ensure Zoster displays with Last Action column as 'Administered- did not count'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, administeredDidNotCount
+		
+		Log "VERIFICATION: Ensure Zoster displays with a last action Date of <DOB + 12 months - 4 days>."
+		set age to "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName1, dose1AdminDate, age
+		CaptureScreen(Name:"Step"&Global stepNumber&"- MPage Verification- Patient 1")		
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Close Application."
+		run "Immunizations/setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------		
+		EndTestCase "VR/Zoster/HLM-VR-Immunizations-Zoster_2_Dose_Patient_DidNotCount"
+		
+	catch
+		logError "Test Steps Exception: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	end try
+	#PATIENT CLEANUP
+	log "ACTION: Cleanup Patient."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName,firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+catch
+	logError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+end try
+---------------------------------------------------------------------------------------------------------------
+#SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

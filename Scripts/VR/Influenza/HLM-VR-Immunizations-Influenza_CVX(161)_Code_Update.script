@@ -1,0 +1,290 @@
+﻿--------------------------------------------------HELPER SUITE INFORMATION-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+------------------------------------------------RQM TEST CASE LINK--------------------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=78368
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+params domain 
+Log "Test running in domain"&&domain
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set relationship to setup.relationship
+set conversation to setup.Conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set noVaccineHistoryImage to common.noVaccineHistoryImage
+set didNotCountImage to common.didNotCountImage
+set greyForecastButton to common.greyForecastButton
+set doubleDashImage to common.doubleDashImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set performedDateField to fieldLabels.performedDateField
+set productNameField to fieldLabels.productNameField
+set documentedByField to fieldLabels.documentedByField
+set productField to fieldLabels.productField
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set inRange to textStrings.inRange
+set inRangeTodayWithHyphen to textStrings.inRangeTodayWithHyphen
+set lastAdmin to textStrings.lastAdmin
+set administeredOn to textStrings.administeredOn
+set administeredDidNotCount to textStrings.administeredDidNotCount
+
+set testData to JSONValue(file ResourcePath("VR/CVX_Code_Update/testData_Flu.json")).(value of domain)
+set lastName to testData.Influenza_CVX161_Patient.lastName
+set firstName to testData.Influenza_CVX161_Patient.firstName
+set patientName to testData.Influenza_CVX161_Patient.nameFullFormatted
+set newLastName to testData.Influenza_CVX161_Patient.newLastName
+set dob to formattedTime("%m/%d/%Y", value(testData.Influenza_CVX161_Patient.dob)) 
+set sex to testData.Influenza_CVX161_Patient.sex
+set vaccineName to testData.vaccineName
+set vaccineName2 to testData.vaccineName2
+set source to testdata.source
+set product1 to testData.product1
+set dateFormat to testData.dateFormat
+set unchartedReason to testData.unchartedReason
+set (fluSeasonStart, fluSeasonEnd) to "Immunizations/Util/Date".fluSeasonDateCalc( "%b %d, %Y")
+
+
+set format to "%b %d, %Y"
+
+Try
+	#PATIENT RESET
+	run "Immunizations/PatientCreation".resetPatientToZeroState username, password, domain, lastName, firstName, dob
+	
+	Try
+		#TEST STEPS
+		BeginTestCase "VR/Influenza/HLM-VR-Immunizations-Influenza_CVX(161)_Code_Update"
+		
+		Log "Util".stepNumber &"ACTION: Open Powerchart.exe with User1, search for and open the chart for , and open the Immunizations Workflow component."
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, relationship
+		
+		Log "VERIFICATION: Ensure Influenza displays with a status of 'In Range'."
+		click text:"status", searchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Status")
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, inRange
+		
+		Log "VERIFICATION: Next recommended dates start today and goes until the end of the flu season."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "Today" && "-" && formattedTime(format,fluSeasonEnd)
+		capturescreen (Name:"Step"&Global stepNumber&"-MPage Review ")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on Influenza."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		Log "VERIFICATION: Ensure the status and next recommended date 'In Range - Today - <End of Flu Season>' displays below the vaccine group name."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle()
+		set SidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName, SidePanelHeaderRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyValidNextRecommendedDate inRangeTodayWithHyphen && "-" && formattedTime(format,fluSeasonEnd),SidePanelHeaderRectangle
+		
+		Log "VERIFICATION: Ensure 'No vaccine history to display' is shown in the middle of the detail pane."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+		run "Immunizations/Util/Validation".verifyimage noVaccineHistoryImage, sidePanelRectangle
+		capturescreen (Name:"Step"&Global stepNumber&"-MPage Side Panel ")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber &"ACTION: Chart an administration of any vaccine other than Influenza (Ex: Hepatitis B) for the patient at less than 3 years age."
+		Set administrationDate to "Immunizations/Util/Date".todaysDate(format) -  1 month
+		run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName2, dateFormat, administrationDate, source, "Submit"
+		
+		Log "VERIFICATION: Ensure the vaccine is charted"
+		set Age to "Immunizations/Util/Date".ageCalculator(dob, administrationDate, false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName2,administrationDate, Age
+		capturescreen (Name:"Step"&Global stepNumber&"-Charted any vaccine")
+		----------------------------------------------------------------------------------------------------------------
+		
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1932"
+		Log "Util".stepNumber &"ACTION: Click on the 'View Forecast' button and chart a dose at the beginning of the flu season and at 3 years from DOB using product CVX 161 ."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		waitfor 50, greyForecastButton
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat,fluSeasonStart, source, product1, "submit"
+		wait 5
+		waitfor 50, greyForecastButton
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, "Immunizations/Util/Date".todaysDate(format), source, product1, "submit"	
+		
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1932"
+		Log "VERIFICATION: Under the CDC Schedule column, ensure Influenza displays with 'Last Admin: <Today's Date > (3yrs)' along with the did not count icon."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName, firstColumnSearchRectangle
+		run "Immunizations/Util/Validation".verifyText lastAdmin && "Immunizations/Util/Date".todaysDate(format) && "(3yrs)","Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,firstColumnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyimage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,firstColumnSearchRectangle)
+		
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1932"
+		Log "VERIFICATION: Ensure product name and today's date displays in the today column with the did not count Icon."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText product1 &return& "Immunizations/Util/Date".todaysDate(format),"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangleToday)
+		run "Immunizations/Util/Validation".verifyimage didNotCountImage,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangleToday)
+		capturescreen (Name:"Step"&Global stepNumber&"-Forecaster product1 ")
+		----------------------------------------------------------------------------------------------------------------
+		
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1932"
+		Log "Util".stepNumber &"ACTION: Click on the second administration."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		Click text:product1, SearchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangleToday)
+		waitfor 15,"Immunizations/Forecaster-Forecast/ExpandedView/TL_TopPane"
+		
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1932"
+		Log "VERIFICATION: In the left hand pane, ensure the second administration displays with the did not count icon."
+		set LeftPaneSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		run "Immunizations/Util/Validation".verifyimage didNotCountImage, LeftPaneSearchRectangle
+		
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1932"
+		Log "VERIFICATION: In the right hand pane, 'Administered on <Today's Date> (Did Not Count) - CVX 161' displays. In the body of the right hand pane, ensure all appropriate administration details display."
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText administeredOn && "Immunizations/Util/Date".todaysDate(format) && "(Did Not Count)" && "-" && product1, rightPaneHeaderSearchRectangle
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField performedDateField, "Immunizations/Util/Date".todaysDate(format)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField productNameField, product1
+		capturescreen (Name:"Step"&Global stepNumber&"- Product1 Charted Expanded View ")
+		---------------------------------------------------------------------------------------------------------------
+		
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1932"
+		Log "Util".stepNumber &"ACTION: Navigate to the list view."
+		Click text:"Print", searchrectangle: "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+		
+		Log "VERIFICATION: Ensure under the vaccine column, Influenza displays with a status of 'Last Admin: <Today's Date>'."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName , "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText lastAdmin && "Immunizations/Util/Date".todaysDate(format), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyimage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Action column displays Dose 1 with product or or default event set name on top and administrations date with age in parenthesis below it"
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("2")
+		run "Immunizations/Util/Validation".verifyText product1 &return&"Immunizations/Util/Date".todaysDate(format) && "(3yrs)","Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchrectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyimage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"- list view ")
+		---------------------------------------------------------------------------------------------------------------
+		
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1932"
+		Log "Util".stepNumber &"ACTION: Navigate back to the MPage"
+		run "Immunizations/Common/actions".clickMPagesView viewPoint
+		click text:"status", searchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Status")
+		
+		Log "VERIFICATION: Ensure the status remains as '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure administrations displays with '2' along with the did not count icon."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", true
+		
+		Log "VERIFICATION: Ensure the next doses are recommended for next flu season."
+		set immediatepreviousdose to "Immunizations/Util/Date".adjustDate(dob, format, ("year": 3))
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "Immunizations/Util/Date".adjustDate(immediatepreviousdose, format, ("week": 4)) && "-" && formattedTime(format,fluSeasonEnd)
+		
+		Log "VERIFICATION: Ensure the last action displays as 'Administered - Did Not Count'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administeredDidNotCount
+		capturescreen (Name:"Step"&Global stepNumber&"-Workflow product1 ")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1932"
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify the administration such that it is 3 years - 1 day from DOB."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("year": 3)),"1",dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("year": 3, "day": -1))
+		
+		Log "VERIFICATION: Ensure the status remains as '--'."
+		click text:"status", searchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Status")
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure administrations displays with '2' along without the did not count icon."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", false
+		
+		Log "VERIFICATION: Ensure the next doses are recommended for next flu season."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "Immunizations/Util/Date".adjustDate(fluSeasonstart, format, ("year":1))&&"-"&&"Immunizations/Util/Date".adjustDate(fluSeasonend, format, ("year":1))
+		
+		Log "VERIFICATION: Ensure the last action displays as 'Administered'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administered
+		capturescreen (Name:"Step"&Global stepNumber&"-Administration 1 modified")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Unchart both doses and chart a dose at 3 years from DOB using product 'CVX 161'."
+		run "Immunizations/Util/Validation".validationJiraComment "IMMUN-1932"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".unchart "Immunizations/Util/Date".adjustDate(dob, format, ("year": 3, "day": -1)),"1", unchartedReason
+		click text:"status", searchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Status")
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".unchart fluSeasonStart,"1", unchartedReason 
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat,"Immunizations/Util/Date".adjustDate(dob, format, ("year": 3)), source, product1, "submit"
+		
+		Log "VERIFICATION: Ensure the status remains as '--'."
+		click text:"status", searchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Status")
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, inRange
+		
+		Log "VERIFICATION: Ensure administrations displays with '2' along with the did not count icon."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "1", true
+		
+		Log "VERIFICATION: Ensure the next doses are recommended for next flu season."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName, "Today" && "-" && formattedTime(format,fluSeasonEnd)
+		
+		Log "VERIFICATION: Ensure the last action displays as 'Administered - Did Not Count'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administeredDidNotCount
+		capturescreen (Name:"Step"&Global stepNumber&"-MPage product1 ") 
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on Influenza."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		Log "VERIFICATION: Ensure the 1st dose is charted with ''<DOB + 3 years> - Administered - Did Not Count' as the header. Ensure all administration details display for the dose."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", documentedByField,sidePanelRectangle, "Immunizations/Util/Date".adjustDate(dob, format, ("year": 3)) 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1",documentedByField,sidePanelRectangle, administeredDidNotCount
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyDidNotCountImage "1",documentedByField,sidePanelRectangle
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", productField,sidePanelRectangle, product1
+		capturescreen (Name:"Step"&Global stepNumber&"-MPage Side Panel ")
+		----------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber &"ACTION: Modify the administration such that it is 3 years - 1 day from DOB."
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("year": 3)),"1",dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("year":3, "day": -1))
+		
+		Log "VERIFICATION: Ensure the status remains as '--'."
+		click text:"status", searchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".columnSearchRectangle("Status")
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, doubleDashImage
+		
+		Log "VERIFICATION: Ensure administrations displays with '2' along with the did not count icon."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "1", false
+		
+		Log "VERIFICATION: Ensure the next doses are recommended for next flu season."
+		set previousdose to "Immunizations/Util/Date".adjustDate(dob, format, ("year":3, "day": -1))
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName,"Immunizations/Util/Date".adjustDate(previousdose, format, ("week":4)) && "-" &&  formattedTime(format,fluSeasonEnd)
+		
+		Log "VERIFICATION: Ensure the last action displays as 'Administered'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, administered
+		capturescreen (Name:"Step"&Global stepNumber&"-Workflow prod1 mod pat1")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Close Application"
+		run "Immunizations/setup".CloseApplication
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/Influenza/HLM-VR-Immunizations-Influenza_CVX(161)_Code_Update"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+#SUT Cleanup
+run "Cleanup".ZeroStateCloseAllApps

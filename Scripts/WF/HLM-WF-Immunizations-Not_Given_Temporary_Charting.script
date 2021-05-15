@@ -1,0 +1,1096 @@
+﻿--------------------------------------------------Helper Suite Information--------------------------------------------------------------------------------------------------------------
+
+#Repo: IPDev-Shared-Millennium
+#Repo: IPDev-mPages-Shared-Immunizationss
+#Repo: IPDev-Millennium-Shared-HealthMaintenanceTools
+#Repo: IPDev-Millennium-Shared-Medication-Record
+#Repo: IPDev-Millennium-Shared-Immunizations
+# https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+--------------------------------------------------RQM Test Case Link-----------------------------------------------------------------------------------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=61799
+
+---------------------------------------------------Assigning Test Data to Variables------------------------------------------------------------------------------------------------------
+params domain
+Log "Test running in domain"&&domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+Log "commonData:" && setup
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set relationship to setup.relationship
+set conversation to setup.conversation
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set cancelButtonEnabledImage to common.cancelButtonEnabledImage
+set asterisk to common.asterisk
+set greyForecastButton to common.greyForecastButton
+set greenCheckMark to common.greenCheckMark
+set addImmunizations to common.addImmunizations
+set whiteListButton to common.whiteListButton
+set whiteForecastButton to common.whiteForecastButton
+set checkMarkForSelectedVaccineImage to common.checkMarkForSelectedVaccineImage
+set radioButtonDithered to common.radioButtonDithered
+set notGivenReasonFieldDithered to common.notGivenReasonFieldDithered
+set radioButtonDisabled to common.radioButtonDisabled
+set radioButtonEnabled to common.radioButtonEnabled
+set noImmunizationsSelectedImage to common.noImmunizationsSelectedImage
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set seasonalRefused to textStrings.seasonalRefused
+set inRange to textStrings.inRange
+set forecastRescheduled to textStrings.forecastRescheduled
+set notStarted to textStrings.notStarted
+set rescheduledFor to textStrings.rescheduledFor
+set contraindicated to textStrings.contraindicated
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set notGivenReasonField to fieldLabels.notGivenReasonField
+set notGivenTypeField to fieldLabels.notGivenTypeField
+set minimum to fieldLabels.minimum
+set earliestRecommended to fieldLabels.earliestRecommended
+set latestRecommended to fieldLabels.latestRecommended
+set maximum to fieldLabels.maximum
+set expirationDateField to fieldLabels.expirationDateField
+
+set testData to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("WF/Not_Given_Temporary_Charting/testData.json")),domain)
+set format to "%m/%d/%Y"
+set lastName1 to testData.Patient1.lastName
+set firstName1 to testData.Patient1.firstName
+set patientName1 to testData.Patient1.nameFullFormatted
+set newLastName1 to testData.Patient1.newLastName
+set dob1 to formattedTime(format, value(testData.Patient1.dob))
+set sex1 to testData.Patient1.sex
+set lastName2 to testData.Patient2.lastName
+set firstName2 to testData.Patient2.firstName
+set patientName2 to testData.Patient2.nameFullFormatted
+set newLastName2 to testData.Patient2.newLastName
+set dob2 to formattedTime(format, value(testData.Patient2.dob))
+set sex2 to testData.Patient2.sex
+set lastName3 to testData.Patient3.lastName
+set firstName3 to testData.Patient3.firstName
+set patientName3 to testData.Patient3.nameFullFormatted
+set newLastName3 to testData.Patient3.newLastName
+set dob3 to formattedTime(format, value(testData.Patient3.dob))
+set sex3 to testData.Patient3.sex
+set orderableName to testData.orderableName
+set route to testData.route
+set dose to testData.dose
+set exceptionMAR to testData.exceptionMAR
+set exceptionReasonMAR to testData.exceptionReasonMAR
+set user to testData.user
+set format1 to "%b %d, %Y"
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set vaccineName3 to testData.vaccineName3
+set vaccineName4 to testData.vaccineName4
+set vaccineName5 to testData.vaccineName5
+set vaccineName6 to testData.vaccineName6
+set vaccineName7 to testData.vaccineName7
+set vaccineName8 to testData.vaccineName8
+set permNotGivenAction to testData.permNotGivenAction
+set permNotGivenType to testData.permNotGivenType
+set permNotGivenReason to testData.permNotGivenReason
+set rescheduleDate to testData.rescheduleDate
+set authorizedDate to testData.authorizedDate
+set tempNotGivenAction to testData.tempNotGivenAction
+set VIS1 to testData.VIS1
+set VIS2 to testData.VIS2
+set tempNotGivenReason to testData.tempNotGivenReason
+set documentHistory to testData.documentHistory
+set chartNotGiven to testData.chartNotGiven
+set vaccineName1InImmunizationSchedule to testData.vaccineName1InImmunizationSchedule
+set vaccineName1NotGivenType to testData.vaccineName1NotGivenType
+set vaccineName1NotGivenReason to testData.vaccineName1NotGivenReason
+set vaccineName2InImmunizationSchedule to testData.vaccineName2InImmunizationSchedule
+set vaccineName2NotGivenType to testData.vaccineName2NotGivenType
+set vaccineName2NotGivenReason to testData.vaccineName2NotGivenReason
+set vaccineName3InImmunizationSchedule to testData.vaccineName3InImmunizationSchedule
+set vaccineName3NotGivenType to testData.vaccineName3NotGivenType
+set vaccineName3NotGivenReason to testData.vaccineName3NotGivenReason
+set vaccineName4InImmunizationSchedule to testData.vaccineName4InImmunizationSchedule
+set vaccineName4Product to testData.vaccineName4Product
+set vaccineName4FundingSource to testData.vaccineName4FundingSource
+set vaccineName4VIS to testData.vaccineName4VIS
+set vaccineName4Dose to testData.vaccineName4Dose
+set vaccineName4Unit to testData.vaccineName4Unit
+set vaccineName4Route to testData.vaccineName4Route
+set vaccineName4Site to testData.vaccineName4Site
+set vaccineName4Manufacturer to testData.vaccineName4Manufacturer
+set vaccineName4LotNumber to testData.vaccineName4LotNumber
+set todaysdate to "Immunizations/Util/Date".todaysDate(format1)
+
+Try
+	
+	//Patient1 Data Reset (DOB: Today - 14 months)
+	run "Immunizations/PatientCreation".resetPatientToZeroState  username, password, domain, lastName1, firstName1, dob1
+	
+	//Patient2 Data Reset (DOB: Today - 3 months)
+	run "Immunizations/PatientCreation".resetPatientToZeroState  username, password, domain, lastName2, firstName2, dob2	
+	
+	//Patient3 Data Reset (DOB: Today - 3 months)
+	run "Immunizations/PatientCreation".resetPatientToZeroState  username, password, domain, lastName3, firstName3, dob3
+	
+	---------------------------------------------------------------Pre Conditions-------------------------------------------------------------------------------------------------
+	
+	Log "Add data to patient(s) for the test"
+	log "Patient 1 - Has an order charted as Not Given from MAR."
+	run "Immunizations/Setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName1, menu, subMenu,relationship
+	run "Immunizations/Common/orderImmunizations/Task".chartExceptionFromMAR orderableName, encounterType, exceptionMAR, exceptionReasonMAR,menu,subMenu, "0.5 mL", "0.5 mL"
+	
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	try
+		BeginTestCase "WF/HLM-WF-Immunizations-Not_Given_Temporary_Charting"
+		----------------------------------------------------------------Test Steps------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Open Powerchart.exes with User1, search for and open the chart for patient1, open the Immunizations Workflow component, click on the plus sign and select not given."
+		run "Immunizations/Setup".LoadComponentViaPatientChart menu, subMenu
+		waitFor 100, "Immunizations/WorkflowMPage/Table/TL_Workflow"
+		run "Immunizations/Common/Actions".temporaryRefreshClick
+		run "Immunizations/Common/ChartNotGiven/Actions".openDialog
+		
+		Log "VERIFICATION:  Ensure the Select button is dithered and displays 'Select (0)'."
+		run "Immunizations/Common/ChartingDialog/Validation".verifySelectButton "false", 0
+		
+		Log "VERIFICATION: Ensure Cancel button is selectable."
+		set productSearchRectangle to "Immunizations/Common/DocumentHistory/Helpers".productSearchRectangles
+		run "Immunizations/Util/Validation".verifyimage cancelButtonEnabledImage, productSearchRectangle
+		
+		Log "VERIFICATION: Ensure 'No Immunization Selected' is displayed in the Immunization – Not Given dialog."
+		click image:cancelButtonEnabledImage
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".DialogSearchrectangle
+		run "Immunizations/Util/Validation".verifyImage noImmunizationsSelectedImage,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-NotGivenDialog")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the following vaccine groups: Future forecasted vaccine group with a latest date for dose 1 E.G. Human Papillomavirus (HPV). Any independent vaccine group that comes after the future forecasted vaccine group alphabetically E.G. Typhoid)"
+		click addImmunizations
+		run "Immunizations/Common/SelectImmunizationsList".SelectvaccineName vaccineName1
+		
+		Log "VERIFICATION: Ensure selected vaccine groups are highlighted."
+		set rectangle to "Immunizations/Common/SelectImmunizationsList".vaccineSelectedSearchRectangle(vaccineName1)
+		run "Immunizations/Util/Validation".verifyImage checkMarkForSelectedVaccineImage,rectangle
+		
+		//Selecting another vaccine one after another
+		run "Immunizations/Common/SelectImmunizationsList".SelectvaccineName vaccineName2
+		
+		Log "VERIFICATION: Ensure selected vaccine groups are highlighted."
+		set rectangle to "Immunizations/Common/SelectImmunizationsList".vaccineSelectedSearchRectangle(vaccineName2)
+		run "Immunizations/Util/Validation".verifyImage checkMarkForSelectedVaccineImage,rectangle
+		
+		Log "VERIFICATION: Ensure the Select button is available and displays 'Select (2)''."
+		run "Immunizations/Common/ChartingDialog/Validation".verifySelectButton "true", 2
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Select(2)")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click the Select button."
+		run "Immunizations/Common/SelectImmunizationsList".ClickSelectButton
+		
+		Log "VERIFICATION: Ensure the selected vaccine groups are added to the Immunization-Not Given dialog with a red asterisk displayed to the left of the vaccine group names."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".asteriskOrCheckmarkSearchRectangle ("Human Papillomavir")
+		run "Immunizations/Util/Validation".verifyImage asterisk,rectangle
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".asteriskOrCheckmarkSearchRectangle (vaccineName2)
+		run "Immunizations/Util/Validation".verifyImage asterisk,rectangle
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".DialogSearchrectangle
+		click (text: "Human Papillomavir", searchrectangle:(rectangle))
+		set rectangle to empty
+		
+		Log "VERIFICATION: Verify the Chart button shows a count of 0 in parenthesis and is dithered."
+		//run "Immunizations/Common/ChartingDialog/Validation".verifySubmitButton "false", 0
+		
+		Log "VERIFICATION: Verify the 'Cancel series and stop forecasting' and the 'Reschedule Date' radio buttons are dithered."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (permNotGivenAction)
+		run "Immunizations/Util/Validation".verifyImage radioButtonDithered,rectangle
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (rescheduleDate)
+		run "Immunizations/Util/Validation".verifyImage radioButtonDithered,rectangle
+		
+		Log "VERIFICATION: The system shall display 'This will stop the forecasting remainders of future doses.' right below Cancel Series/Forecasting radio button."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".selectActionSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "This will stop the forecasting reminders of future doses.",rectangle
+		
+		Log "VERIFICATION: Verify the Authorized Date defaults to today's date."
+		set rectangle to  "Immunizations/Common/ChartNotGiven/Helpers".authorizedDateSearchRectangle
+		run "Immunizations/Util/Validation".verifyValue rectangle,"Immunizations/Util/Date".todaysDate(format)
+		
+		Log "VERIFICATION: Verify Authorized By is defaulted to the logged in user."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".authorizedBySearchRectangle
+		run "Immunizations/Util/Validation".verifyValueEquals rectangle,user
+		
+		Log "VERIFICATION: Verify Not Given Type is a mandatory field."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (notGivenTypeField)
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/RedAstriek/MandatoryField_RedAsterisk",rectangle
+		
+		Log "VERIFICATION: Verify Not Given Reason field is dithered."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle   
+		run "Immunizations/Util/Validation".verifyImage  notGivenReasonFieldDithered,rectangle
+		
+		Log "VERIFICATION: Verify the Cancel button in the lower right is enabled."
+		set productSearchRectangle to "Immunizations/Common/DocumentHistory/Helpers".productSearchRectangle
+		run "Immunizations/Util/Validation".verifyimage cancelButtonEnabledImage, productSearchRectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-AllFieldValidations")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click on the Not Given Type field"
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		click imageLocation(text:"Not Given Type",searchRectangle:rectangle)+(30,30)
+		
+		Log "VERIFICATION: Verify the following is displayed in alphabetical order: Contraindicated,permNotGivenType,Unnecessary"
+		put rectangle sorted ascending into ascendingOrder
+		run "Immunizations/Util/Validation".verifyValueEquals rectangle,ascendingOrder
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-AscendingOrder")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select 'Contraindicated' as the Not Given Type."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".DialogSearchrectangle
+		click text:contraindicated,SearchRectangle:rectangle
+		
+		Log "VERIFICATION: Verify the 'Reschedule Date' and 'Cancel series and stop forecasting' radio buttons are enabled."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (permNotGivenAction)
+		run "Immunizations/Util/Validation".verifyImage radioButtonDisabled,rectangle
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (rescheduleDate)
+		run "Immunizations/Util/Validation".verifyImage radioButtonDisabled,rectangle
+		
+		Log "VERIFICATION: Ensure Contraindicated displays in the Not Given Type field."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".DialogSearchrectangle
+		run "Immunizations/Util/Validation".verifyText contraindicated,rectangle
+		
+		Log "VERIFICATION: Verify the Chart button shows a count of 0 in parenthesis and is dithered."
+		//Run "Immunizations/Common/ChartingDialog/Validation".verifySubmitButton "false", 0
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-SelectActionValidations")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select 'Reschedule Date' radio button."
+		Set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".selectActionSearchRectangle
+		Click text:rescheduleDate,searchRectangle:rectangle,ignoreSpaces:YES
+		
+		Log "VERIFICATION: Verify the 'Reschedule Date' radio button is selected."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (rescheduleDate)
+		run "Immunizations/Util/Validation".verifyImage radioButtonEnabled,rectangle
+		
+		Log "VERIFICATION:  Verify the 'Not Given Reason' field is a mandatory field."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (notGivenReasonField)
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/RedAstriek/MandatoryField_RedAsterisk",rectangle
+		
+		Log "VERIFICATION: Verify the 'Authorized Date' entry field has an asterisk to the left."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (authorizedDate)
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/RedAstriek/MandatoryField_RedAsterisk",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ReschedueDateValidations")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select within the 'Reschedule Date' field, backspace to delete the date, and click outside of the field."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		click imageLocation(Text:rescheduleDate,searchRectangle:rectangle,ignoreSpaces:YES)
+		typeText tabKey
+		typeText backspace
+		typeText tabKey
+		typeText backspace
+		typeText tabKey
+		typeText backspace
+		typeText tabKey
+		
+		Log "VERIFICATION: Verify the Reschedule field is yellow with mm/dd/yyyy"
+		run "Immunizations/Util/Validation".verifyText "mm / dd / yyyy",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ClearedRescheduleDate")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Type today’s date in MM/DD/YYYY format."
+		run "Immunizations/Common/ChartNotGiven/Actions".RescheduleDateInput "Immunizations/Util/Date".todaysDate(format)
+		
+		Log "VERIFICATION: 'Enter a date that is after mm,dd,yyyy' validation message is displayed."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		run "Immunizations/Util/Validation".verifyText "Enter a date that is after"&&todaysdate,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ValidationMessage")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select a date greater than the latest date for the given vaccine."
+		run "Immunizations/Common/ChartNotGiven/Actions".RescheduleDateInput "Immunizations/Util/Date".adjustDate(dob1, format, ("year":27))
+		
+		Log "VERIFICATION: Verify the following message displays right below the 'Reschedule Date' field: 'Selected date is after the latest date of mm/dd/yyyy'."
+		run "Immunizations/Util/Validation".verifyText "Selected date is after the latest date of"&"Immunizations/Util/Date".adjustDate(dob1, format1, ("year":27,"day":-1)),rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ValidationMessage")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Type a date two digit year form with the slashes (MM/DD/YY) and click outside the date field."
+		typetext shiftkey,tabkey
+		typetext "20"
+		typetext tabkey
+		
+		Log "VERIFICATION: 'Enter a date that is after mm,dd,yyyy' validation message is displayed."
+		run "Immunizations/Util/Validation".verifyText "Enter a date that is after"&&todaysdate,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ErrorMessageValidation")
+		
+		//To revert back the reschedule date as per the above step
+		run "Immunizations/Common/ChartNotGiven/Actions".RescheduleDateInput "Immunizations/Util/Date".adjustDate(dob1, format, ("year":27))
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select a 'Not Given Reason' from code set 30441. E.g."&&tempNotGivenReason
+		click imageLocation(text:notGivenReasonField,searchRectangle:rectangle)+(30,30)
+		click text:tempNotGivenReason, searchRectangle:rectangle
+		
+		Log "VERIFICATION: Verify Submit button displays with a count of 1 in parenthesis and is enabled."
+		run "Immunizations/Common/ChartingDialog/Validation".verifySubmitButton "true", 1
+		
+		Log "VERIFICATION: Ensure a green checkmark is displayed for the future forecasted vaccine group e.g. HPV along the left pane."
+		(*set rectangle to "Immunizations/Common/DocumentHistory/Helpers".asteriskOrCheckmarkSearchRectangle("Human Papillomavir")
+		run "Immunizations/Util/Validation".verifyImage greenCheckMark,rectangle*)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Submit(1)")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the"&vaccineName2&"vaccine group and select any 'Not Given Type'."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".asteriskOrCheckmarkSearchRectangle(vaccineName2)
+		click imagelocation(image:asterisk, SearchRectangle: rectangle)
+		Set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		click imageLocation(text:notGivenTypeField,searchRectangle:rectangle)+(30,30)
+		click text:permNotGivenType,searchRectangle:rectangle
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".selectActionSearchRectangle
+		click text:permNotGivenAction,searchRectangle:rectangle
+		
+		Log "VERIFICATION: Verify Submit button displays with a count of 1 in parenthesis and is enabled."
+		run "Immunizations/Common/ChartingDialog/Validation".verifySubmitButton "true", 1
+		
+		Log "VERIFICATION: Verify the Not Given Reason field is a mandatory field."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (notGivenReasonField)
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/RedAstriek/MandatoryField_RedAsterisk",rectangle
+		
+		Log "VERIFICATION: Verify there is an asterisk beside"&vaccineName2&"in the vaccine group list to the left."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".asteriskOrCheckmarkSearchRectangle(vaccineName2)
+		run "Immunizations/Util/Validation".verifyImage asterisk,rectangle
+		
+		Log "VERIFICATION: Verify the 'Cancel series and stop forecasting' radio button is selected."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (permNotGivenAction)
+		run "Immunizations/Util/Validation".verifyImage radioButtonEnabled,rectangle
+		
+		Log "VERIFICATION: Verify the Comments field is displayed with '0/200' below"
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		click imagelocation(text:"Comments",SearchRectangle:rectangle)
+		scrollWheelDown 1
+		click imagelocation(text:"Comments",SearchRectangle:rectangle)+(0,20)
+		click imagelocation(text:"Comments",SearchRectangle:rectangle)
+		scrollWheelDown 1
+		run "Immunizations/Util/Validation".verifyText "0/200",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Submit(1)")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click on the Submit button."
+		run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton "Submit"
+		
+		Log "VERIFICATION: Ensure the Status column display with appropriate status for the vaccine group E.g."&vaccineName1&"charted from the MPAGE "
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName1, contraindicated
+		
+		Log "VERIFICATION: Ensure the Next Recommended column display with appropriate value for the vaccine group E.g."&vaccineName1&"charted from the MPAGE "
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyNextRecommendedColumn vaccineName1, "--"
+		
+		Log "VERIFICATION: Ensure the Administrations column display with appropriate value for the vaccine group E.g."&vaccineName1&"charted from the MPAGE "
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "--", "true"
+		
+		Log "VERIFICATION: Ensure the Last Action column display with appropriate value for the vaccine group E.g."&vaccineName1&"charted from the MPAGE "
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, "Not Given"
+		
+		Log "VERIFICATION: Ensure the Last Action Date column display with appropriate value for the vaccine group E.g."&vaccineName1&"charted from the MPAGE "
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionDateColumn vaccineName1,todaysdate,"Immunizations/Util/Date".ageCalculator (dob1, "Immunizations/Util/Date".adjustDate(dob1, format, ("Month":14)), "false", "false")
+		
+		Log "VERIFICATION: Ensure the Status column display with '--' for the vaccine group E.g."&vaccineName2&"charted from the MPAGE "
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName2, "--"
+		
+		Log "VERIFICATION: Ensure the Last Action column display with '--' for the vaccine group E.g."&vaccineName2&"charted from the MPAGE "
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName2, "--"
+		
+		Log "VERIFICATION: Ensure the Status column display with appropriate status for the vaccine group E.g."&vaccineName3&"charted from the MAR "
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName3, inRange
+		
+		Log "VERIFICATION: Ensure the Next Recommended column display with appropriate value for the vaccine group E.g."&vaccineName3&"charted from the MAR "
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyNextRecommendedColumn vaccineName3, "Today" && "-" && "Immunizations/Util/Date".adjustDate(todaysdate, format1, ("month":2,"week":4,"day":-1))
+		
+		Log "VERIFICATION: Ensure the Administrations column display with appropriate value for the vaccine group E.g."&vaccineName3&"charted from the MAR "
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName3, "--", "true"
+		
+		Log "VERIFICATION: Ensure the Last Action column display with appropriate value for the vaccine group E.g."&vaccineName3&"charted from the MAR "
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName3, "Not Given"
+		
+		Log "VERIFICATION: Ensure the Last Action Date column display with appropriate value for the vaccine group E.g."&vaccineName3&"charted from the MAR "
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionDateColumn vaccineName3,todaysdate,"Immunizations/Util/Date".ageCalculator (dob1, "Immunizations/Util/Date".adjustDate(dob1, format, ("Month":14)), "false", "false")
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-MPAGE Columns Validation")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the future forecasted vaccine group E.g."&vaccineName1
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		
+		Log "VERIFICATION: Ensure the charted today display correctly and correctly reflect the Authorized by date. Ensure the age within the parenthesis correctly reflects the age of the patient for the Authorized by date of today."
+		set rectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+		run "Immunizations/Util/Validation".verifyText todaysdate&&"Immunizations/Util/Date".ageCalculator (dob1, "Immunizations/Util/Date".adjustDate(dob1, format, ("Month":14)), "false", "true"),rectangle
+		set rectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelTopHeaderRectangle
+		run "Immunizations/Util/Validation".verifyText contraindicated ,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-NotGivenChartedWithTodaysDate")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the View Forecast link in the upper right corner."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure the Forecast button in the upper right is selected and a darker shade of grey."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage greyForecastButton,rectangle
+		
+		Log "VERIFICATION: Ensure those charted with an Authorized by date of Today display in the Today column. Verify the vaccine group charted as Not Given from the MAR (e.g. Varicella) display in the Today column with current dose due."
+		set rowSearchRectangleVaccineName1 to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText contraindicated&return&todaysdate,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName1,columnSearchRectangleToday)
+		set rowSearchRectangleVaccineName3 to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName3)
+		run "Immunizations/Util/Validation".verifyText "Dose 1","Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName3,columnSearchRectangleToday)
+		
+		Log "VERIFICATION: Ensure each charted not given vaccine group display future columns with 'Forecast Rescheduled' with a blue background"
+		set startDateHeader to  "Immunizations/Util/Date".adjustDate(todaysdate, format1, ("Day":1))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(todaysdate, format1, ("Year":6,"Month":-2,"Day":27))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader, "-100", "-100", "100", "600")
+		run "Immunizations/Util/Validation".verifyText forecastRescheduled, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName1, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure the vaccine group not given charted from the MAR does not display future columns with 'Forecast Rescheduled' with a blue background "
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader, "-100", "-100", "100", "600")
+		run "Immunizations/Util/Validation".verifyTextNotVisible forecastRescheduled, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName3, columnSearchRectangle)
+		
+		Log "VERIFICATION: Verify the Document History and Chart Not Given buttons are enabled and listed in the lower right corner of the window."
+		set rectangle to "Immunizations/Common/Helpers".offsetImageRectangle ("Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarRightArrow", -500, 10, 50, 50)
+		run "Immunizations/Util/Validation".verifyText documentHistory,rectangle
+		run "Immunizations/Util/Validation".verifyText chartNotGiven,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ForecastView")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the Chart Not Given button in the lower right.Select a vaccine group from the Favorites list which is defined as part of the CDC Schedule and is forecasted Seasonally E.g."&vaccineName4&"and click the Select button."
+		run "Immunizations/Common/ChartNotGiven/Actions".openDialog
+		run "Immunizations/Common/SelectImmunizationsList".SelectvaccineName vaccineName4
+		run "Immunizations/Common/SelectImmunizationsList".ClickSelectButton
+		
+		Log "VERIFICATION: Verify the selected vaccine group is added to the Immunization-Not Given dialog with a red asterisk displayed to the left of the vaccine group names."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".asteriskOrCheckmarkSearchRectangle (vaccineName4)
+		run "Immunizations/Util/Validation".verifyImage asterisk,rectangle
+		
+		Log "VERIFICATION: Ensure the cancel button is available in the lower right corner of the Not Given Dialog and there is an x in the upper right portion of the dialog."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		run "Immunizations/Util/Validation".verifyImage  cancelButtonEnabledImage,rectangle
+		
+		Log "VERIFICATION: The system shall display 'This will stop the forecasting remainders of future doses.' right below Cancel Series/Forecasting radio button."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".selectActionSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "This will stop the forecasting reminders of future doses.",rectangle
+		
+		Log "VERIFICATION: Ensure Radio buttons are listed in the following order and are dithered; Reschedule Date, Cancel series and stop forecasting and This season only."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (permNotGivenAction)
+		run "Immunizations/Util/Validation".verifyImage radioButtonDithered,rectangle
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (tempNotGivenAction)
+		run "Immunizations/Util/Validation".verifyImage radioButtonDithered,rectangle
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (rescheduleDate)
+		run "Immunizations/Util/Validation".verifyImage radioButtonDithered,rectangle
+		
+		Log "VERIFICATION: Verify the Not Given reason field is dithered."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		run "Immunizations/Util/Validation".verifyImage  radioButtonDithered,rectangle
+		
+		Log "VERIFICATION: Verify the Authorized By field is defaulted to the logged in user."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".authorizedBySearchRectangle
+		run "Immunizations/Util/Validation".verifyValue rectangle,user
+		
+		Log "VERIFICATION: Verify the Not Given Date located to the right of the Authorized By field is defaulted to today's date."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".authorizedDateSearchRectangle
+		run "Immunizations/Util/Validation".verifyValue rectangle,"Immunizations/Util/Date".todaysDate(format)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-AllFieldValidations")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select"&permNotGivenType&"from the Not Given Type drop down"
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		click imageLocation(text:notGivenTypeField,searchRectangle:rectangle)+(30,30)
+		click text:permNotGivenType,searchRectangle:rectangle
+		
+		Log "VERIFICATION: Verify the 'Reschedule Date', 'Cancel series and stop forecasting' and 'This season only' radio buttons are enabled."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (permNotGivenAction)
+		run "Immunizations/Util/Validation".verifyImage radioButtonDisabled,rectangle
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (tempNotGivenAction)
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (rescheduleDate)
+		run "Immunizations/Util/Validation".verifyImage radioButtonDisabled,rectangle
+		
+		Log "VERIFICATION: Ensure the selected choice for Not Given Type displays."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		run "Immunizations/Util/Validation".verifyText permNotGivenType,rectangle
+		
+		Log "VERIFICATION: Ensure the Cancel button is enabled and the Submit button displays a count of 0 in parenthesis and is dithered."
+		set productSearchRectangle to "Immunizations/Common/DocumentHistory/Helpers".productSearchRectangle
+		run "Immunizations/Util/Validation".verifyimage cancelButtonEnabledImage, productSearchRectangle
+		run "Immunizations/Common/ChartingDialog/Validation".verifySubmitButton "false", 0
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-SelectActionsValidations")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the 'This Season Only' radio button."
+		set rectangle to  "Immunizations/Common/ChartNotGiven/Helpers".selectActionSearchRectangle
+		click text:tempNotGivenAction,SearchRectangle:rectangle
+		
+		Log "VERIFICATION: Ensure the 'This Season Only' radio button displays as selected."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (tempNotGivenAction)
+		run "Immunizations/Util/Validation".verifyImage radioButtonEnabled,rectangle
+		
+		Log "VERIFICATION: Ensure 'Cancel series and stop forecasting' and 'Reschedule Date' radio buttons are enabled but do not display as selected and the Reschedule for date field remains disabled."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (permNotGivenAction)
+		run "Immunizations/Util/Validation".verifyImage radioButtonDisabled,rectangle
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (rescheduleDate)
+		run "Immunizations/Util/Validation".verifyImage radioButtonDisabled,rectangle
+		
+		Log "VERIFICATION: Verify the Not Given Reason field is a mandatory field and it is enabled"
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".fieldLabelLeftSearchRectangle (notGivenReasonField)
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/RedAstriek/MandatoryField_RedAsterisk",rectangle
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		run "Immunizations/Util/Validation".verifyImage  "Immunizations/Common/ChartNotGiven/NotGivenReasonField_Enabled",rectangle
+		
+		Log "VERIFICATION: Verify the Submit button is dithered and displays a count of 0 in parenthesis."
+		run "Immunizations/Common/ChartingDialog/Validation".verifySubmitButton "false", 0
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-tempNotGivenAction")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select a Not Given Reason E.G. Parent or Guardian Refuses"
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		click imageLocation(text:notGivenReasonField,searchRectangle:rectangle)+(30,30)
+		click text: permNotGivenReason, searchRectangle:rectangle
+		
+		Log "VERIFICATION: Verify the Comments field is displayed with '0/200' below"
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		click imagelocation(text:"Comments",SearchRectangle:rectangle)
+		scrollWheelDown 1
+		click imagelocation(text:"Comments",SearchRectangle:rectangle)+(0,20)
+		click imagelocation(text:"Comments",SearchRectangle:rectangle)
+		scrollWheelDown 1
+		run "Immunizations/Util/Validation".verifyText "0/200",rectangle
+		
+		Log "VERIFICATION: Verify Submit button is enabled and displays a count of 1 in parenthesis."
+		run "Immunizations/Common/ChartingDialog/Validation".verifySubmitButton "true", 1
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Submit(1)")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click on Submit button."
+		run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton "Submit"
+		
+		Log "VERIFICATION: Ensure the Future forecasted e.g."&vaccineName1&"displays with Rescheduled For MMM DD, YYYY and MAR Charted Not Given vaccine group e.g."&vaccineName3&"as Not Started to the left of the Today column and Seasonal vaccine e.g."&vaccineName4&" as Contraindicated"
+		run "Immunizations/Util/Validation".verifyText rescheduledFor&&"Immunizations/Util/Date".adjustDate(dob1, format1, ("year":27)),rowSearchRectangleVaccineName1
+		run "Immunizations/Util/Validation".verifyText notStarted,rowSearchRectangleVaccineName3
+		set rowSearchRectangleVaccineName4 to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName4)
+		run "Immunizations/Util/Validation".verifyText seasonalRefused,rowSearchRectangleVaccineName4
+		
+		Log "VERIFICATION: Ensure the Not Givens charted with an Authorized date of today are listed in the Today column. Ensure the Not Given Type is on the first line and the date is on the second line in format MMM DD, YYYY."
+		run "Immunizations/Forecaster-Forecast/Actions".scrollToLeft
+		run "Immunizations/Util/Validation".verifyText  contraindicated&return&todaysdate,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName1,columnSearchRectangleToday)
+		run "Immunizations/Util/Validation".verifyText  seasonalRefused&return&todaysdate,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName4,columnSearchRectangleToday)
+		
+		Log "VERIFICATION: Ensure each charted not given vaccine group displays future columns with 'Forecast Rescheduled' with a blue background except for the vaccine group charted as Not Given from the MAR."
+		set startDateHeader to  "Immunizations/Util/Date".adjustDate(todaysdate, format1, ("Day":1))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(todaysdate, format1, ("Year":6,"Month":-2,"Day":27))
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader, "-100", "-100", "100", "600")
+		run "Immunizations/Util/Validation".verifyText forecastRescheduled, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName1, columnSearchRectangle)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader, "-100", "-100", "100", "600")
+		run "Immunizations/Util/Validation".verifyTextNotVisible forecastRescheduled, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName3, columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ForecastViewValidation")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the future forecasted vaccine group E.g."&vaccineName1
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName1
+		
+		Log "VERIFICATION: Ensure the vaccine group name and Rescheduled for MM DD, YYYY is highlighted to the left."
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1&return&rescheduledFor&&"Immunizations/Util/Date".adjustDate(dob1, format1, ("year":27)),rectangle
+		
+		Log "VERIFICATION: Ensure the entry charted is available before the forecasted doses that are due in the future."
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText contraindicated&return&todaysdate,rectangle
+		
+		Log "VERIFICATION: Ensure the Body has Vaccine group information Statement(s) with link(s) if available in the domain.  Otherwise, ensure text displays below the body header stating 'There is no associated Vaccine Information Statement to be displayed.  Contact your help desk.'"
+		run "Immunizations/Util/Validation".verifyText VIS1, "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneSearchRectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ExpandedViewValidation")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the Not Recommended dose that's rescheduled beyond the Latest date."
+		Click text: "1", SearchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		
+		Log "VERIFICATION: In the right hand pane, ensure Dose 1-Rescheduled Beyond Vaccine Age Limit displays in the header."
+		set expandedViewRightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText "Dose 1 - Rescheduled Beyond Vaccine Age Limit",expandedViewRightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Earliest: 9 years from DOB (9yrs)."
+		set dose1MinimumDate to "Immunizations/Util/Date".adjustDate(dob1, format1, ("Year":9))		
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum, dose1MinimumDate		
+		set dose1MinimumAge to "Immunizations/Util/Date".ageCalculator(dob1, dose1MinimumDate, false, false)		
+		set rightPaneBodySearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneBodySearchRectangle()	
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose1MinimumAge, "Immunizations/Util/Date".setPattern(dose1MinimumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(minimum, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Recommended From: 11 years from DOB (11yrs)."
+		set dose1EarliestRecommendedDate to "Immunizations/Util/Date".adjustDate(dob1, format1, ("Year":11))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended, dose1EarliestRecommendedDate
+		set dose1EarliestRecommendedAge to "Immunizations/Util/Date".ageCalculator(dob1, dose1EarliestRecommendedDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose1EarliestRecommendedAge, "Immunizations/Util/Date".setPattern(dose1EarliestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(earliestRecommended, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Recommended Until: 13 years + 4 weeks - 1 day from DOB (13yrs 3w)."
+		set dose1LatestRecommendedDate to "Immunizations/Util/Date".adjustDate(dob1, format1,("year": 13,"week":4,"day":-1))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended, dose1LatestRecommendedDate
+		set dose1LatestRecommendedAge to "Immunizations/Util/Date".ageCalculator(dob1, dose1LatestRecommendedDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose1LatestRecommendedAge, "Immunizations/Util/Date".setPattern(dose1LatestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(latestRecommended, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Latest: 26 years - 1 day from DOB (26yrs 11m)."
+		set dose1MaximumDate to "Immunizations/Util/Date".adjustDate(dob1, format1,("year": 27,"day":-1))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField maximum, dose1MaximumDate
+		set dose1MaximumAge to "Immunizations/Util/Date".ageCalculator(dob1, dose1MaximumDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose1MaximumAge, "Immunizations/Util/Date".setPattern(dose1MaximumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(maximum, rightPaneBodySearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose1ExpandedView")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click anywhere outside the expanded view window"
+		Log "VERIFICATION: Ensure the expanded view collapses."
+		set topPaneRectangle to "Immunizations/Common/Helpers".tabListSearchrectangle
+		click text:"CDC Schedule", searchrectangle:topPaneRectangle
+		
+		//Exiting from powerchart since multiple applications if opened there is issue while swtiching back from foreground to background application 
+		run "Immunizations/Setup".closeApplication 
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ExpandedViewClosed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Change the age of patient1 so that the Latest date the vaccine should be given comes after the Reschedule for date and refresh Powerchart.exe from the top blue banner."
+		Log "VERIFICATION: Ensure age of patient1 updates."
+		run "DiscernVisualDeveloper/Actions".openDiscernVisualDeveloper username, password, domain 
+		run "Immunizations/PatientCreation".updatePatientDOB  lastName1, firstName1, formattedTime("%b-%d-%Y", value("Today - 26 years - 11 months - 8 days"))
+		waitFor 100, "DiscernVisualDeveloper/Run_Prompt/No_Data_Found_Text"
+		run "Util".closeApplication 2
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Patient1AgeChanged")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Navigate back to Forecast View and select the future forecasted vaccine group"
+		run "Immunizations/Setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName1, menu, subMenu, "true", relationship
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		repeat 2 times
+			run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		end repeat
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName1
+		
+		Log "VERIFICATION: Ensure the vaccine group name and Rescheduled for MM DD, YYYY is highlighted to the left.Ensure the entry charted is available before the forecasted doses that are due in the future."
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1&return&rescheduledFor&&"Immunizations/Util/Date".adjustDate(dob1, format1, ("year":27)),rectangle
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText contraindicated&return&todaysdate,rectangle
+		
+		Log "VERIFICATION: Ensure the Body has Vaccine group information Statement(s) with link(s) if available in the domain.  Otherwise, ensure text displays below the body header stating 'There is no associated Vaccine Information Statement to be displayed.  Contact your help desk.'"
+		run "Immunizations/Util/Validation".verifyText VIS1, "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneSearchRectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ExpandedHeaderView")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the Not Recommended dose that's rescheduled beyond the Latest date."
+		Click text: "1", validWords:1,SearchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		
+		Log "VERIFICATION: In the right hand pane, ensure Dose 1-Rescheduled Beyond Vaccine Age Limit displays in the header."
+		set changedDOB to formattedTime("%m %d, %Y", value("Today - 26 years - 11 months - 8 days"))
+		set expandedViewRightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText "Dose 1 - Rescheduled Beyond Vaccine Age Limit",expandedViewRightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Earliest: 9 years from DOB (9yrs)."
+		set dose1MinimumDate to "Immunizations/Util/Date".adjustDate(changedDOB, format1, ("Year":9))		
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum, dose1MinimumDate		
+		set dose1MinimumAge to "Immunizations/Util/Date".ageCalculator(changedDOB, dose1MinimumDate, false, false)		
+		set rightPaneBodySearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneBodySearchRectangle()	
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose1MinimumAge, "Immunizations/Util/Date".setPattern(dose1MinimumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(minimum, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Recommended From: 11 years from DOB (11yrs)."
+		set dose1EarliestRecommendedDate to "Immunizations/Util/Date".adjustDate(changedDOB, format1, ("Year":11))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended, dose1EarliestRecommendedDate
+		set dose1EarliestRecommendedAge to "Immunizations/Util/Date".ageCalculator(changedDOB, dose1EarliestRecommendedDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose1EarliestRecommendedAge, "Immunizations/Util/Date".setPattern(dose1EarliestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(earliestRecommended, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Recommended Until: 13 years + 4 weeks - 1 day from DOB (13yrs 3w)."
+		set dose1LatestRecommendedDate to "Immunizations/Util/Date".adjustDate(changedDOB, format1,("year": 13,"week":4,"day":-1))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended, dose1LatestRecommendedDate
+		set dose1LatestRecommendedAge to "Immunizations/Util/Date".ageCalculator(changedDOB, dose1LatestRecommendedDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose1LatestRecommendedAge, "Immunizations/Util/Date".setPattern(dose1LatestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(latestRecommended, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Latest: 26 years - 1 day from DOB (26yrs 11m)."
+		set dose1MaximumDate to "Immunizations/Util/Date".adjustDate(changedDOB, format1,("year": 27,"day":-1))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField maximum, dose1MaximumDate
+		set dose1MaximumAge to "Immunizations/Util/Date".ageCalculator(changedDOB, dose1MaximumDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose1MaximumAge, "Immunizations/Util/Date".setPattern(dose1MaximumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(maximum, rightPaneBodySearchRectangle)
+		
+		//Exiting from powerchart since multiple applications if opened there is issue while swtiching back from foreground to background application 
+		run "Immunizations/Setup".closeApplication 
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose1ExpandedView")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Change the age of patient1 back to the original value and refresh Powerchart.exe from the top blue banner."
+		Log "VERIFICATION: Ensure age of patient1 updates."
+		run "DiscernVisualDeveloper/Actions".openDiscernVisualDeveloper username, password, domain 
+		run "Immunizations/PatientCreation".updatePatientDOB  lastName1, firstName1, formattedTime("%b-%d-%Y", dob1)
+		waitFor 100, "DiscernVisualDeveloper/Run_Prompt/No_Data_Found_Text"
+		run "Util".closeApplication 2
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Patient1AgeRevertedBack")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Navigate back to Forecast View and select the List Button in the upper right corner."
+		run "Immunizations/Setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName1, menu, subMenu, "true", relationship
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+		
+		Log "VERIFICATION: Verify the Authorized By dates for the charted Not Givens are displayed in the Action column for"&&vaccineName1&&"charted Not Given Vaccine group and the status is directly underneath."
+		set rowSearchRectangleVaccineName1 to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangleWithIndexOne to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText contraindicated&return&todaysdate,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName1,columnSearchRectangleWithIndexOne)
+		
+		Log "VERIFICATION: Verify the Authorized By dates for the charted Not Givens are displayed in the Action column for"&&vaccineName3&&"charted Not Given Vaccine group and Ensure the vaccine group charted from the MAR displays Not Given for the status"
+		set rowSearchRectangleVaccineName3 to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName3)
+		run "Immunizations/Util/Validation".verifyText notStarted,rowSearchRectangleVaccineName3
+		run "Immunizations/Util/Validation".verifyText "Not Given"&return&todaysdate,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName3,columnSearchRectangleWithIndexOne)
+		
+		Log "VERIFICATION: Verify the Authorized By dates for the charted Not Givens are displayed in the Action column for"&&vaccineName4&&"charted Not Given Vaccine group and the status is directly underneath."
+		set rowSearchRectangleVaccineName4 to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName4)
+		run "Immunizations/Util/Validation".verifyText seasonalRefused,rowSearchRectangleVaccineName4
+		run "Immunizations/Util/Validation".verifyText seasonalRefused&return&todaysdate,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName4,columnSearchRectangleWithIndexOne)
+		
+		Log "VERIFICATION: Ensure the Document History and Chart Not Given buttons are enabled and listed in the lower right corner of the window."
+		set rectangle to "Immunizations/Common/Helpers".offsetImageRectangle ("Immunizations/Forecaster-Forecast/List", -500, 10, 50, 50)
+		run "Immunizations/Util/Validation".verifyText documentHistory,rectangle
+		run "Immunizations/Util/Validation".verifyText chartNotGiven,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ListViewValidation")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the Chart Not Given button in the lower right portion of the window."
+		run "Immunizations/Common/ChartNotGiven/Actions".openDialog
+		
+		Log "VERIFICATION: Ensure the Select button is dithered and displays 'Select (0)' and Ensure Cancel button is selectable."
+		run "Immunizations/Common/ChartingDialog/Validation".verifySelectButton "false", 0
+		set productSearchRectangle to "Immunizations/Common/DocumentHistory/Helpers".productSearchRectangle
+		run "Immunizations/Util/Validation".verifyimage cancelButtonEnabledImage, productSearchRectangle
+		
+		Log "VERIFICATION: Ensure 'No Immunization Selected' is displayed in the Immunization – Not Given dialog."
+		click image:cancelButtonEnabledImage
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".DialogSearchrectangle
+		run "Immunizations/Util/Validation".verifyImage noImmunizationsSelectedImage,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Select(0)")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select any two independent vaccines that have at least 1 vaccine alphabeticaly after them in the list.E.g."&&vaccineName5&&"and"	&&vaccineName6
+		click addImmunizations
+		run "Immunizations/Common/SelectImmunizationsList".SelectvaccineName vaccineName5
+		run "Immunizations/Common/SelectImmunizationsList".SelectvaccineName vaccineName6
+		run "Immunizations/Common/SelectImmunizationsList".ClickSelectButton
+		
+		Log "VERIFICATION: Ensure the selected vaccine groups are added to the Immunization-Not Given dialog with a red asterisk displayed to the left of the vaccine names."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".asteriskOrCheckmarkSearchRectangle (vaccineName5)
+		run "Immunizations/Util/Validation".verifyImage asterisk,rectangle
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".asteriskOrCheckmarkSearchRectangle (vaccineName6)
+		run "Immunizations/Util/Validation".verifyImage asterisk,rectangle
+		
+		Log "VERIFICATION: Verify the Comments field is displayed with '0/200' below"
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		click imagelocation(text:"Comments",SearchRectangle:rectangle)
+		scrollWheelDown 1
+		click imagelocation(text:"Comments",SearchRectangle:rectangle)+(0,20)
+		click imagelocation(text:"Comments",SearchRectangle:rectangle)
+		scrollWheelDown 1
+		run "Immunizations/Util/Validation".verifyText "0/200",rectangle
+		
+		Log "VERIFICATION: Verify the Cancel button in the lower right is enabled."
+		set productSearchRectangle to "Immunizations/Common/DocumentHistory/Helpers".productSearchRectangle
+		//run "Immunizations/Util/Validation".verifyimage cancelButtonEnabledImage, productSearchRectangle
+		
+		Log "VERIFICATION: Verify the Submit button shows a count of 0 in parenthesis and is dithered."
+		//run "Immunizations/Common/ChartingDialog/Validation".verifySubmitButton "false", 0
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-AllFieldValidations")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: With the first vaccine group selected click the 'x' inside the right hand pane E.g. Hep A"
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		click text:"Delete Entry",SearchRectangle:rectangle
+		
+		Log "VERIFICATION: Verify the  vaccine group name does not display on the left hand side."
+		set rectangle to "Immunizations/Common/ChartNotGiven/Helpers".DialogRectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName5,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-OneVaccineRemoved")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click + Add Immunizations and select an independent vaccine group that comes after the removed vaccine group E.g."&&vaccineName1
+		click  ImageLocation(addImmunizations)
+		run "Immunizations/Common/SelectImmunizationsList".SelectvaccineName vaccineName1
+		run "Immunizations/Common/SelectImmunizationsList".ClickSelectButton
+		
+		Log "VERIFICATION: Ensure the previously selected vaccine group has been removed and the vaccine group selected from the Immunization list is added to the Immunization-Not Given dialog in the left column with a red asterisk displayed to the left of the vaccine name."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".asteriskOrCheckmarkSearchRectangle ("Human Papillomavir")
+		run "Immunizations/Util/Validation".verifyImage asterisk,rectangle
+		put imagerectangle(image:addImmunizations).bottomleft() into Immunizations
+		insert Immunizations+(200,350)  into Immunizations
+		run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName5,Immunizations
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-NewVaccineAdded")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click Cancel button."
+		Log "VERIFICATION: Ensure the Immunization Not Given dialog disposes."
+		set productSearchRectangle to "Immunizations/Common/DocumentHistory/Helpers".productSearchRectangle
+		click imagename:cancelButtonEnabledImage,SearchRectangle:productSearchRectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-NotGivenClosed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Navigate to the Win32 Immunization Schedule."
+		run "Immunizations/Setup".LoadComponentViaPatientChart menu, "Immunization Schedule"
+		
+		Log "VERIFICATION: Verify the future forecasted vaccine group charted as Not Given from the Mpage e.g."&&vaccineName1&&",MAR charted Not Given, and the Seasonal vaccine group charted as Not Given from the Forecaster e.g."&&vaccineName4&&"display in the Previous Immunizations section with Not Given in the Admin Date field."
+		waitfor 100,"ImmunizationsSchedule/PreviousImmunizations/TL_PreviousImmunizations"
+		set rectangle to "ImmunizationsSchedule/PreviousImmunizations/Helpers".DialogRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName3,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-PreviousImmunizationSection")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Right click the Not Given entry for the MAR charted vaccine group e.g."&vaccineName3&"and select View."
+		click text:vaccineName3,SearchRectangle:rectangle
+		rightClick text:vaccineName3,SearchRectangle:rectangle
+		click text:"View",EnableAggressiveTextExtraction:Yes,SearchRectangle:rectangle
+		
+		Log "VERIFICATION: Ensure the details window opens. Verify the Not Given section at the bottom of the window displays the following fields from left to right with the details you charted from the MAR: Exception, Exception Authorized by, Exception Reason, Description"
+		waitfor 100,"ImmunizationsSchedule/ImmunizationsDetails/Label_ImmunizationDetails"
+		set rectangle to  "ImmunizationsSchedule/ImmunizationDetails/Helpers".DialogRectangle
+		put imageLocation(image:"ImmunizationsSchedule/ImmunizationsDetails/Exception", searchrectangle:rectangle)+[-20,0] into ExceptionSR
+		insert ExceptionSR + [880,110] into ExceptionSR
+		run "Immunizations/Util/Validation".verifyText exceptionMAR,ExceptionSR
+		run "Immunizations/Util/Validation".verifyText user,ExceptionSR
+		run "Immunizations/Util/Validation".verifyText exceptionMAR,ExceptionSR
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ImmunnizationDialog")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select Cancel"
+		Log "VERIFICATION: Immunization Details, View Only window closes."
+		click "ImmunizationsSchedule/ImmunizationsDetails/BR_Cancel"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ViewWindowClosed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: From the Future Immunization Schedule section on the right, select any vaccine group, E.g."&&vaccineName5&&"select the Chart button, and chart an entry with a Not Given Type of Refuse - Reschedule."
+		Log "VERIFICATION: Verify the Status field within the Future Immunization Schedule section to the right correctly reflects the updated status."
+		run "ImmunizationsSchedule/ImmunizationDetails/Actions/".chartNotGivenFromFutureImmunizationSchedule vaccineName1InImmunizationSchedule,vaccineName1NotGivenType,vaccineName1NotGivenReason
+		wait 2 //a popup window appears
+		typetext returnkey
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ChartHepA")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: From the Future Immunization Schedule section on the right, select any vaccine group, E.g."&&vaccineName6&&"select the Chart button, and chart an entry with a Not Given Type of Contraindicated – Reschedule."
+		Log "VERIFICATION: Verify the Status field within the Future Immunization Schedule section to the right correctly reflects the updated status."
+		run "ImmunizationsSchedule/ImmunizationDetails/Actions/".chartNotGivenFromFutureImmunizationSchedule vaccineName2InImmunizationSchedule,vaccineName2NotGivenType,vaccineName2NotGivenReason
+		wait 2 //a popup window appears
+		typetext returnkey
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ChartHepB")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: From the Future Immunization Schedule section on the right, select a Seasonal vaccine group, E.g."&&vaccineName4&&"select the Chart button, and chart an entry with a Not Given Type of Defer - Reshedule."
+		Log "VERIFICATION: Verify the Status field within the Future Immunization Schedule section to the right correctly reflects the updated status."
+		run "ImmunizationsSchedule/ImmunizationDetails/Actions/".chartNotGivenFromFutureImmunizationSchedule vaccineName3InImmunizationSchedule,vaccineName3NotGivenType,vaccineName3NotGivenReason
+		wait 2 //a popup window appears
+		typetext returnkey
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ChartInfluenza")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Chart any vaccine with an expiration date"      
+		run "ImmunizationsSchedule/ImmunizationDetails/Actions/".chartVaccineFromFutureImmunizationSchedule vaccineName4InImmunizationSchedule,vaccineName4Product,vaccineName4FundingSource,vaccineName4VIS,vaccineName4Dose,vaccineName4Unit,vaccineName4Route,vaccineName4Site,vaccineName4Manufacturer,vaccineName4LotNumber
+		
+		Log "VERIFICATION: Navigate to the MPAGE Forecast View and refresh the view and verify the banner message displaying"
+		waitfor 100,"ImmunizationsSchedule/PreviousImmunizations/TL_PreviousImmunizations"
+		run "Immunizations/Setup".LoadComponentViaPatientChart menu, subMenu
+		click "Immunizations/Common/Icon_Refresh"
+		if imageFound(image:"Immunizations/Setup/Server_down_error",waitfor:30)
+			logWarning "Bypassing a server error not related to our solution: https://jira2.cerner.com/browse/IMMUN-1802"
+			typeText returnKey
+		end if
+		WaitFor 100, "Immunizations/WorkflowMPage/Table/TL_Workflow/SOLGM2012"
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Unable to display Temporary Not Given status for"&&vaccineName1InImmunizationSchedule&","&&vaccineName2InImmunizationSchedule&","&&vaccineName4&&"vaccines documented through Immunization Schedule. Any forecasting impact is not reflected here.",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-BannerMessageInMPAGEView")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Dismiss the banner message."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		click text:"Dismiss",SearchRectangle:rectangle
+		
+		Log "VERIFICATION: Ensure banner message is no longer visible."
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Unable to display Temporary Not Given status for"&&vaccineName1InImmunizationSchedule&","&&vaccineName2InImmunizationSchedule&","&&vaccineName4&&"vaccines documented through Immunization Schedule. Any forecasting impact is not reflected here.",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-NoBannerMessageInMPAGEView")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Click on the expanded view for the charted vaccine and validate the Expiration Date field value displayed. After validating click anywhere outside the expanded view"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		repeat 2 times
+			run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		end repeat
+		set rowSearchRectangleVaccineName7 to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName7)
+		click text:"Dose 1",searchRectangle:"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName7,columnSearchrectangleToday)
+		Click text: "1", SearchRectangle: "Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchRectangle()
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField expirationDateField, "Immunizations/Util/Date".todaysDate(format1)+1 day     
+		set topPaneRectangle to "Immunizations/Common/Helpers".tabListSearchrectangle
+		Click text:"CDC Schedule", searchrectangle:topPaneRectangle
+		
+		Log "VERIFICATION: Ensure the banner message is visible."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Unable to display Temporary Not Given status for"&&vaccineName1InImmunizationSchedule&","&&vaccineName2InImmunizationSchedule&","&&vaccineName4&&"vaccines documented through Immunization Schedule. Any forecasting impact is not reflected here.",rectangle
+		
+		Log "VERIFICATION: Verify the Document History and Chart Not Given buttons are enabled and listed in the lower right corner of the window."
+		set rectangle to "Immunizations/Common/Helpers".offsetImageRectangle ("Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarRightArrow", -500, 10, 50, 50)
+		run "Immunizations/Util/Validation".verifyText documentHistory,rectangle
+		run "Immunizations/Util/Validation".verifyText chartNotGiven,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-BannerMessageInForecastView")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Navigate to List view and verify the banner message displaying"
+		click image:whiteListButton
+		
+		Log "VERIFICATION: Verify a banner displays above the Header section with the text 'Unable to display Temporary Not Given status for  vaccines documented through Immunization Schedule. Any forecasting impact is not reflected here.' for the vaccine groups documented from the Win32 Immunization Schedule. E.g."&& vaccineName1InImmunizationSchedule&&vaccineName2InImmunizationSchedule&&vaccineName3InImmunizationSchedule
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Unable to display Temporary Not Given status for"&&vaccineName1InImmunizationSchedule&","&&vaccineName2InImmunizationSchedule&","&&vaccineName4&&"vaccines documented through Immunization Schedule. Any forecasting impact is not reflected here.",rectangle
+		
+		Log "VERIFICATION: Ensure the Document History and Chart Not Given are enabled and listed in the lower right corner of the window."
+		set rectangle to "Immunizations/Common/Helpers".offsetImageRectangle (whiteForecastButton, -100, 700, 150, 500)
+		run "Immunizations/Util/Validation".verifyText documentHistory,rectangle
+		run "Immunizations/Util/Validation".verifyText chartNotGiven,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-BannerMessageInListView")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Close the banner message"
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		click image:"Immunizations/Forecaster-Common/Icon_CloseInBannerMessage",SearchRectangle:rectangle
+		
+		Log "VERIFICATION: Verify a banner does not display above the Forecast/List Button with the text 'Unable to display Temporary Not Given status for  vaccines documented through Immunization Schedule. Any forecasting impact is not reflected here.' for the vaccine groups documented from the Win32 Immunization Schedule. E.g."&& vaccineName1InImmunizationSchedule&&vaccineName2InImmunizationSchedule&&vaccineName3InImmunizationSchedule
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Unable to display Temporary Not Given status for"&&vaccineName1InImmunizationSchedule&","&&vaccineName2InImmunizationSchedule&","&&vaccineName4&&"vaccines documented through Immunization Schedule. Any forecasting impact is not reflected here.",rectangle
+		
+		Log "VERIFICATION: Verify the Authorized By dates for the charted Not Givens are displayed in the Action column for"&&vaccineName1&&"charted Not Given Vaccine group and the status is directly underneath."
+		set rowSearchRectangleVaccineName1 to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		run "Immunizations/Util/Validation".verifyText rescheduledFor&&"Immunizations/Util/Date".adjustDate(dob1, format1, ("year":27)),rowSearchRectangleVaccineName1
+		run "Immunizations/Util/Validation".verifyText contraindicated&return&todaysdate,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName1,columnSearchRectangleWithIndexOne)
+		
+		Log "VERIFICATION: Verify the Authorized By dates for the charted Not Givens are displayed in the Action column for"&&vaccineName3&&"charted Not Given Vaccine group and Ensure the vaccine group charted from the MAR displays Not Given for the status"
+		set rowSearchRectangleVaccineName3 to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName3)
+		run "Immunizations/Util/Validation".verifyText notStarted,rowSearchRectangleVaccineName3
+		run "Immunizations/Util/Validation".verifyText "Not Given"&return&todaysdate,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName3,columnSearchRectangleWithIndexOne)
+		
+		Log "VERIFICATION: Verify the Authorized By dates for the charted Not Givens are displayed in the Action column for"&&vaccineName4&&"charted Not Given Vaccine group and the status is directly underneath."
+		set rowSearchRectangleVaccineName4 to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName4)
+		run "Immunizations/Util/Validation".verifyText seasonalRefused,rowSearchRectangleVaccineName4
+		run "Immunizations/Util/Validation".verifyText seasonalRefused&return&todaysdate,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangleVaccineName4,columnSearchRectangleWithIndexOne)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-NoBannerMessageInForecastView")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select Forecast Button in the upper right corner."
+		run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+		
+		Log "VERIFICATION: Verify a banner does not display above the Forecast/List Button with the text 'Unable to display Temporary Not Given status for  vaccines documented through Immunization Schedule. Any forecasting impact is not reflected here.' for the vaccine groups documented from the Win32 Immunization Schedule. E.g."&& vaccineName1InImmunizationSchedule&&vaccineName2InImmunizationSchedule&&vaccineName3InImmunizationSchedule
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Unable to display Temporary Not Given status for"&&vaccineName1InImmunizationSchedule&","&&vaccineName2InImmunizationSchedule&","&&vaccineName4&&"vaccines documented through Immunization Schedule. Any forecasting impact is not reflected here.",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-NoBannerMessageInListView")
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open Powerchart.exe with User1, search for and open the chart for patient2, open the Immunizations Workflow component, click on the plus sign and select not given."
+		run "Immunizations/setup".closeChartViaX
+		run "Immunizations/Setup".navigateToImmunizationWorkflowViaMenu  patientName2, menu, subMenu, "Primary Care Physician"
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Immunizations/WorkflowMPage/Table/BR_PlusSignDropDown","Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		run "Immunizations/Util/Validation".verifyTextNotVisible documentHistory,"Immunizations/Common/Helpers".offsetImageRectangle (common.greyForecastButton, -250, 600, 160, 720)
+		run "Immunizations/Util/Validation".verifyTextNotVisible chartNotGiven,"Immunizations/Common/Helpers".offsetImageRectangle (common.greyForecastButton, -250, 600, 160, 720)
+		run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+		run "Immunizations/Util/Validation".verifyTextNotVisible documentHistory,"Immunizations/Common/Helpers".offsetImageRectangle (common.whiteForecastButton, -250, 600, 160, 720)
+		run "Immunizations/Util/Validation".verifyTextNotVisible chartNotGiven,"Immunizations/Common/Helpers".offsetImageRectangle (common.whiteForecastButton, -250, 600, 160, 720)
+		
+		CaptureScreen{Name:"Step"&Global stepNumber&"-P2-AddIconIsntDisplayed"}	--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Open Powerchart.exe with User1, search for and open the chart for patient3, open the Immunizations Workflow component, Click on View Forecast link"
+		run "Immunizations/setup".closeChartViaX
+		run "Immunizations/Setup".navigateToImmunizationWorkflowViaMenu  patientName3, menu, subMenu, relationship
+		
+		run "Immunizations/Common/ChartNotGiven/Task".chartRequiredInput vaccineName8, contraindicated,rescheduleDate, tempNotGivenReason, "Submit"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-P3-ForecastView")
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the vaccine charted as Not Given mentioned in the prerequisites e.g."&&vaccineName8
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName8
+		
+		Log "VERIFICATION: Verify the expanded panel opens. Ensure the vaccine group name and Rescheduled for MM DD, YYYY is highlighted to the left."
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewLeftPaneHeaderSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName8&return&rescheduledFor&&"Immunizations/Util/Date".adjustDate(todaysdate, format1, ("Day":1)),rectangle
+		
+		Log "VERIFICATION: Ensure the Body has Vaccine group information Statement(s) with link(s) if available in the domain.  Otherwise, ensure text displays below the body header stating 'There is no associated Vaccine Information Statement to be displayed.  Contact your help desk.'"
+		run "Immunizations/Util/Validation".verifyText VIS2, "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneSearchRectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-P3-HeaderAndVISValidation")
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the Dose 2 - Not Yet Recommended dose"
+		click text:"2", searchrectangle:"Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchrectangle()   
+		set rightPaneHeaderSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneHeaderSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Dose 2",rightPaneHeaderSearchRectangle
+		
+		Log "VERIFICATION: Earliest: 2 months + 1 week from DOB"
+		set dose2MinimumDate to "Immunizations/Util/Date".adjustDate(dob3, format1,("Week":10))	
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum, dose2MinimumDate		
+		set dose2MinimumAge to "Immunizations/Util/Date".ageCalculator(dob3, dose2MinimumDate, false, false)		
+		set rightPaneBodySearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".expandedViewRightPaneBodySearchRectangle()	
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose2MinimumAge, "Immunizations/Util/Date".setPattern(dose2MinimumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(minimum, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Recommended From: 4 months from DOB."
+		set dose2EarliestRecommendedDate to "Immunizations/Util/Date".adjustDate(dob3, format1, ("Month":4))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended, dose2EarliestRecommendedDate
+		set dose2EarliestRecommendedAge to "Immunizations/Util/Date".ageCalculator(dob3, dose2EarliestRecommendedDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose2EarliestRecommendedAge, "Immunizations/Util/Date".setPattern(dose2EarliestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(earliestRecommended, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Recommended Until: 5 months + 4 weeks - 4 day from DOB."
+		set dose2LatestRecommendedDate to "Immunizations/Util/Date".adjustDate(dob3, format1, ("Month":5,"Week":4,"Day":-1))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended, dose2LatestRecommendedDate
+		set dose2LatestRecommendedAge to "Immunizations/Util/Date".ageCalculator(dob3, dose2LatestRecommendedDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose2LatestRecommendedAge, "Immunizations/Util/Date".setPattern(dose2LatestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(latestRecommended, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Latest: 8 months from DOB."
+		set dose2MaximumDate to "Immunizations/Util/Date".adjustDate(dob3, format1, ("Month":8))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField maximum, dose2MaximumDate
+		set dose2MaximumAge to "Immunizations/Util/Date".ageCalculator(dob3, dose2MaximumDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose2MaximumAge, "Immunizations/Util/Date".setPattern(dose2MaximumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(maximum, rightPaneBodySearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-P3-Dose2ExpandedView")
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Select the Dose 3 - Not Yet Recommended dose"
+		click text:"3", searchrectangle:"Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchrectangle()
+		
+		Log "VERIFICATION: Earliest: 3 months from DOB"
+		set dose3MinimumDate to "Immunizations/Util/Date".adjustDate(dob3, format1,{"Week":14})	
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField minimum, dose3MinimumDate		
+		set dose3MinimumAge to "Immunizations/Util/Date".ageCalculator(dob3, dose3MinimumDate, false, false)			
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose3MinimumAge, "Immunizations/Util/Date".setPattern(dose3MinimumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(minimum, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Recommended From: 6 months from DOB."
+		set dose3EarliestRecommendedDate to "Immunizations/Util/Date".adjustDate(dob3, format1, ("Month":6))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField earliestRecommended, dose3EarliestRecommendedDate
+		set dose3EarliestRecommendedAge to "Immunizations/Util/Date".ageCalculator(dob3, dose3EarliestRecommendedDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose3EarliestRecommendedAge, "Immunizations/Util/Date".setPattern(dose3EarliestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(earliestRecommended, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Recommended Until: 7 months + 4 weeks - 1 day from DOB."
+		set dose3LatestRecommendedDate to "Immunizations/Util/Date".adjustDate(dob3, format1, ("Month":7,"Week":4,"Day":-1))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField latestRecommended, dose3LatestRecommendedDate
+		set dose3LatestRecommendedAge to "Immunizations/Util/Date".ageCalculator(dob3, dose3LatestRecommendedDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose3LatestRecommendedAge, "Immunizations/Util/Date".setPattern(dose3LatestRecommendedAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(latestRecommended, rightPaneBodySearchRectangle)
+		
+		Log "VERIFICATION: Latest: 8 months from DOB."
+		set dose3MaximumDate to "Immunizations/Util/Date".adjustDate(dob3, format1, ("Month":8))
+		run "Immunizations/Forecaster-Forecast/Validations".verifyExpandedViewField maximum, dose3MaximumDate
+		set dose3MaximumAge to "Immunizations/Util/Date".ageCalculator(dob3, dose3MaximumDate, false, false)
+		run "Immunizations/Util/Validation".verifyTextWithPattern dose3MaximumAge, "Immunizations/Util/Date".setPattern(dose3MaximumAge), "Immunizations/Common/Helpers".fieldValueSearchRectangle(maximum, rightPaneBodySearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"-P3-Dose3ExpandedView")
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Close powerchart application"
+		run "Immunizations/Setup".closeApplication 
+		--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		EndTestCase "WF/HLM-WF-Immunizations-Not_Given_Temporary_Charting"
+		
+	Catch
+		LogError "Exception encountered" && the exception
+		capturescreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+Catch
+	LogError "Exception encountered" && the exception
+	capturescreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+--------------------------------------------------Zero State Script---------------------------------------
+
+run "Cleanup".ZeroStateCloseAllApps

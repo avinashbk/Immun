@@ -1,0 +1,343 @@
+﻿------------------------------------------------Helper Suite Information---------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-HealthMaintenanceTools
+# https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+------------------------------------------------RQM TEST CASE LINK--------------------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=119759
+
+---------------------------------------Assigning Test Data to the Variables---------------------------------------
+params domain 
+Log "Test running in domain"&&domain
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set relationship to setup.relationship
+set conversation to setup.conversation
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set fieldLabelName to fieldLabels.name
+set fieldLabelDob to fieldLabels.dob
+set fieldLabelSex to fieldLabels.sex
+set fieldLabelReportRunOn to fieldLabels.reportRunOn
+set fieldLabelOtherVaccines to fieldLabels.otherVaccines
+set fieldLabelProduct to fieldLabels.productField
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set printRecord to textStrings.printRecord
+set viewForecast to textStrings.viewForecast
+
+set testData to JSONValue(file ResourcePath("VR/Print_Immunization_Report_Default_Immunization_Eventcode/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file ResourcePath("VR/Print_Immunization_Report_Default_Immunization_Eventcode/testData.json")).(value of domain)
+set patientName to testData.Patient1.nameFullFormatted
+set newLastName to testData.Patient1.newLastName
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set format to "%b %d, %Y"
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) 
+set sex to testData.Patient1.sex
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set vaccineName3 to testData.vaccineName3
+set product1 to testData.product1
+set product2 to testData.product2
+set product3 to testData.product3
+set source to testData.source
+set reportName to testData.reportName
+set clinicAddress to testData.clinicAddress
+set clinicPhoneNumber to testData.clinicPhoneNumber
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+try
+	------------------------------------------------------Patient Setup---------------------------------------------------------
+	
+	Log "Create patient1 - 20 years old."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".CloseApplication 2
+	------------------------------------------------------Pre-conditions---------------------------------------------------------
+	
+	log "Pre-conditions - Patient 1 - Has charted a vaccine from standard vaccine list without selecting a product (Vaccine1)."
+	run "Immunizations/Setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, "true", relationship
+	set dose1V1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("year":7))
+	run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, dateFormat,dose1V1AdminDate , source, "Submit"
+	
+	log "Pre-conditions - Patient 1 - Has charted any 'Other Vaccine' type without selecting a product (OtherVaccine1)."
+	set dose1V2AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("month":2))
+	run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName2, dateFormat, dose1V2AdminDate, source, "Submit"
+	
+	log "Pre-conditions - Patient 1 - Has charted any 'Other Vaccine' type by selecting a product (OtherVaccine2)."
+	set dose1V3AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("month":2))
+	run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName3, "Date", dose1V3AdminDate, source, product3, "Submit"
+	---------------------------------------------------------------------------------------------------------------
+	
+	try
+		
+		------------------------------------------------------Test Steps---------------------------------------------------------
+		BeginTestCase  "VR/General_Immun_Concepts/HLM-VR-Immunizations-Print_ImmunizationReport_for_default_immunization_eventcode"
+		
+		Log "Util".stepNumber & "ACTION: Open Powerchart with User 1, search and select patient, from TOC select Immunization workflow MPage and navigate to Immunization Section."
+		
+		Log "VERIFICATION: Ensure the Immunization Workflow MPage displays."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure the print Record button displays."
+		run "Immunizations/Util/Validation".verifyText printRecord, "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Vaccine1 which has been charted from standard vaccine list will display under Documented Vaccine group"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName1
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Vaccinevalidation-P1")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Select the Vaccine which has been charted from standard vaccine list without selecting product ,from Vaccine coulmn list. "
+		Run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		
+		Log "VERIFICATION: Verify Side panel opens and the system shall displays Default Immunization event code under Product name field"
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/SidePanel", "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue  "1",fieldLabelProduct,sidePanelRectangle,product1
+		CaptureScreen(Name:"Step"&Global stepNumber&"-SidepanelValidationStdvaccine-P1")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION:Close the side panel and Select the Vaccine which has been charted from other vaccine list without selecting product ,from Vaccine coulmn list."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".closeSidePanel sidePanelRectangle, vaccineName1
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName2
+		
+		Log "VERIFICATION: Verify Side panel opens and the system shall displays Default Immunization event code associated for vaccine which has been charted from other vaccine list under Product name field"
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/SidePanel", "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue  "1",fieldLabelProduct,sidePanelRectangle,product2
+		CaptureScreen(Name:"Step"&Global stepNumber&"-SidepanelValidationOthervaccine1-P1")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION:Close the side panel and Select the Vaccine which has been charted from other vaccine list with selecting product ,from Vaccine coulmn list."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".closeSidePanel sidePanelRectangle, vaccineName2
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName3
+		
+		Log "VERIFICATION: Verify Side panel opens and the system shall displays product name which has been charted under Product name field"
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/SidePanel", "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue  "1",fieldLabelProduct,sidePanelRectangle,product3
+		CaptureScreen(Name:"Step"&Global stepNumber&"-SidepanelValidationOthervaccine2-P1")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION:Close the side panel and Click on Print Button."
+		set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelRectangle 
+		run "Immunizations/WorkFlowMPage/SidePanel/Actions".closeSidePanel sidePanelRectangle, vaccineName1
+		run "Immunizations/Common/Print/Actions".clickPrintRecord(printRecord)
+		
+		Log "VERIFICATION: Verify the DiscernReportViewer window opens with correct information for Patient 2 for Print Template with appropriate spacing and date formatting with the following fields:1. Immunization Report Header (First Page):a Report Name b. Organization/Clinic address c. Organization/Clinic phone number"
+		run  "Immunizations/Util/Validation".verifyText ,reportName,"Immunizations/Common/Print/Helpers".reportHeaderSearchRectangle
+		run  "Immunizations/Util/Validation".verifyText ,clinicAddress,"Immunizations/Common/Print/Helpers".ReportHeaderSearchRectangle
+		run  "Immunizations/Util/Validation".verifyText ,clinicPhoneNumber,"Immunizations/Common/Print/Helpers".reportHeaderSearchRectangle
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): a. Full formatted name,,c. Sex,d. Primary Care Provider,e. MRN,f.  Printed Date"
+		run  "Immunizations/Util/Validation".verifyText patientName, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelName)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): b. Date of birth (age) as defined in prerequisites"
+		set age to "Immunizations/Util/Date".ageCalculator(dob,"Immunizations/Util/Date".adjustDate(dob, "%m/%d/%y", ("Year":19)), "true", "true")
+		run  "Immunizations/Util/Validation".verifyText  formattedTime("%m/%d/%y",dob) && age, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelDob)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): c. Sex,d. Primary Care Provider (when available), e. MRN, f.Printed Date(Report Run On)"
+		run  "Immunizations/Util/Validation".verifyText sex, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelSex)
+		run  "Immunizations/Util/Validation".verifyText date, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelReportRunOn)
+		
+		Log "VERIFICATION: Report Body: a. Vaccine : Verify vaccines Influenza, Hepatitis A ,Hepatitis B and Hepatitis E are listed in the print report."
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("false",1)
+		run "Immunizations/Util/Validation".verifyText vaccineName2, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("true",3)
+		run "Immunizations/Util/Validation".verifyText vaccineName3, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("false",2)
+		
+		Log "VERIFICATION: Report Body: b. The system shall display product name associated with documented vaccine (when available)."
+		run "Immunizations/Util/Validation".verifyText product1, "Immunizations/Common/Print/Helpers".productSearchRectangle("false",1,1)
+		run "Immunizations/Util/Validation".verifyText product2, "Immunizations/Common/Print/Helpers".productSearchRectangle("true",3,1)
+		run "Immunizations/Util/Validation".verifyText product3, "Immunizations/Common/Print/Helpers".productSearchRectangle("false",2,1)
+		
+		Log "VERIFICATION: Report Body: C. Administration Date displayed in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText dose1V1AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("false",1,1)
+		run "Immunizations/Util/Validation".verifyText dose1V2AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true",3,1)
+		run "Immunizations/Util/Validation".verifyText dose1V3AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("false",2,1)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-PrintRecordValidataionMpage-P1")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION:Close the DiscernReportViewer window and Click on View Forecast button"
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast (viewForecast)
+		
+		Log "VERIFICATION: Ensure the Forecast View tab displays without any errors. Verify the Print Record hyperlink displays as enabled between the List and Refresh buttons."
+		run "Immunizations/Util/Validation".verifyText printRecord, "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: The charted vaccine which is not associated to any product event code, the system shall display the vaccine  as 'Other Vaccines' as the vaccinegroup name."
+		repeat 3 times
+			run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		end repeat
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText fieldLabelOtherVaccines & "(2)",columnSearchRectangle
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".otherVaccinesColumnSearchRectangle(fieldLabelOtherVaccines)
+		run "Immunizations/Util/Validation".verifyText vaccineName2,columnSearchRectangle
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".otherVaccinesColumnSearchRectangle(fieldLabelOtherVaccines)
+		run "Immunizations/Util/Validation".verifyText vaccineName3,columnSearchRectangle
+		
+		Log "VERIFICATION: Ensure" & vaccineName1 & "Dose 1 displays charted with default immunization event product name on the top along with Dose Number and Administration Date on bottom."
+		set startDateHeader to dose1V1AdminDate
+		set endDateHeader to  dose1V1AdminDate
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,"-180", "-30", "100","100")
+		run "Immunizations/Forecaster-Forecast/Validations".verifyColumnHeaderAges startDateHeader, endDateHeader, dob
+		run "Immunizations/Util/Validation".verifyText product1 &return&"Dose 1 -"&& dose1V1AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure" & vaccineName2 & "Dose displays charted with default immunization event product name on the top along with Dose Number and Administration Date on bottom."
+		set startDateHeader to dose1V2AdminDate
+		set endDateHeader to  dose1V2AdminDate
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,"-180", "-30", "100","100")
+		run "Immunizations/Forecaster-Forecast/Validations".verifyColumnHeaderAges startDateHeader, endDateHeader, dob
+		run "Immunizations/Util/Validation".verifyText product2 &return& dose1V2AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure" & vaccineName3 & "Dose displays charted with product name on the top along with Dose Number and Administration Date on bottom."
+		set startDateHeader to dose1V3AdminDate
+		set endDateHeader to dose1V3AdminDate
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName3)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,"-180", "-30", "100","100")
+		run "Immunizations/Forecaster-Forecast/Validations".verifyColumnHeaderAges startDateHeader, endDateHeader, dob
+		run "Immunizations/Util/Validation".verifyText product3 &return&& dose1V3AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-ForecastValidation-P1")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION:Click on Print Record hyperlink."
+		run "Immunizations/Common/Print/Actions".clickPrintRecord(printRecord)
+		
+		Log "VERIFICATION: Verify the DiscernReportViewer window opens with correct information for Patient 2 for Print Template with appropriate spacing and date formatting with the following fields:1. Immunization Report Header (First Page):a Report Name b. Organization/Clinic address c. Organization/Clinic phone number"
+		run  "Immunizations/Util/Validation".verifyText ,reportName,"Immunizations/Common/Print/Helpers".reportHeaderSearchRectangle
+		run  "Immunizations/Util/Validation".verifyText ,clinicAddress,"Immunizations/Common/Print/Helpers".ReportHeaderSearchRectangle
+		run  "Immunizations/Util/Validation".verifyText ,clinicPhoneNumber,"Immunizations/Common/Print/Helpers".reportHeaderSearchRectangle
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): a. Full formatted name,,c. Sex,d. Primary Care Provider,e. MRN,f.  Printed Date"
+		run  "Immunizations/Util/Validation".verifyText patientName, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelName)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): b. Date of birth (age) as defined in prerequisites"
+		set age to "Immunizations/Util/Date".ageCalculator(dob,"Immunizations/Util/Date".adjustDate(dob, "%m/%d/%y", ("Year":19)), "true", "true")
+		run  "Immunizations/Util/Validation".verifyText  formattedTime("%m/%d/%y",dob) && age, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelDob)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): c. Sex,d. Primary Care Provider (when available), e. MRN, f.Printed Date(Report Run On)"
+		run  "Immunizations/Util/Validation".verifyText sex, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelSex)
+		run  "Immunizations/Util/Validation".verifyText date, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelReportRunOn)
+		
+		Log "VERIFICATION: Report Body: a. Vaccine : Verify vaccines Influenza, Hepatitis A ,Hepatitis B and Hepatitis E are listed in the print report."
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("false",1)
+		run "Immunizations/Util/Validation".verifyText vaccineName2, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("true",3)
+		run "Immunizations/Util/Validation".verifyText vaccineName3, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("false",2)
+		
+		Log "VERIFICATION: Report Body: b. The system shall display product name associated with documented vaccine (when available)."
+		run "Immunizations/Util/Validation".verifyText product1, "Immunizations/Common/Print/Helpers".productSearchRectangle("false",1,1)
+		run "Immunizations/Util/Validation".verifyText product2, "Immunizations/Common/Print/Helpers".productSearchRectangle("true",3,1)
+		run "Immunizations/Util/Validation".verifyText product3, "Immunizations/Common/Print/Helpers".productSearchRectangle("false",2,1)
+		
+		Log "VERIFICATION: Report Body: C. Administration Date displayed in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText dose1V1AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("false",1,1)
+		run "Immunizations/Util/Validation".verifyText dose1V2AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true",3,1)
+		run "Immunizations/Util/Validation".verifyText dose1V3AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("false",2,1)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-PrintRecordValidationForecast-P1")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION:Close the DiscernReportViewer window and Click on the List View button."
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+		
+		Log "VERIFICATION: Ensure the List View displays without any errors.1.Verify the Print Record hyperlink displays as enabled between the List and.Refresh buttons"
+		run "Immunizations/Util/Validation".verifyText printRecord, "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Verify Under Vaccine column:  Vaccine1 , OtherVaccine1 and OtherVaccine2 displays which has been charted in pre-req's"
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		run "Immunizations/Util/Validation".verifyText vaccineName2, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName3)
+		run "Immunizations/Util/Validation".verifyText vaccineName3, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Under Action Column: Product - The system shall display product name associated with documented vaccine.  If no product selected, display event code display."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText "1" && product1 & return & dose1V1AdminDate && "Immunizations/Util/Date".ageCalculator(dob, dose1V1AdminDate, false, true), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchrectangle, columnSearchRectangle)
+		
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText product2, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName3)
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText product3, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-VaccineValidation-P1")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Print Record hyperlink."
+		run "Immunizations/Common/Print/Actions".clickPrintRecord(printRecord)
+		
+		Log "VERIFICATION: Verify the DiscernReportViewer window opens with correct information for Patient 2 for Print Template with appropriate spacing and date formatting with the following fields:1. Immunization Report Header (First Page):a Report Name b. Organization/Clinic address c. Organization/Clinic phone number"
+		run  "Immunizations/Util/Validation".verifyText ,reportName,"Immunizations/Common/Print/Helpers".reportHeaderSearchRectangle
+		run  "Immunizations/Util/Validation".verifyText ,clinicAddress,"Immunizations/Common/Print/Helpers".ReportHeaderSearchRectangle
+		run  "Immunizations/Util/Validation".verifyText ,clinicPhoneNumber,"Immunizations/Common/Print/Helpers".reportHeaderSearchRectangle
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): a. Full formatted name,,c. Sex,d. Primary Care Provider,e. MRN,f.  Printed Date"
+		run  "Immunizations/Util/Validation".verifyText patientName, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelName)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): b. Date of birth (age) as defined in prerequisites"
+		set age to "Immunizations/Util/Date".ageCalculator(dob,"Immunizations/Util/Date".adjustDate(dob, "%m/%d/%y", ("Year":19)), "true", "true")
+		run  "Immunizations/Util/Validation".verifyText  formattedTime("%m/%d/%y",dob) && age, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelDob)
+		
+		Log "VERIFICATION: Immunization Page Header (all pages): c. Sex,d. Primary Care Provider (when available), e. MRN, f.Printed Date(Report Run On)"
+		run  "Immunizations/Util/Validation".verifyText sex, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelSex)
+		run  "Immunizations/Util/Validation".verifyText date, "Immunizations/Common/Print/Helpers".reportHeaderAllPagesSearchRectangle (fieldLabelReportRunOn)
+		
+		Log "VERIFICATION: Report Body: a. Vaccine : Verify vaccines Influenza, Hepatitis A ,Hepatitis B and Hepatitis E are listed in the print report."
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("false",1)
+		run "Immunizations/Util/Validation".verifyText vaccineName2, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("true",3)
+		run "Immunizations/Util/Validation".verifyText vaccineName3, "Immunizations/Common/Print/Helpers".vaccineGroupSearchRectangle("false",2)
+		
+		Log "VERIFICATION: Report Body: b. The system shall display product name associated with documented vaccine (when available)."
+		run "Immunizations/Util/Validation".verifyText product1, "Immunizations/Common/Print/Helpers".productSearchRectangle("false",1,1)
+		run "Immunizations/Util/Validation".verifyText product2, "Immunizations/Common/Print/Helpers".productSearchRectangle("true",3,1)
+		run "Immunizations/Util/Validation".verifyText product3, "Immunizations/Common/Print/Helpers".productSearchRectangle("false",2,1)
+		
+		Log "VERIFICATION: Report Body: C. Administration Date displayed in the Date Given column."
+		run "Immunizations/Util/Validation".verifyText dose1V1AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("false",1,1)
+		run "Immunizations/Util/Validation".verifyText dose1V2AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("true",3,1)
+		run "Immunizations/Util/Validation".verifyText dose1V3AdminDate, "Immunizations/Common/Print/Helpers".dateGivenSearchRectangle("false",2,1)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-PrintRecordValidationList-P1")
+		-----------------------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Close the DiscernReportViewer and Exit PowerChart.exe"
+		run "Immunizations/Common/Print/Actions".closePrintRecord
+		run "Immunizations/setup".closeApplication global Cleanup
+		-----------------------------------------------------------------------------------------------------------------------------
+		EndTestCase  "VR/General_Immun_Concepts/HLM-VR-Immunizations-Print_ImmunizationReport_for_default_immunization_eventcode"
+		
+	catch
+		LogError "Exception encountered" && the exception.reason
+		captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End try
+	
+	------------------------------------------------------Patient Cleanup---------------------------------------------------------
+	
+	Log "Cleanup Patient 1 – 20 years ."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newlastName
+	run "Util".CloseApplication 2
+	----------------------------------------------------------------------------------------------------------------
+	
+catch
+	LogError "Exception encountered" && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End try
+
+#SUT CLEANUP
+run "CommonModules".zeroStateScript

@@ -1,0 +1,210 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=116529
+
+*)
+
+params domain
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+Log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationshiptext
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set viewingOutsideRecordsBannerImage to common.viewingOutsideRecordsBannerImage
+set refineSearchWindowImage to common.refineSearchWindowImage
+set refineButtonWhiteImage to common.refineButtonWhiteImage
+set refineButtonBlueImageImage to common.refineButtonBlueImage
+set refineButtonDisabledImage to common.refineButtonDisabledImage
+set warningBannerImage to common.warningBannerImage
+set warningMessageImage to common.warningMessageImage
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set firstNameField to fieldLabels.firstNameField
+set lastNameField to fieldLabels.lastNameField
+set middleNameField to fieldLabels.middleNameField
+set dobField to fieldLabels.dobField
+set birthOrderField to fieldLabels.birthOrderField
+set sexField to fieldLabels.sexField
+set motherMaidenNameField to fieldLabels.motherMaidenNameField
+set motherFirstNameField to fieldLabels.motherFirstNameField
+set motherMiddleNameField to fieldLabels.motherMiddleNameField
+set phoneNumberField to fieldLabels.phoneNumberField
+set emailAddressField to fieldLabels.emailAddressField
+set addressLine1Field to fieldLabels.addressLine1Field
+set addressLine2Field to fieldLabels.addressLine2Field
+set cityField to fieldLabels.cityField
+set stateField to fieldLabels.stateField
+set zipCodeField to fieldLabels.zipCodeField
+set countryField to fieldLabels.countryField
+
+set testData to JSONValue(file ResourcePath("VR/Reconcile_Refine_Workflow/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file resourcePath("VR/Reconcile_Refine_Workflow/testData.json")).(text of domain)
+set lastName to testData.Patient_Multi_Match.lastName
+set firstName to testData.Patient_Multi_Match.firstName
+set middleName to testData.Patient_Multi_Match.middleName
+set patientName to testData.Patient_Multi_Match.nameFullFormatted
+set newLastName to testData.Patient_Multi_Match.newLastName
+set dob to "Immunizations/Util/Date".adjustDate(testData.Patient_Multi_Match.dob,"%m/%d/%Y")
+set sex to testData.Patient_Multi_Match.sex
+set registryName to testData.Patient_Multi_Match.registryName
+
+
+set format to "%b %d, %Y"
+
+
+Try
+	#################################################################################
+	# TEST STEPS
+	
+	BeginTestCase "VR/Reconciliation/HLM-VR-Immunizations-Reconcile_Refine_Workflow_Multi_Match"
+	
+	log "Util".stepNumber & "ACTION: Navigate to Patient's chart then click on the 'View' button within the reconciliation banner."
+	run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+	
+	log "VERIFICATION: Ensure the reconciliation banner displays on the top of the table with the message 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'"
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, rectangle
+	
+	Log "VERIFICATION: A warning banner displays at the top of the modal with the message 'Search should be refined due to the following reason(s) with more details link'."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	run "Immunizations/Util/Validation".verifyImage warningBannerImage, rectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Initial Reconciliation View P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Click on the More Details link in the warning banner."
+	click text:"More Details", SearchRectangle: rectangle
+	
+	Log "VERIFICATION: A warning banner displays with the message 'The search returned too many results for "& registryName &" '."
+	run "Immunizations/Util/Validation".verifyText "Search returned too many results for " & registryName, rectangle
+	
+	Log "VERIFICATION: A refine button displays within the warning banner."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	run "Immunizations/Util/Validation".verifyImage refineButtonWhiteImage, rectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Warning Banner Expands P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Click on the Less Details link in the warning banner."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	click text:"Less Details", SearchRectangle: rectangle
+	
+	Log "VERIFICATION: A warning banner no longer displays."
+	run "Immunizations/Util/Validation".verifyImageNotVisible warningMessageImage, rectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Warning Banner Shrinks P1")
+	----------------------------------------------------------------------------------------------------------------
+	Log "Util".stepNumber &"ACTION: Click the Refine button in the warning banner."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Actions".openDialog
+	
+	Log "VERIFICATION: The refine dialog displays with 'Registry Search Refine' as the header."
+	set refineDialogRectangle to "Immunizations/WorkflowMPage/Reconciliation/Refine/Helpers".RefineDialogRectangle
+	run "Immunizations/Util/Validation".verifyImage refineSearchWindowImage, refineDialogRectangle
+	
+	Log "VERIFICATION: "& firstNameField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields firstNameField,refineDialogRectangle
+	
+	Log "VERIFICATION: "& lastNameField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields lastNameField,refineDialogRectangle
+	
+	Log "VERIFICATION: "& middleNameField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields middleNameField, refineDialogRectangle
+	
+	Log "VERIFICATION: "& dobField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields dobField, refineDialogRectangle
+	
+	Log "VERIFICATION: "& birthOrderField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields birthOrderField, refineDialogRectangle
+	
+	Log "VERIFICATION: "& sexField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields sexField, refineDialogRectangle
+	
+	Log "VERIFICATION: "& motherMaidenField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields motherMaidenNameField, refineDialogRectangle
+	
+	Log "VERIFICATION: "& motherFirstField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields motherFirstNameField, refineDialogRectangle
+	
+	Log "VERIFICATION: "& motherMiddleField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields motherMiddleNameField,refineDialogRectangle
+	
+	Log "VERIFICATION: "& phoneNumberField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields phoneNumberField,refineDialogRectangle
+	
+	Log "VERIFICATION: "& emailAddressField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields emailAddressField, refineDialogRectangle
+	
+	Log "VERIFICATION: "& addressLine1Field &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields addressLine1Field, refineDialogRectangle
+	
+	Log "VERIFICATION: "& addressLine2Field &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields addressLine2Field, refineDialogRectangle
+	
+	Log "VERIFICATION: "& cityField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields cityField, refineDialogRectangle
+	
+	Log "VERIFICATION: "& stateField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields stateField, refineDialogRectangle
+	
+	Log "VERIFICATION: "& zipCodeField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields zipCodeField, refineDialogRectangle
+	
+	Log "VERIFICATION: "& countryField &" display in the refine query."
+	run "Immunizations/WorkflowMPage/Reconciliation/Refine/Validations".verifyRefineFields countryField, refineDialogRectangle
+	
+	logWarning "Specify which demographic field will be populated"
+	Log "VERIFICATION: "& firstName &" is populated in "& firstNameField &"."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Refine/Helpers".populatedFieldsSearchRectangle(firstNameField)
+	run "Immunizations/Util/Validation".verifyText firstName, rectangle
+	
+	Log "VERIFICATION: "& lastName &" is populated in "& lastNameField &"."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Refine/Helpers".populatedFieldsSearchRectangle(lastNameField)
+	run "Immunizations/Util/Validation".verifyText lastName, rectangle 
+	
+	Log "VERIFICATION: "& dob &" is populated in "& dobField &"."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Refine/Helpers".dateOfBirthSearchRectangle
+	run "Immunizations/Util/Validation".verifytext  dob, rectangle   
+	
+	Log "VERIFICATION: "& sex &" is populated in "& sexField &"."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Refine/Helpers".populatedFieldsSearchRectangle(sexField)
+	run "Immunizations/Util/Validation".verifytext sex, rectangle  
+	
+	Log "VERIFICATION: Refine Button is in the bottom right corner and enabled."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Refine/Helpers".RefineDialogRectangle
+	run "Immunizations/Util/Validation".verifyImage refineButtonBlueImage, rectangle
+	
+	Log "VERIFICATION: Cancel Button is in the bottom right corner to the left of the Refine Button."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Refine/Helpers".RefineDialogRectangle
+	run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Reconciliation/Refine/BR_Dialog", rectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Refine Query present P1") 
+	----------------------------------------------------------------------------------------------------------------
+	EndTestCase "VR/Reconciliation/HLM-VR-Immunizations-Reconcile_Refine_Workflow_Multi_Match"
+	
+catch exception
+	logError "Exception encountered" && exception.reason
+	log "Exception Location:" && exception.location	
+	captureScreen"Exception" && "at" & Global stepNumber
+end try
+
+---------------------------------------------------------------------------------------------------------------
+log "Util".stepNumber & "ACTION: Close the application."
+run "Immunizations/setup".closeApplication 
+
+---------------------------------------------------------------------------------------------------------------
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

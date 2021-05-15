@@ -1,0 +1,43 @@
+﻿
+------------------------------------------------Helper Suite Information---------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-HealthMaintenanceTools
+
+------------------------------------------------Helper Suite Information---------------------------------------------
+
+params domain
+
+try
+	
+	log "Test running in domain"&&domain
+	set domain to "Immunizations/Util/Setup".domainRun(domain)
+	
+	BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/Patient_Setup"
+	Run "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/Patient_Setup"domain
+	EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/Patient_Setup"
+	
+	BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/HLM-VR-Immunizations-Reconcile-Registry_Forecast_P1_Multiple_Registries"
+	Run "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/HLM-VR-Immunizations-Reconcile-Registry_Forecast_P1_Multiple_Registries"domain
+	EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/HLM-VR-Immunizations-Reconcile-Registry_Forecast_P1_Multiple_Registries"
+	
+	BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/HLM-VR-Immunizations-Reconcile-Registry_Forecast_P2_No_Registries"
+	Run "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/HLM-VR-Immunizations-Reconcile-Registry_Forecast_P2_No_Registries"domain
+	EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/HLM-VR-Immunizations-Reconcile-Registry_Forecast_P2_No_Registries"
+	
+	BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/HLM-VR-Immunizations-Reconcile-Registry_Forecast_P3_One_Registry"
+	Run "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/HLM-VR-Immunizations-Reconcile-Registry_Forecast_P3_One_Registry"domain
+	EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/HLM-VR-Immunizations-Reconcile-Registry_Forecast_P3_One_Registry"
+	
+	BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/Patient_Cleanup"
+	Run "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/Patient_Cleanup"domain
+	EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Registry_Forecast/Patient_Cleanup"
+	
+catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+end try
+
+run "CommonModules".zeroStateScript
+

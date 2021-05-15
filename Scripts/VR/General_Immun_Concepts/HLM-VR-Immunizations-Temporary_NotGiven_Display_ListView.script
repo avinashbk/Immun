@@ -1,0 +1,141 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+------------------------------------------------RQM TEST CASE LINK--------------------------------------------------------
+
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=120011
+
+---------------------------------------Assigning Test Data to the Variables---------------------------------------
+
+params domain 
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set format to "%b %d, %Y"
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "Common data:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set conversation to setup.conversation
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set influenzaVaccineStrikeThroughImg to common.influenzaVaccineStrikeThroughImg
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set seriesRefused to textStrings.seriesRefused
+set seasonalRefused to textStrings.seasonalRefused
+set viewForecast to textStrings.viewForecast
+set seasonalUnnecessary to textStrings.seasonalUnnecessary
+set seasonalContraindication to textStrings.seasonalContraindication
+
+set testData to JSONValue(file ResourcePath("VR/Temporary_Not_Given_Display/testData.json")).(value of domain)
+set patientName to testData.patient2_List_View.nameFullFormatted
+set firstName to testData.patient2_List_View.firstName
+set lastName to testData.patient2_List_View.lastName
+set sex to testData.patient2_List_View.sex
+set newLastName to testData.patient2_List_View.newLastName
+set dob to formattedTime("%m/%d/%Y", value(testData.patient2_List_View.dob)) 
+set vaccineName2 to testData.vaccineName2
+set tempNotGivenType to testData.tempNotGivenType
+set permNotGivenType to testData.permNotGivenType
+set unnecessaryNotGivenType to testData.unnecessaryNotGivenType
+set rescheduleNotGiven to testData.rescheduleNotGiven
+set tempNotGivenAction to testData.tempNotGivenAction
+set permNotGivenAction to testData.permNotGivenAction
+set tempNotGivenReason to testData.tempNotGivenReason
+set contraindicatedReason to testData.contraindicatedReason
+set unnecessaryReason to testData.unnecessaryReason
+set permNotGivenReason to testData.permNotGivenReason
+
+set global cleanup to "Immunizations/setup".setCleanup()
+
+try
+	------------------------------------------------------Patient Setup---------------------------------------------------------
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) of 2 years for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	----------------------------------------------------------------------------------------------------------------------------------
+	try
+		------------------------------------------------------Test Steps---------------------------------------------------------
+		BeginTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-Temporary_NotGiven_Display_ListView"
+		
+		Log "Util".stepNumber &"ACTION: Open Patient 2's chart, navigate to the immunization component, chart 8 not Given events for vaccineName2, then navigate to the list view."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,global cleanup, relationship
+		repeat 4 times
+			run "Immunizations/Common/ChartNotGiven/Task".chartRequiredInput vaccineName2, permNotGivenType, permNotGivenAction, permNotGivenReason, "submit"	
+		end repeat
+		run "Immunizations/Common/ChartNotGiven/Task".chartWithAuthorizedDate vaccineName2, tempNotGivenType, tempNotGivenAction, contraindicatedReason, "Immunizations/Util/Date".todaysDate(format) - 1 week, "submit"
+		run "Immunizations/Common/ChartNotGiven/Task".chartWithAuthorizedDate vaccineName2, permNotGivenType, tempNotGivenAction, permNotGivenReason, "Immunizations/Util/Date".todaysDate(format) - 2 weeks, "submit"
+		run "Immunizations/Common/ChartNotGiven/Task".chartWithAuthorizedDate vaccineName2, unnecessaryNotGivenType, tempNotGivenAction, unnecessaryReason, "Immunizations/Util/Date".todaysDate(format) - 5 months, "submit"
+		run "Immunizations/Common/ChartNotGiven/Task".chartWithRescheduleDate vaccineName2, tempNotGivenType, rescheduleNotGiven, tempNotGivenReason, "Immunizations/Util/Date".todaysDate(format) + 5 months, "submit"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		waitfor 30,"Immunizations/Forecaster-Forecast/GreyForecastButton"
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews
+		
+		Log "VERIFICATION: Ensure '4 Items Documented' displays in the Action column with Contraindicated and <Today's Date - 1 day>"
+		set rowSearchRectangleStrikeThrough to  "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(influenzaVaccineStrikeThroughImg)
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText "4 Items Documented" ,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangleStrikeThrough,columnSearchRectangle)
+		capturescreen (Name:"Step"&Global stepNumber&"-List View 8 items documented P2")
+		----------------------------------------------------------------------------------------------------------------		
+		Log "Util".stepNumber &"ACTION: Click on the Action Column with multiple documented items."
+		click text: "4 Items Documented", searchRectangle: "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangleStrikeThrough,columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure the unnecessary not given event displays in the dropdown"
+		set item1Rectangle to "Immunizations/Common/Helpers".offsetimageRectangle ("Immunizations/Forecast-List/Many_Items_Documented",-150, 15, 140, 80)
+		set age to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".todaysDate(format) - 5 months, false, true)
+		run "Immunizations/Util/Validation".verifyText seasonalUnnecessary &return& "Immunizations/Util/Date".todaysDate(format)- 5 months && age ,item1Rectangle
+		
+		Log "VERIFICATION: Ensure the seasonal refused not given event displays in the dropdown"
+		set item2Rectangle to "Immunizations/Common/Helpers".offsetimageRectangle ("Immunizations/Forecast-List/Many_Items_Documented",-150, 60, 140, 110)
+		set age to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".todaysDate(format) - 2 weeks, false, true)
+		run "Immunizations/Util/Validation".verifyText seasonalRefused &return& "Immunizations/Util/Date".todaysDate(format)- 2 weeks && age ,item2Rectangle
+		
+		Log "VERIFICATION: Ensure the seasonal contraindication not given event displays in the dropdown"
+		set item3Rectangle to "Immunizations/Common/Helpers".offsetimageRectangle ("Immunizations/Forecast-List/Many_Items_Documented",-150, 110, 140, 160)
+		set age to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".todaysDate(format) - 1 weeks, false, true)
+		run "Immunizations/Util/Validation".verifyText seasonalContraindication &return& "Immunizations/Util/Date".todaysDate(format)- 1 weeks && age ,item3Rectangle
+		
+		Log "VERIFICATION: Ensure the series refused not given event displays in the dropdown"
+		set item4Rectangle to "Immunizations/Common/Helpers".offsetimageRectangle ("Immunizations/Forecast-List/Many_Items_Documented",-150,160, 140, 210)
+		set age to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".todaysDate(format), false, true)
+		run "Immunizations/Util/Validation".verifyText seriesRefused &return& "Immunizations/Util/Date".todaysDate(format) && age ,item4Rectangle
+		capturescreen (Name:"Step"&Global stepNumber&"-List View action column dropdown P2")
+		----------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Close Application."
+		run "Immunizations/Setup".closeApplication Global Cleanup
+		
+		EndTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-Temporary_NotGiven_Display_ListView"
+		---------------------------------------------------------------------------------------------------------------
+	catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	end try
+	------------------------------------------------------Patient Cleanup----------------------------------------------
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+catch
+	LogError "Exception encountered" && the exception.reason
+	captureScreen"Exception"
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps	

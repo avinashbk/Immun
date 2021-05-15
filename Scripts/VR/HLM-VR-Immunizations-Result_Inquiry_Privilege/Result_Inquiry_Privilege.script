@@ -1,0 +1,41 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-PowerchartFramework
+------------------------------------------------------------------------------------------------------------------------------
+beginTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/Patient_Setup"
+run "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/Patient_Setup"
+endTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/Patient_Setup"
+
+beginTestCase  "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P1_No_Priv"
+run "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P1_No_Priv"
+endTestCase  "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P1_No_Priv"
+
+beginTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P2_No_Except_For"
+run "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P2_No_Except_For"
+endTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P2_No_Except_For"
+
+beginTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P3_Yes_Except_For"
+run "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P3_Yes_Except_For"
+endTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P3_Yes_Except_For"
+
+beginTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P4_Yes"
+Run "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P4_Yes"
+endTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P4_Yes"
+
+beginTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P5_Yes_Except_For_Not_Immun"
+Run "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P5_Yes_Except_For_Not_Immun"
+endTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P5_Yes_Except_For_Not_Immun"
+
+beginTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P6_Yes_Except_For_1_Immun"
+Run "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P6_Yes_Except_For_1_Immun"
+endTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P6_Yes_Except_For_1_Immun"
+
+beginTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P7_No_Except_For_1_Immun"
+Run "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P7_No_Except_For_1_Immun"
+endTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/HLM-VR-Result_Inquiry_P7_No_Except_For_1_Immun"
+
+beginTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/Patient_Cleanup"
+run "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/Patient_Cleanup"
+endTestCase "VR/HLM-VR-Immunizations-Result_Inquiry_Privilege/Patient_Cleanup"

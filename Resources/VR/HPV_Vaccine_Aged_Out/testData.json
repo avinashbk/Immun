@@ -1,0 +1,133 @@
+{
+	"SOLM64":{
+		"AgedOut_Male":	{
+			"lastName":"HPV",
+			"firstName":"Male",
+			"nameFullFormatted":"HPV,Male",
+			"newLastName":"OldHPVM",
+			"dob":" Today - 27 years",
+			"sex":"Male"
+		},
+		"AgedOut_Female":{
+			"lastName":"HPV",
+			"firstName":"Female",
+			"nameFullFormatted":"HPV,Female",	
+			"newLastName":"oldHPVF",
+			"dob":"Today - 27 years",
+			"sex":"Female"	
+		},
+		"vaccineName":"Human Papillomavirus",
+		"productName1":"Gardasil",
+		"productName2":"Cervarix",
+		"user":"Maintenance, Health",
+		"hpvStrikeThroughImage":"Immunizations/Forecaster-Common/HPVStrikeThrough",
+		"administrationDialog":"Historical Entry",
+		"Source":"Clinician",
+		"button":"Submit"
+		},
+	"S18vx":{
+		"AgedOut_Male":	{
+			"lastName":"HPV",
+			"firstName":"Male",
+			"nameFullFormatted":"HPV,Male",
+			"newLastName":"OldHPVM",
+			"dob":" Today - 27 years",
+			"sex":"Male"
+		},
+		"AgedOut_Female":{
+			"lastName":"HPV",
+			"firstName":"Female",
+			"nameFullFormatted":"HPV,Female",	
+			"newLastName":"oldHPVF",
+			"dob":"Today - 27 years",
+			"sex":"Female"	
+		},
+		"vaccineName":"Human Papillomavirus",
+		"productName1":"Gardasil",
+		"productName2":"Cervarix",
+		"user":"Maintenance, Health",
+		"hpvStrikeThroughImage":"Immunizations/Forecaster-Common/HPVStrikeThrough",
+		"administrationDialog":"Historical Entry",
+		"Source":"Clinician",
+		"button":"Submit"
+		},
+	"S18VA":{
+		"AgedOut_Male":	{
+			"lastName":"HPV",
+			"firstName":"Male",
+			"nameFullFormatted":"HPV,Male",
+			"newLastName":"OldHPVM",
+			"dob":" Today - 27 years",
+			"sex":"Male"
+		},
+		"AgedOut_Female":{
+			"lastName":"HPV",
+			"firstName":"Female",
+			"nameFullFormatted":"HPV,Female",	
+			"newLastName":"oldHPVF",
+			"dob":"Today - 27 years",
+			"sex":"Female"	
+		},
+		"vaccineName":"Human Papillomavirus",
+		"productName1":"Gardasil",
+		"productName2":"Cervarix",
+		"user":"Maintenance, Health",
+		"hpvStrikeThroughImage":"Immunizations/Forecaster-Common/HPVStrikeThrough",
+		"administrationDialog":"Historical Entry",
+		"Source":"Clinician",
+		"button":"Submit"
+		},
+	"INTGM":{
+		"AgedOut_Male":	{
+			"lastName":"HPV",
+			"firstName":"Male",
+			"nameFullFormatted":"HPV,Male",
+			"newLastName":"OldHPVM",
+			"dob":" Today - 27 years",
+			"sex":"Male"
+		},
+		"AgedOut_Female":{
+			"lastName":"HPV",
+			"firstName":"Female",
+			"nameFullFormatted":"HPV,Female",	
+			"newLastName":"oldHPVF",
+			"dob":"Today - 27 years",
+			"sex":"Female"	
+		},
+		"vaccineName":"Human Papillomavirus",
+		"productName1":"Gardasil",
+		"productName2":"Cervarix",
+		"user":"Maintenance, Health",
+		"hpvStrikeThroughImage":"Immunizations/Forecaster-Common/HPVStrikeThrough",
+		"administrationDialog":"Historical Entry",
+		"Source":"Clinician",
+		"button":"Submit"
+		},
+	"ENG18":{
+		"AgedOut_Male":	{
+			"lastName":"HPV",
+			"firstName":"Male",
+			"nameFullFormatted":"HPV,Male",
+			"newLastName":"OldHPVM",
+			"dob":" Today - 27 years",
+			"sex":"Male"
+		},
+		"AgedOut_Female":{
+			"lastName":"HPV",
+			"firstName":"Female",
+			"nameFullFormatted":"HPV,Female",	
+			"newLastName":"oldHPVF",
+			"dob":"Today - 27 years",
+			"sex":"Female"	
+		},
+		"vaccineName":"Human Papillomavirus",
+		"productName1":"Gardasil",
+		"productName2":"Cervarix",
+		"user":"Maintenance, Health",
+		"hpvStrikeThroughImage":"Immunizations/Forecaster-Common/HPVStrikeThrough",
+		"administrationDialog":"Historical Entry",
+		"Source":"Clinician",
+		"button":"Submit"
+		},
+		"dateFormat":"Date"
+}

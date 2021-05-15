@@ -1,0 +1,99 @@
+{
+	"SOLM64": {
+		"Patient1_9Months_No_Doses": {
+			"lastName": "Pneumo7MonthsP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP1,Bob",
+			"newLastName": "oldPneumo7MonthsP1",
+			"dob": "Today - 9 months",
+			"sex": "Female"
+		},
+		"Patient2_12Months_PCV13_Dose_2Months": {
+			"lastName": "Pneumo7MonthsP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP2,Bob",
+			"newLastName": "oldPneumo7MonthsP2",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"vaccineName": "Pneumococcal Conjugate",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)"
+	},
+	"S18VX": {
+		"Patient1_9Months_No_Doses": {
+			"lastName": "Pneumo7MonthsP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP1,Bob",
+			"newLastName": "oldPneumo7MonthsP1",
+			"dob": "Today - 9 months",
+			"sex": "Female"
+		},
+		"Patient2_12Months_PCV13_Dose_2Months": {
+			"lastName": "Pneumo7MonthsP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP2,Bob",
+			"newLastName": "oldPneumo7MonthsP2",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"vaccineName": "Pneumococcal Conjugate",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)"
+	},
+	"SOLGM": {
+		"Patient1_9Months_No_Doses": {
+			"lastName": "Pneumo7MonthsP12",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP1,Bob",
+			"newLastName": "oldPneumo7MonthsP1",
+			"dob": "Today - 9 months",
+			"sex": "Male"
+		},
+		"Patient2_12Months_PCV13_Dose_2Months": {
+			"lastName": "Pneumo7MonthsP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP2,Bob",
+			"newLastName": "oldPneumo7MonthsP2",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"vaccineName": "Pneumococcal Conjugate",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)"
+	},
+	"ENG18": {
+		"Patient1_9Months_No_Doses": {
+			"lastName": "Pneumo7MonthsP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP1,Bob",
+			"newLastName": "oldPneumo7MonthsP1",
+			"dob": "Today - 9 months",
+			"sex": "Male"
+		},
+		"Patient2_12Months_PCV13_Dose_2Months": {
+			"lastName": "Pneumo7MonthsP2",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo7MonthsP2,Bob",
+			"newLastName": "oldPneumo7MonthsP2",
+			"dob": "Today - 12 months",
+			"sex": "Male"
+		},
+		"vaccineName": "Pneumococcal Conjugate",
+		"user": "Maintenance, Health",
+		"source": "Mother",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)"
+	},
+	"dateFormat": "Date"
+}

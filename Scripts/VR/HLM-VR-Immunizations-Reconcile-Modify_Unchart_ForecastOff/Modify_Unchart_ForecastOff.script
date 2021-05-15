@@ -1,0 +1,11 @@
+﻿BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff/Patient_Setup"
+Run "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff/Patient_Setup"
+EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff/Patient_Setup"
+
+BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff"
+Run "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff"
+EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff"
+
+BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff/Patient_Cleanup"
+Run "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff/Patient_Cleanup"
+EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_ForecastOff/Patient_Cleanup"

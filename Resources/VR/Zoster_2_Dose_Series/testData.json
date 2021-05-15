@@ -1,0 +1,147 @@
+{
+	"SOLM64":{
+		"Patient1_DidNotCount":{
+			"lastName":"Zoster1",
+			"firstName":"1",
+			"nameFullFormatted":"Zoster1,1",
+			"newLastName":"oldZoster1",
+			"dob":"Today - 17 years",
+			"sex":"Male"
+		},
+		"Patient2_Complete":{
+			"lastName":"Zoster2",
+			"firstName":"2",
+			"nameFullFormatted":"Zoster2,2",	
+			"newLastName":"oldZoster2",
+			"dob":"Today - 50 years - 1 month",
+			"sex":"Male"	
+		},
+		  "Patient3_Cvx":{
+			"lastName":"Zoster3",
+			"firstName":"Cvx",
+			"nameFullFormatted":"Zoster3,Cvx",
+			"newLastName":"oldZoster3",
+			"dob":"Today - 50 years",
+			"sex":"Male"
+		},
+	"user":"Maintenance, Health",
+	"vaccineName1":"Zoster",
+	"vaccineName2":"Varicella",
+	"vaccineName3":"Measles, Mumps, Rubella",
+	"product1":"zoster vaccine live",
+	"product2":"zoster recombinant",
+	"product3":"varicella virus vaccine",
+	"product4":"Proquad",
+	"source":"Device",
+	"vis":"Shingles (zoster) (English)"
+	},
+	"S18VX":{
+		"Patient1_DidNotCount":{
+			"lastName":"Zoster1",
+			"firstName":"1",
+			"nameFullFormatted":"Zoster1,1",
+			"newLastName":"oldZoster1",
+			"dob":"Today - 17 years",
+			"sex":"Male"
+		},
+		"Patient2_Complete":{
+			"lastName":"Zoster2",
+			"firstName":"2",
+			"nameFullFormatted":"Zoster2,2",	
+			"newLastName":"oldZoster2",
+			"dob":"Today - 50 years - 1 month",
+			"sex":"Male"	
+		},
+		 "Patient3_Cvx":{
+			"lastName":"Zoster3",
+			"firstName":"Cvx",
+			"nameFullFormatted":"Zoster3,Cvx",
+			"newLastName":"oldZoster3",
+			"dob":"Today - 50 years",
+			"sex":"Male"
+		},
+	"user":"Maintenance, Health",
+	"vaccineName1":"Zoster",
+	"vaccineName2":"Varicella",
+	"vaccineName3":"Measles, Mumps, Rubella",
+	"product1":"zoster vaccine live",
+	"product2":"zoster recombinant",
+	"product3":"varicella virus vaccine",
+	"product4":"Proquad",
+	"source":"Device",
+	"vis":"Shingles (zoster) (English)"
+	},
+	"INTGM":{
+		"Patient1_DidNotCount":{
+			"lastName":"Zoster1",
+			"firstName":"1",
+			"nameFullFormatted":"Zoster1,1",
+			"newLastName":"oldZoster1",
+			"dob":"Today - 17 years",
+			"sex":"Male"
+		},
+		"Patient2_Complete":{
+			"lastName":"Zoster2",
+			"firstName":"2",
+			"nameFullFormatted":"Zoster2,2",	
+			"newLastName":"oldZoster2",
+			"dob":"Today - 50 years - 1 month",
+			"sex":"Male"	
+		},
+		  "Patient3_Cvx":{
+			"lastName":"Zoster3",
+			"firstName":"Cvx",
+			"nameFullFormatted":"Zoster,Cvx",
+			"newLastName":"oldZoster3",
+			"dob":"Today - 50 years",
+			"sex":"Male"
+		},
+	"user":"Maintenance, Health",
+	"vaccineName1":"Zoster",
+	"vaccineName2":"Varicella",
+	"vaccineName3":"Measles, Mumps, Rubella",
+	"product1":"zoster vaccine live",
+	"product2":"zoster recombinant",
+	"product3":"varicella virus vaccine",
+	"product4":"Proquad",
+	"source":"Device",
+	"vis":"Shingles (zoster) (English)"
+	},
+	"ENG18":{
+		"Patient1_DidNotCount":{
+			"lastName":"Zoster1",
+			"firstName":"1",
+			"nameFullFormatted":"Zoster1,1",
+			"newLastName":"oldZoster1",
+			"dob":"Today - 17 years",
+			"sex":"Male"
+		},
+		"Patient2_Complete":{
+			"lastName":"Zoster2",
+			"firstName":"2",
+			"nameFullFormatted":"Zoster2,2",	
+			"newLastName":"oldZoster2",
+			"dob":"Today - 50 years - 1 month",
+			"sex":"Male"	
+		},
+		  "Patient3_Cvx":{
+			"lastName":"Zoster3",
+			"firstName":"Cvx",
+			"nameFullFormatted":"Zoster,Cvx",
+			"newLastName":"oldZoster3",
+			"dob":"Today - 50 years",
+			"sex":"Male"
+		},
+	"user":"Maintenance, Health",
+	"vaccineName1":"Zoster",
+	"vaccineName2":"Varicella",
+	"vaccineName3":"Measles, Mumps, Rubella",
+	"product1":"zoster vaccine live",
+	"product2":"Zoster Recombinant",
+	"product3":"varicella virus vaccine",
+	"product4":"Proquad",
+	"source":"Device",
+	"vis":"Shingles (zoster) (English)"
+	},
+	"dateFormat":"Date",
+}

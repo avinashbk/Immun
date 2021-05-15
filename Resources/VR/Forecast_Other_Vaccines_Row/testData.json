@@ -1,0 +1,102 @@
+{
+	"SOLM64":{
+		"Patient1_Other_Vaccines":{
+			"lastName":"OtherVaccines1",
+			"firstName":"Bob",
+			"nameFullFormatted":"OtherVaccines1,Bob",
+			"newLastName":"OldOtherVaccines1,Bob",
+			"dob":"Today - 17 months",
+			"vaccineName1":"Cholera",
+			"vaccineName2":"Hepatitis A",
+			"vaccineName3":"Rotavirus",
+			"vaccineName4":"Hepatitis B",
+			"vaccineName5":"Human Papillomavirus",
+			"product":"Cholera vaccine",
+			"source" : "Mother",
+			"sex":"Male"
+                                           },
+	 "Patient2_Other_Vaccines":{
+			"lastName":"OtherVaccines1",
+			"firstName":"Bob",
+			"nameFullFormatted":"OtherVaccines1,Bob",
+			"dob":"Today - 17 months",
+			"vaccineName6":"Hepatitis C"
+				}
+      },
+
+      "S18VX":{
+		"Patient1_Other_Vaccines":{
+			"lastName":"OtherVaccines1",
+			"firstName":"Bob",
+			"nameFullFormatted":"OtherVaccines1,Bob",
+			"newLastName":"OldOtherVaccines1,Bob",
+			"dob":"Today - 17 months",
+			"vaccineName1":"Cholera",
+			"vaccineName2":"Hepatitis A",
+			"vaccineName3":"Rotavirus",
+			"vaccineName4":"Hepatitis B",
+			"vaccineName5":"Human Papillomavirus",
+			"product":"Cholera vaccine",
+			"source" : "Mother",
+			"sex":"Male"
+                                           },
+	 "Patient2_Other_Vaccines":{
+			"lastName":"OtherVaccines1",
+			"firstName":"Bob",
+			"nameFullFormatted":"radebe,Rutger",
+			"dob":"Today - 17 months",
+			"vaccineName6":"Hepatitis C"
+				}
+      },
+
+      "S18VA":{
+		"Patient1_Other_Vaccines":{
+			"lastName":"OtherVaccines1",
+			"firstName":"Bob",
+			"nameFullFormatted":"OtherVaccines1,Bob",
+			"newLastName":"OldOtherVaccines1,Bob",
+			"dob":"Today - 17 months",
+			"vaccineName1":"Cholera",
+			"vaccineName2":"Hepatitis A",
+			"vaccineName3":"Rotavirus",
+			"vaccineName4":"Hepatitis B",
+			"vaccineName5":"Human Papillomavirus",
+			"product":"Cholera vaccine",
+			"source" : "Mother",
+			"sex":"Male"
+                                           },
+		"Patient2_Other_Vaccines":{
+			"lastName":"OtherVaccines1",
+			"firstName":"Bob",
+			"nameFullFormatted":"OtherVaccines1,Bob",
+			"dob":"Today - 17 months",
+			"vaccineName6":"Hepatitis C"
+				}
+      },
+
+      "ENG18":{
+		"Patient1_Other_Vaccines":{
+			"lastName":"OtherVaccines1",
+			"firstName":"Bob",
+			"nameFullFormatted":"OtherVaccines1,Bob",
+			"newLastName":"OldOtherVaccines1,Bob",
+			"dob":"Today - 17 months",
+			"vaccineName1":"Cholera",
+			"vaccineName2":"Hepatitis A",
+			"vaccineName3":"Rotavirus",
+			"vaccineName4":"Hepatitis B",
+			"vaccineName5":"Human Papillomavirus",
+			"product":"Cholera vaccine",
+			"source" : "Mother",
+			"sex":"Male"
+                                           },
+	 "Patient2_Other_Vaccines":{
+			"lastName":"OtherVaccines1",
+			"firstName":"Bob",
+			"nameFullFormatted":"OtherVaccines1,Bob",
+			"dob":"Today - 17 months",
+			"vaccineName6":"Hepatitis C"
+		}
+      },
+"dateFormat":"Date"
+}

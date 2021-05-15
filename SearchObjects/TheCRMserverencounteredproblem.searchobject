@@ -1,0 +1,48 @@
+{
+	"originalcapturelocation": [
+		754,
+		387,
+		385,
+		53
+	],
+	"lastmodifieddate": 1615305512.2460001,
+	"createddate": 1615305512.2460001,
+	"name": "TheCRMserverencounteredproblem",
+	"lastfounddate": 1615305513.7869999,
+	"ocrcapturestring": "The CRM server encountered problems. Contact your system administrator.",
+	"lastfoundlocation": [
+		754,
+		387,
+		385,
+		53
+	],
+	"testlocationdata": [
+		{
+				"connectionportnum": 3389,
+				"properties": {
+					"CropRectangle": "[0,0,0,0]",
+					"Rotate": 0,
+					"Scale": "    1",
+					"HotSpot": "[192,26]",
+					"Tolerance": "_71",
+					"Discrepancy": "_0",
+					"SearchType": "Smoothed for Text"
+				},
+				"sutinfo": {
+					"type": "Unknown RDP"
+				},
+				"name": "TheCRMserverencounteredproblem.png",
+				"connectionname": "Team VM",
+				"type": 1,
+				"connectionserverid": "10.171.44.21",
+				"capturerect": [
+					754,
+					387,
+					385,
+					53
+				],
+				"connectiontype": "RDP",
+				"capturedocrtext": "The CRM server encountered problems. Contact your system administrator."
+			}
+	]
+}

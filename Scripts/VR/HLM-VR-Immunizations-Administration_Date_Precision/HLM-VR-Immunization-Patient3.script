@@ -1,0 +1,76 @@
+﻿params domain 
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+Log "Common data:" && setup
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set global cleanup to  "Immunizations/setup".setCleanup()
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set testData to JSONValue(file ResourcePath("VR/Administration_Date_Precision/testData.json")).(value of domain)
+set patientName to testData.Patient3.nameFullFormatted
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient3.dob)) 
+set vaccineName1 to testData.vaccineName1
+set source to testData.Source
+set product1 to testData.product1
+
+Try	
+	Log "Util".stepNumber &"ACTION: Open Patient 3's chart to the Immunizations Forecast. Chart at least 9 events for Vaccine 1 (e.g. Influenza) with the 4 oldest charted using the following date estimation formats: Week Of, Date, Month/Year and Year. Click on View Forecast and click the List button."
+	Run "Immunizations/setup".NavigateToImmunizationWorkflowViaMenu patientName, menu, subMenu, relationship
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Date",Date - 10 month, source,"Submit"
+	set adminDate to year of (Today - 9 months) &"-"& month of (Today - 9 months)&"-01"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Week of",adminDate, source,"Submit"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Month/Year",Date - 8 month, source,"Submit"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Year",Date - 2 Year, source,"Submit"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Date",Date - 6 month, source,"Submit"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Date",Date - 5 month, source,"Submit"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Date",Date - 4 month, source,"Submit"
+	Run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName1, "Month/Year",Date - 3 month, source,"Submit"
+	waitfor 30, Image: "Immunizations/Setup/Button_ViewForecast"
+	Click FoundImageLocation()
+	Run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+	
+	Log "VERIFICATION: Ensure '<number of items within the drop down > Items Documented' displays within the first Action column for Vaccine1 (e.g. Influenza)"
+	Set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchrectangle(vaccineName1)
+	Set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+	Run "Immunizations/Util/Validation".VerifyText "4 Items Documented",("Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle))
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"List View Items Documented-Pateint3")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Click the chevron icon next to Vaccine1 (e.g. Influenza) within the first Action column"
+	Click "Immunizations/Forecast-List/Icon_Chevron"
+	
+	Log "VERIFICATION: Verify the drop down displays the administration with the product or event set name on the first line and the administration date on the second line with the age in parenthesis to the right"
+	Set admindate to year of (Today - 2 Year) &"-01-01"
+	Set Age to "Immunizations/Util/Date".ageCalculator (dob, admindate, False, True)
+	Run "Immunizations/Util/Validation".VerifyText product1&Return&formattedTime("%Y", Today - 2 Year)&&Age,"Immunizations/Forecaster-list/Helpers".itemsDocumentedPopoverSearchRectangle()
+	
+	Set Age to "Immunizations/Util/Date".ageCalculator (dob, Today - 10 months, False, True)
+	Run "Immunizations/Util/Validation".VerifyText product1&Return&formattedTime("%b %d, %Y", Today - 10 months)&&Age,"Immunizations/Forecaster-list/Helpers".itemsDocumentedPopoverSearchRectangle()
+	
+	Set adminDate to year of (Today - 9 months) &"-"& month of (Today - 9 months)&"-01"
+	Set Age to "Immunizations/Util/Date".ageCalculator (dob, adminDate, False, True)
+	Run "Immunizations/Util/Validation".VerifyText product1&Return&"Week of"&&formattedTime("%b %d, %Y", adminDate)&&Age,"Immunizations/Forecaster-list/Helpers".itemsDocumentedPopoverSearchRectangle()
+	
+	Set adminDate to year of (Today - 8 months) &"-"& month of (Today - 8 months)&"-15"
+	Set Age to "Immunizations/Util/Date".ageCalculator (dob, adminDate, False, True)
+	Run "Immunizations/Util/Validation".VerifyText product1&Return&&formattedTime("%b. %Y", adminDate)&&Age,"Immunizations/Forecaster-list/Helpers".itemsDocumentedPopoverSearchRectangle()
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"ItemsDocumented Popup-Pateint3")
+	---------------------------------------------------------------------------------------------------------------
+	
+catch theException
+	logError "Exception encountered" && theException.reason
+	captureScreen "Error" & formattedTime("_%m%d%Y%H%M%S", the time)
+end try
+
+---------------------------------------------------------------------------------------------------------------
+
+Log "Util".stepNumber &"ACTION: Close the Application."
+run "Immunizations/Setup".closeApplication Cleanup
+---------------------------------------------------------------------------------------------------------------

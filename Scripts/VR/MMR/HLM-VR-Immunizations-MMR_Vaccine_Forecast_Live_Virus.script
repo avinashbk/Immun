@@ -1,0 +1,270 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST SCRIPT LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestScript&id=108943
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set didNotCountImage to common.didNotCountImage
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set overdue to textStrings.overdue
+set viewForecast to textStrings.viewForecast
+set forecastSuspended to textStrings.forecastSuspended
+set lastAdmin to textStrings.lastAdmin
+set complete to textStrings.complete
+set notStarted to textStrings.notStarted
+set administered to textStrings.administered
+
+set testData to JSONValue(file ResourcePath("VR/MMR_Vaccine/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file ResourcePath("VR/MMR_Vaccine/testData.json")).(value of domain)
+set lastName to testData.Patient_Live_Virus.lastName
+set firstName to testData.Patient_Live_Virus.firstName
+set newLastName to testData.Patient_Live_Virus.newLastName
+set sex to testData.Patient_Live_Virus.sex
+set patientName to testData.Patient_Live_Virus.nameFullFormatted
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Live_Virus.dob)) 
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set vaccineName3 to testData.vaccineName3
+set vaccineName4 to testData.vaccineName4
+set source to testData.source
+put (testData.Product1, testData.Product2, testData.Product3, testData.Product4) into productList
+
+set format to "%b %d, %Y"
+
+
+
+Try
+	---------------------------------------------------------------------------------------------------------------
+	# PATIENT SETUP
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		
+		BeginTestCase "VR/MMR/HLM-VR-Immunizations_MMR_P3_Live_Virus"
+		
+		Log "Util".stepNumber & "ACTION: Open Patient 3's chart, navigate to the immunization component and review the MPage."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		
+		Log "VERIFICATION: Ensure MMR displays in the vaccine Column."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName1
+		
+		Log "VERIFICATION: Ensure Status displays as 'Overdue'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName1, overdue
+		
+		Log "VERIFICATION: Ensure the Next recommended administration is 'Today'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, "Today"
+		
+		Log "VERIFICATION: Ensure Administrations displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, "--", false
+		
+		Log "VERIFICATION: Ensure Last action displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, "--"
+		
+		Log "VERIFICATION: Ensure Last action Date displays with '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName1, "--"
+		CaptureScreen(Name: "Step" & Global stepNumber & "-MPage Review P3")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast button."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: In the CDC Schedule column, ensure MMR displays with a status of 'Not Started'."
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName1 & return & notStarted, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure Dose 1 displays in the today column in red."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Dose 1", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangleToday)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyDoseInRed(vaccineName1)
+		
+		Log "VERIFICATION: Ensure that 'forecast suspended' displays in the today + 1 column and spans across all future columns."
+		set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set endDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-20", "-30", "1200", "100")
+		run "Immunizations/Util/Validation".verifyText forecastSuspended, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		CaptureScreen(Name: "Step" & Global stepNumber & "-Forecaster review P3")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart a dose at <DOB + 4 years> using CVX 03 (M-M-R II) then chart a second dose <Dose1 + 24 days> using CVX 05 (Attenuvax)."
+		set dose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("year": 4))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, dose1AdminDate, source, item 1 of productList, "submit"
+		set dose2AdminDate to "Immunizations/Util/Date".adjustDate(dose1AdminDate, format, ("day": 24))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName2, dateFormat, dose2AdminDate, source, item 2 of productList, "submit"
+		
+		Log "VERIFICATION: Ensure MMR displays with a status of 'Last Admin: <Date and age for Dose1 + 24 days>'."
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set age to "Immunizations/Util/Date".ageCalculator(dob, dose2AdminDate, false, true)
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, firstColumnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText lastAdmin && dose2AdminDate && age, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose 2 displays charted in the forecaster with the product name, 'Dose 1' and date of administration in the cell."
+		set startDateHeader to dose2AdminDate
+		set endDateHeader to dose2AdminDate 
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-130", "-30", "130", "100")
+		run "Immunizations/Util/Validation".verifyText item 2 of productList & return & "Dose 2 - " & dose2AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		set startDateHeader to "Immunizations/Util/Date".ageCalculator(dob, dose2AdminDate, false, false)
+		set endDateHeader to "Immunizations/Util/Date".ageCalculator(dob, dose2AdminDate, false, false)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleWithIndex("2", startDateHeader, "2", endDateHeader , "-140", "-30", "140", "100")
+		run "Immunizations/Util/Validation".verifyText item 2 of productList & return & "Dose 2 - " & dose2AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure Dose 3 displays in the today column in red."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Dose 3", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangleToday)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyDoseInRed(vaccineName1)
+		CaptureScreen(Name: "Step" & Global stepNumber & "- Forecaster Dose1 & 2 charted P3")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart another dose at <Dose2 + 24 days> using CVX 07 (Mumpsvax)."
+		set dose3AdminDate to "Immunizations/Util/Date".adjustDate(dose2AdminDate, format, ("day": 24))
+		set age to "Immunizations/Util/Date".ageCalculator(dob, dose3AdminDate, false, false)
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName3, dateFormat, dose3AdminDate, source, item 3 of productList, "submit"
+		
+		Log "VERIFICATION: Ensure MMR displays with a status of 'Last Admin: <Date and age for Dose2 + 24 days>'."
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set age to "Immunizations/Util/Date".ageCalculator(dob, dose3AdminDate, false, true)
+		set pattern to "Immunizations/Util/Date".setPattern(age)
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, firstColumnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText lastAdmin && dose3AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, firstColumnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyTextWithPattern age, pattern, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, firstColumnSearchRectangle) 
+		
+		Log "VERIFICATION: Ensure dose 3 displays charted in the forecaster with the product name, 'Dose 1' and date of administration in the cell."
+		set startDateHeader to dose3AdminDate
+		set endDateHeader to dose3AdminDate 
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-130", "-30", "130", "100")
+		run "Immunizations/Util/Validation".verifyText item 3 of productList & return & "Dose 3 - " & dose3AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		set startDateHeader to "Immunizations/Util/Date".ageCalculator(dob, dose3AdminDate, false, false)
+		set endDateHeader to "Immunizations/Util/Date".ageCalculator(dob, dose3AdminDate, false, false)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-140", "-30", "140", "100")
+		run "Immunizations/Util/Validation".verifyText item 3 of productList & return & "Dose 3 - " & dose3AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure Dose 4 displays in the today column in red."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Dose 4", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangleToday)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyDoseInRed(vaccineName1)
+		CaptureScreen(Name: "Step" & Global stepNumber & "- Forecaster Dose3 charted P3")
+		---------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber & "ACTION: Chart another dose at <Dose3 + 23 days> using CVX 06 (Meruvax)."
+		set dose4AdminDate to "Immunizations/Util/Date".adjustDate(dose3AdminDate, format, ("day": 23))
+		set age to "Immunizations/Util/Date".ageCalculator(dob, dose4AdminDate, false, true)
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName4, dateFormat, dose4AdminDate, source, item 4 of productList, "submit"
+		
+		Log "VERIFICATION: Ensure MMR displays with a status of 'Last Admin: <Date and age for Dose3 + 23 days>' along with the Did Not Count icon."
+		set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, firstColumnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText lastAdmin && dose4AdminDate && age, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, firstColumnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1rowSearchRectangle, firstColumnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure dose 4 displays charted in the forecaster with the product name, 'Dose 1' and date of administration in the cell along with the Did Not Count icon."
+		set startDateHeader to dose4AdminDate
+		set endDateHeader to dose4AdminDate 
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-130", "-30", "130", "100")
+		run "Immunizations/Util/Validation".verifyText item 4 of productList & return & dose4AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		set startDateHeader to "Immunizations/Util/Date".ageCalculator(dob, dose4AdminDate, false, false)
+		set endDateHeader to "Immunizations/Util/Date".ageCalculator(dob, dose4AdminDate, false, false)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader , "-140", "-30", "140", "100")
+		run "Immunizations/Util/Validation".verifyText item 4 of productList & return & dose4AdminDate, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage didNotCountImage, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangle)
+		
+		Log "VERIFICATION: Ensure Dose 4 remains in the today column in red."
+		set columnSearchRectangleToday to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Dose 4", "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle, columnSearchRectangleToday)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyDoseInRed(vaccineName1)
+		CaptureScreen(Name: "Step" & Global stepNumber & "- Forecaster Dose4 charted P3")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Navigate to the workflow MPage and modify the fourth administration from <Dose3 + 23 days> to <Dose3 + 24 days>."
+		run "Immunizations/Common/Actions".clickMPagesView viewpoint
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName1
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate dose4AdminDate, "1", dateFormat, "Immunizations/Util/Date".adjustDate(dose3AdminDate, format, ("day": 24))
+		
+		Log "VERIFICATION: Ensure MMR displays in the historical section with a status of complete"
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameHistorySection vaccineName1
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName1, complete
+		
+		Log "VERIFICATION: Ensure MMR displays administrations of 4."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, 4, "false"
+		
+		Log "VERIFICATION: Ensure MMR displays a next recommended of '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, "--"
+		
+		Log "VERIFICATION: Ensure MMR displays with a last action of 'Administered'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, administered
+		
+		Log "VERIFICATION: Ensure MMR displays with a last action Date of <Dose3 + 24 days>."
+		set age to "Immunizations/Util/Date".ageCalculator(dob, "Immunizations/Util/Date".adjustDate(dose3AdminDate, format, ("day": 24)), false, false)
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName1, "Immunizations/Util/Date".adjustDate(dose3AdminDate, format, ("day": 24)), age
+		CaptureScreen(Name: "Step" & Global stepNumber & "-Workflow MPage Complete P2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient 3's chart."
+		run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/MMR/HLM-VR-Immunizations_MMR_P3_Live_Virus"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+	#################################################################################
+	# PATIENT CLEANUP
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

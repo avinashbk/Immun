@@ -1,0 +1,226 @@
+{
+  "SOLM64":{
+		"Patient1":{
+			"lastName":"No",
+			"firstName":"Gender",
+			"nameFullFormatted":"No,Gender",
+			"newLastName":"oldNoGender",
+			"DOB":"Today - 20 years"
+			},
+		"Patient2":{
+			"lastName":"Unknown",
+			"firstName":"Gender",
+			"nameFullFormatted":"Unknown,Gender",
+			"newLastName":"oldUnknownGender",
+			"sex":"Unknown",
+			"DOB":"Today - 20 years"
+			},
+		"Patient3":{
+			"lastName":"No",
+			"firstName":"DOB",
+			"nameFullFormatted":"No,DOB",
+			"newLastName":"oldNoDOB",
+			"sex":"Male",
+			},
+		"Patient4":{
+			"lastName":"NoGender",
+			"firstName":"NoDOB",
+			"nameFullFormatted":"NoGender,NoDOB",
+			"newLastName":"oldNoGenderNoDOB",
+			},		
+		"vaccineName":"Meningococcal",
+		"productName":"meningococcal conjugate vaccine",
+      		"source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"		
+		},
+
+	"S18VX":{
+ 		"Patient1":{
+			"lastName":"No",
+			"firstName":"Gender",
+			"nameFullFormatted":"No,Gender",
+			"newLastName":"oldNoGender",
+			"DOB":"Today - 20 years"
+			},
+		"Patient2":{
+			"lastName":"Unknown",
+			"firstName":"Gender",
+			"nameFullFormatted":"Unknown,Gender",
+			"newLastName":"oldUnknownGender",
+			"sex":"Unknown",
+			"DOB":"Today - 20 years"
+			},
+		"Patient3":{
+			"lastName":"No",
+			"firstName":"DOB",
+			"nameFullFormatted":"No,DOB",
+			"newLastName":"oldNoDOB",
+			"sex":"Male"
+			},
+		"Patient4":{
+			"lastName":"NoGender",
+			"firstName":"NoDOB",
+			"nameFullFormatted":"NoGender,NoDOB",
+			"newLastName":"oldNoGenderNoDOB"
+			},		
+		"vaccineName":"Meningococcal",
+		"productName":"meningococcal conjugate vaccine",
+      		"source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"		
+		},
+
+	"SOLGM":{
+ 		"Patient1":{
+			"lastName":"No",
+			"firstName":"Gender",
+			"nameFullFormatted":"No,Gender",
+			"newLastName":"oldNoGender",
+			"DOB":"Today - 20 years"
+			},
+		"Patient2":{
+			"lastName":"Unknown",
+			"firstName":"Gender",
+			"nameFullFormatted":"Unknown,Gender",
+			"newLastName":"oldUnknownGender",
+			"sex":"Unknown",
+			"DOB":"Today - 20 years"
+			},
+		"Patient3":{
+			"lastName":"No",
+			"firstName":"DOB",
+			"nameFullFormatted":"No,DOB",
+			"newLastName":"oldNoDOB",
+			"sex":"Male"
+			},
+		"Patient4":{
+			"lastName":"NoGender",
+			"firstName":"NoDOB",
+			"nameFullFormatted":"NoGender,NoDOB",
+			"newLastName":"oldNoGenderNoDOB"
+			},		
+		"vaccineName":"Meningococcal",
+		"productName":"meningococcal conjugate vaccine",
+      		"source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"			
+		},
+
+	"S18VE":{
+ 		"Patient1":{
+			"lastName":"No",
+			"firstName":"Gender",
+			"nameFullFormatted":"No,Gender",
+			"newLastName":"oldNoGender",
+			"DOB":"Today - 20 years"
+			},
+		"Patient2":{
+			"lastName":"Unknown",
+			"firstName":"Gender",
+			"nameFullFormatted":"Unknown,Gender",
+			"newLastName":"oldUnknownGender",
+			"sex":"Unknown",
+			"DOB":"Today - 20 years"
+			},
+		"Patient3":{
+			"lastName":"No",
+			"firstName":"DOB",
+			"nameFullFormatted":"No,DOB",
+			"newLastName":"oldNoDOB",
+			"sex":"Male"
+			},
+		"Patient4":{
+			"lastName":"NoGender",
+			"firstName":"NoDOB",
+			"nameFullFormatted":"NoGender,NoDOB",
+			"newLastName":"oldNoGenderNoDOB"
+			},		
+		"vaccineName":"Meningococcal",
+		"productName":"meningococcal conjugate vaccine",
+      		"source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"
+		},
+
+	"S18VA":{
+ 		"Patient1":{
+			"lastName":"No",
+			"firstName":"Gender",
+			"nameFullFormatted":"No,Gender",
+			"newLastName":"oldNoGender",
+			"DOB":"Today - 20 years"
+			},
+		"Patient2":{
+			"lastName":"Unknown",
+			"firstName":"Gender",
+			"nameFullFormatted":"Unknown,Gender",
+			"newLastName":"oldUnknownGender",
+			"sex":"Unknown",
+			"DOB":"Today - 20 years"
+			},
+		"Patient3":{
+			"lastName":"No",
+			"firstName":"DOB",
+			"nameFullFormatted":"No,DOB",
+			"newLastName":"oldNoDOB",
+			"sex":"Male"
+			},
+		"Patient4":{
+			"lastName":"NoGender",
+			"firstName":"NoDOB",
+			"nameFullFormatted":"NoGender,NoDOB",
+			"newLastName":"oldNoGenderNoDOB"
+			},		
+		"vaccineName":"Meningococcal",
+		"productName":"meningococcal conjugate vaccine",
+      		"source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"
+		},
+
+	"INTGM":{
+ 		"Patient1":{
+			"lastName":"No",
+			"firstName":"Gender",
+			"nameFullFormatted":"No,Gender",
+			"newLastName":"oldNoGender",
+			"DOB":"Today - 20 years"
+			},
+		"Patient2":{
+			"lastName":"Unknown",
+			"firstName":"Gender",
+			"nameFullFormatted":"Unknown,Gender",
+			"newLastName":"oldUnknownGender",
+			"sex":"Unknown",
+			"DOB":"Today - 20 years"
+			},
+		"Patient3":{
+			"lastName":"No",
+			"firstName":"DOB",
+			"nameFullFormatted":"No,DOB",
+			"newLastName":"oldNoDOB",
+			"sex":"Male"
+			},
+		"Patient4":{
+			"lastName":"NoGender",
+			"firstName":"NoDOB",
+			"nameFullFormatted":"NoGender,NoDOB",
+			"newLastName":"oldNoGenderNoDOB"
+			},		
+		"vaccineName":"Meningococcal",
+		"productName":"meningococcal conjugate vaccine",
+      		"source":"Clinician",
+		"reportName":"Baseline East - Immunization Report",
+		"clinicAddress":"6276 Rockriver Drive, Business address added, Kansas City, MO 641172521",
+		"clinicPhoneNumber":"(816) 555-4141"
+		},
+
+		"dateFormat":"Date"
+
+}

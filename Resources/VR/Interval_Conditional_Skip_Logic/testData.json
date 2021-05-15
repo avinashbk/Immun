@@ -1,0 +1,36 @@
+{
+	"SOLM64": {
+		"Patient1": {
+			"lastName": "ItrvlCnditional",
+			"firstName": "SkipLogic",
+			"nameFullFormatted": "ItrvlCnditional,SkipLogic",
+			"newLastName": "OldItrvlCnditional",
+			"DOB": "Today - 11 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName": "Human Papillomavirus",
+		"vaccineName2": "Hepatitis A",
+		"vis1": "HPV (Gardasil-9) (English)",
+		"product": "Gardasil9",
+		"product2": "SRA TS hepatitis A pediatric vaccine",
+		"source": "Clinician"
+	},
+	"S18VX": {
+		"Patient1": {
+			"lastName": "ItrvlCnditional",
+			"firstName": "SkipLogic",
+			"nameFullFormatted": "ItrvlCnditional,SkipLogic",
+			"newLastName": "OldItrvlCnditional",
+			"DOB": "Today - 11 years",
+			"sex": "Male"
+		},
+		"User": "Maintenance, Health",
+		"vaccineName": "Human Papillomavirus",
+		"vaccineName2": "Hepatitis A",
+		"vis1": "HPV (Gardasil-9) (English)",
+		"product": "Gardasil9",
+		"product2": "hepatitis A adult vaccine",
+		"source": "Clinician"
+	}
+}

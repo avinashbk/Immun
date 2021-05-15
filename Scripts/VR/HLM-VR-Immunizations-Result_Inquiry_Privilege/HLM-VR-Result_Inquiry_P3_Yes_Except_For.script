@@ -1,0 +1,92 @@
+﻿params domain 
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set format to "%b %d, %Y"
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "Common data:" && setup
+set username1 to setup.username
+set password1 to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship1 to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set insufficientPrivilegesBanner to common.insufficientPrivilegesBanner
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set lastAdmin to textStrings.lastAdmin
+set noResultsFound to textStrings.noResultsFound
+
+set testData to JSONValue(file ResourcePath("VR/Result_Inquiry_Privilege/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file ResourcePath("VR/Result_Inquiry_Privilege/testData.json")).(value of domain)
+set patientName to testData.patient3.nameFullFormatted
+set dob to formattedTime("%m/%d/%Y", value(testData.patient3.dob)) 
+set vaccineName1 to testData.vaccineName1
+set source to testData.source
+set product1 to testData.product1
+set username2 to testData.username1
+set password2 to decodeText(testData.password1.trimAll, "HLM")
+set relationship4 to testData.relationship4
+
+try
+	log "Util".stepNumber &"ACTION: Change back to "& username1 &", open the Immunizations Workflow component, and document an administration for " & vaccineName1 & " with " & product1 & "."
+	run "Immunizations/Setup".changeUser username1, password1
+	run "Immunizations/setup".navigateToImmunizationWorkflowViaMenu patientName, menu, subMenu, relationship1
+	set dose1AdminDate to "Immunizations/Util/Date".adjustDate(dob, format, ("month":12))
+	run "Immunizations/Common/DocumentHistory/Task".documentWithproduct vaccineName1, dateFormat, dose1AdminDate, source, product1, "Submit"
+	
+	log "VERIFICATION: Ensure " & vaccineName1 & " displays administrations of 1."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName1, 1, false
+	
+	log "VERIFICATION: Ensure " & vaccineName1 & " displays with a last action of 'Administered'."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1,"Administered"
+	capturescreen (Name:"Step"&Global stepNumber&"-Workflow MPage Complete P1")
+	----------------------------------------------------------------------------------------------------------------	
+	
+	log "Util".stepNumber &"ACTION: Click on the View Forecast button."
+	run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+	
+	log "VERIFICATION: Ensure " & vaccineName1 & " displays with a status of 'Last Admin: <Date and age for " & dose1AdminDate & ">'."
+	set firstColumnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+	set vaccineName1RowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+	set age to "Immunizations/Util/Date".ageCalculator (dob, dose1AdminDate, false, true)
+	run "Immunizations/Util/Validation".verifyText vaccineName1, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,firstColumnSearchRectangle)
+	run "Immunizations/Util/Validation".verifyText lastAdmin && dose1AdminDate && age, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,firstColumnSearchRectangle)
+	
+	log "VERIFICATION: Ensure dose 1 displays charted in the forecaster with " & product1 & ", 'Dose 1' and " & dose1AdminDate & " in the cell."
+	set startDateHeader to dose1AdminDate
+	set endDateHeader to dose1AdminDate 
+	set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader ,"-100", "-30", "100","100")
+	run "Immunizations/Util/Validation".verifyText product1 &return& "Dose 1 - " & dose1AdminDate,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(vaccineName1RowSearchRectangle,columnSearchRectangle)
+	capturescreen (Name:"Step"&Global stepNumber&"- Forecast Review P1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	log "Util".stepNumber &"ACTION: Change users to "& username2 &" and assign "& relationship4 &" as the relationship to the patient."
+	run "Immunizations/Setup".changeUser username2, password2, relationship4
+	
+	log "VERIFICATION: Ensure 'Insufficient privileges. Forecasting information and documented immunizations may not be viewbale for this record.' displays in the mPage."
+	waitfor 15, "Immunizations/setup/Text_Immunizations"
+	run "Immunizations/Util/Validation".verifyImage insufficientPrivilegesBanner
+	
+	log "VERIFICATION: Ensure the view forecast button does not display in the mPage."
+	run "Immunizations/Util/Validation".verifyTextNotVisible viewForecast, "Immunizations/Common/Helpers".tabListSearchRectangle
+	
+	log "VERIFICATION: Ensure " & noResultsFound & " displays in the mPage."
+	set rectangle to imagerectangle("Immunizations/Setup/Text_Immunizations") + (-40, -10, 1680, 130)
+	run "Immunizations/Util/Validation".verifyText noResultsFound, rectangle
+	
+	log "VERIFICATION: Ensure " & vaccineName1 & " does not display in the mPage ."
+	run "Immunizations/Util/Validation".verifyTextNotVisible vaccineName1, rectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Forecast Review No Priv P1")
+	----------------------------------------------------------------------------------------------------------------
+catch exception
+	logError "Exception encountered" && exception.reason
+	captureScreen"Exception"
+end try
+---------------------------------------------------------------------------------------------------------------	
+Log "Util".stepNumber &"ACTION: Close patient 3's chart."
+run "Immunizations/setup".closeChartViaX
+-------------------------------------------------------------------------

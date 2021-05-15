@@ -1,0 +1,17 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-PowerchartFramework
+------------------------------------------------------------------------------------------------------------------------------
+BeginTestCase "HR/HLM-WF-Immunizations - Not Given charting from mPages/Patient_Setup"
+Run "HR/HLM-WF-Immunizations - Not Given charting from mPages/Patient_Setup"
+EndTestCase  "HR/HLM-WF-Immunizations - Not Given charting from mPages/Patient_Setup"
+
+BeginTestCase "HR/HLM-WF-Immunizations - Not Given charting from mPages/HLM-WF-NotGiven_charting_from_mPages-1"
+Run "HR/HLM-WF-Immunizations - Not Given charting from mPages/HLM-WF-NotGiven_charting_from_mPages-1"
+EndTestCase "HR/HLM-WF-Immunizations - Not Given charting from mPages/HLM-WF-NotGiven_charting_from_mPages-1"
+
+BeginTestCase "HR/HLM-WF-Immunizations - Not Given charting from mPages/Patient_Cleanup"
+Run "HR/HLM-WF-Immunizations - Not Given charting from mPages/Patient_Cleanup"
+EndTestCase  "HR/HLM-WF-Immunizations - Not Given charting from mPages/Patient_Cleanup"

@@ -1,0 +1,542 @@
+﻿--------------------------------Helper Suite Information------------------------------------------------------------------------------------------------
+
+#Repo: IPDev-Millennium-Shared-HealthMaintenanceTools
+#Repo: IPDev-Shared-Millennium
+#Repo: IPDev-Shared-PowerChartFramework
+#Repo: IPDev-mPages-Shared-Immunizations 
+#Repo: IPDev-Millennium-Shared-MillenniumFoundations
+# https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+#RQM Test Case Link: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=61858
+
+---------------------------------Assigning Test Data to Variables--------------------------------------------------------------------------------------
+
+params domain 
+Log "Test Running in domain"&&domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+
+set common to JSONValue(file resourcePath("Common.json"))
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+
+set testData to "UTIL_Json".initializeResourceData(JSONValue(file ResourcePath("WF/Immunizations_List_View_Updates/testData.json")),domain)
+
+Try
+	//Patient1 Data Reset (DOB: Today - 4 Years)
+	run "Immunizations/PatientCreation".resetPatientToZeroState  setup.username,  decodeText(setup.("password").trimAll, "HLM"), domain, testData.Patient1.lastName, testData.Patient1.firstName,  formattedTime("%m/%d/%Y", value(testData.Patient1.dob))
+	-----------------------------------------------------------------Pre-Conditions----------------------------------------------------------------------
+	Log "Add pre-requisites data to patient for the test by setting the pre-requisite preferences before running this plan"
+	run "Common".LaunchMillenniumWindow "prefmaint"
+	run "Millennium_Login_window".LogIntoMillenniumApps setup.username, decodeText(setup.("password").trimAll, "HLM"), domain
+	waitFor 80, "Prefmaint/Text_ExistingPreferences"
+	click "Prefmaint/Text_ExistingPreferences"
+	wait 3 //takes time to load the window
+	typetext windowskey & upArrow
+	wait 3 //takes time to maximize the window
+	run "Prefmaint".SelectApplication "PowerChart"
+	run "Prefmaint".SelectPosition "DBA"
+	click "Prefmaint/Icon_SearchPreference_64bit"
+	waitFor 80,text:"Immunization Forecaster"
+	run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+	run "Prefmaint".ModifyListPreference "IMMUN_CONSENT","1-On"
+	run "Prefmaint".ModifyListPreference "IMMUN_REG_IMPORT","1-On"
+	run "Prefmaint".ModifyListPreference "IMMUN_DEFAULT_VIEW","0-Immunization List View"
+	click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+	waitFor 80,text:"Immunization Forecaster"
+	typetext altKey & F4
+	click "Prefmaint/Icon_Exit"
+	
+	Log "Patient 1 - Has received 3 uncharted doses of DTaP, 1 for today's date and 2 for patient's date of birth"
+run "Immunizations/Setup".LoginAndLoadcomponentViaMenu setup.username,  decodeText(setup.("password").trimAll, "HLM"),  domain, testData.Patient1.nameFullFormatted, common.menu, common.subMenu, setup.relationship 
+	run "Immunizations/Common/DocumentHistory/Task".documentWithProduct testData.vaccineName,"Date", "Immunizations/Util/Date".todaysDate("%m/%d/%Y"), testData.source, testData.product, "Submit"
+	run "Immunizations/Common/DocumentHistory/Task".documentWithProduct testData.vaccineName, "Date", formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , testData.source, testData.product, "Submit"
+	run "Immunizations/Common/DocumentHistory/Task".documentWithProduct testData.vaccineName, "Date", formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , testData.source, testData.product, "Submit"
+	repeat 2 times
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName testData.vaccineName
+		set the currentTextPlatform.OCRStyles.Default.DPI to 72
+		run  "Immunizations/WorkflowMPage/SidePanel/Task".unchart formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) ,"1","test"
+	end repeat
+	run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName testData.vaccineName
+	run  "Immunizations/WorkflowMPage/SidePanel/Task".unchart "Immunizations/Util/Date".todaysDate("%m/%d/%Y") ,"1","test"
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
+	Try
+		
+		BeginTestCase "WF/HLM-WF-Immunizations-List_View_Updates"
+		----------------------------------------------------------------Test Steps---------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(textStrings.viewForecast)
+		run "Immunizations/Common/Actions".temporaryRefreshClick
+		
+		Log "VERIFICATION: Ensure the Refresh button is enabled and to the right of the print hyperlink with 'Print Record' text"
+		run "Immunizations/Util/Validation".verifyText textStrings.printRecord,"Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Verify the Document History and Chart Not Given buttons are enabled within the lower right portion of the lower panel"
+		run "Immunizations/Util/Validation".verifyText testData.documentHistory,"Immunizations/Common/Helpers".offsetImageRectangle ("Immunizations/Forecaster-Forecast/List", -500, 10, 50, 50)
+		run "Immunizations/Util/Validation".verifyText testData.chartNotGiven,"Immunizations/Common/Helpers".offsetImageRectangle ("Immunizations/Forecaster-Forecast/List", -500, 10, 50, 50)
+		
+		Log "VERIFICATION: Verify the Sharing/Follow up: and Registry  Import links are enabled within the lower left portion of the lower panel"
+		run "Immunizations/Util/Validation".verifyImage common.registryImportLink ,"Immunizations/Forecaster-List/Helpers".registryAndConsentLinksSearchRectangle 
+		run "Immunizations/Util/Validation".verifyImage common.sharingFollowUpLink,"Immunizations/Forecaster-List/Helpers".registryAndConsentLinksSearchRectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"VerifyNoVaccineHistory")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Select the button with three lines that's above the Refresh button within the Immunization List View window and if it's not already checked, select 'Hide Uncharted Records'."
+		Log "VERIFICATION: Ensure the 'Hide Uncharted Records' is checked."
+		
+		run "Immunizations/Forecaster-Common/Actions".ClickHideRecords "True"
+		
+		Log "VERIFICATION: Ensure 'No vaccine history to display' text is in the white space within the List view window"
+		run "Immunizations/Forecaster-List/Validations".VerifyNoVaccineHistory
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Select the Document History button."
+		run "Immunizations/Common/DocumentHistory/Actions".OpenDialog
+		
+		Log "VERIFICATION: Ensure the Document History dialog opens and the Select Immunizations drop down is face up. Ensure 'No Immunization Selected' displays in the body to the right"
+		run "Immunizations/Util/Validation".verifyText "Select Immunizations","Immunizations/Common/DocumentHistory/Helpers".DialogSearchrectangle
+		click imagename:common.cancelButtonEnabledImage,SearchRectangle:(imageRectangle(waitFor:10,image:"Immunizations/Common/TL_SelectImmunizations").topLeft+ (0,20), imageRectangle(waitFor:10,image:"Immunizations/Common/TL_SelectImmunizations").bottomRight + (400, 520))
+		
+		Log "VERIFICATION: Ensure the + Add Immunizations link is enabled in the left column"
+		run "Immunizations/Util/Validation".verifyImage common.addImmunizations,"Immunizations/Common/DocumentHistory/Helpers".DialogSearchrectangle
+		
+		Log "VERIFICATION: Ensure 'No Immunization Selected' displays in the body to the right"
+		run "Immunizations/Util/Validation".verifyImage common.noImmunizationsSelectedImage,"Immunizations/Common/DocumentHistory/Helpers".DialogSearchrectangle
+		
+		Log "VERIFICATION: Ensure the Cancel button is enabled"
+		run "Immunizations/Util/Validation".verifyImage  common.cancelButtonEnabledImage,"Immunizations/Common/DocumentHistory/Helpers".DialogSearchrectangle
+		--------------------------------------------------------------------------------------------------------------- 
+		
+		Log "Util".stepNumber & "ACTION: Select the Cancel button within the Immunization – Historical Entry dialog."
+		click imagename:common.cancelButtonEnabledImage,SearchRectangle:"Immunizations/Common/DocumentHistory/Helpers".DialogSearchrectangle
+		
+		Log "VERIFICATION: Ensure the Document History dialog closes."
+		run "Immunizations/Forecaster-List/Validations".VerifyNoVaccineHistory
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Document a History for vaccine e.g."&&testData.vaccineName&&"that falls within the forecasted date using Month/Year date estimation with the product containing the most characters selected."
+		set the currentTextPlatform.OCRStyles.Default.EnableAggressiveTextExtraction to Yes
+		set the currentTextPlatform.OCRStyles.Default.DPI to 72
+		run "Immunizations/Common/DocumentHistory/Task".documentWithproduct testData.vaccineName, "Month/Year", "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) ,"%m/%d/%Y", ("Month":3)),testData.source,testData.product1,"Submit"
+		
+		Log "VERIFICATION: Verify the first column contains the vaccine group name and the column header is labeled Vaccine"
+		run "Immunizations/Util/Validation".verifyText "Vaccine", "Immunizations/Forecaster-Forecast/Helpers".firstcolumnSearchRectangle()
+		
+		Log "VERIFICATION: Verify the charted value displays in the Action column with the following: First Line:  Dose Number and Immunization event set display name, Second Line:  Date in appropriate mask. E.g. MMM DD, YYYY"
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(testData.vaccineName) 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyText "1"&&testData.product1&return&"Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b. %Y", ("Month":3)) ,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle) 
+		
+		Log "VERIFICATION: Verify there is only one Action column"
+		run "Immunizations/Forecaster-List/Validations".verifyActionColumnCount "1"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"One Action column with chart details")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Document a History for vaccine"&&testData.vaccineName&&"before the Earliest date the vaccinegroup's second dose should be given and after the first dose using 'Week Of' date estimation without a product selection."
+		
+		put  (month("Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) ,"%m/%d/%Y", ("Month":3)))  & "/01" & "/" & year("Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) ,"%m/%d/%Y", ("Month":3))))into dose1AdminDatePrefHonor
+		set dose2AdminDate to "Immunizations/Util/Date".adjustDate(dose1AdminDatePrefHonor, "%m/%d/%Y", ("Week":2)) 
+		run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput testData.vaccineName, "Week Of",dose2AdminDate, testData.source,"Submit"
+		
+		Log "VERIFICATION: Verify the first column contains the Vaccine group name and the column header is labeled Vaccine"    
+		run "Immunizations/Util/Validation".verifyText "Vaccine","Immunizations/Forecaster-Forecast/Helpers".firstcolumnSearchRectangle()  
+		
+		Log "VERIFICATION: Verify there are only two Action columns"
+		run "Immunizations/Forecaster-List/Validations".verifyActionColumnCount "2"
+		
+		Log "VERIFICATION: Verify the charted value displays in the Action column with the following: First Line: Did Not Count icon  and Immunization event set display name, Second Line: Date in appropriate mask. E.g. MMM DD, YYYY"
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(testData.vaccineName) 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("2")
+		run "Immunizations/Util/Validation".verifyImage common.didNotCountImage,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle) 
+		run "Immunizations/Util/Validation".verifyText testData.defaultProduct ,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle) 
+		run "Immunizations/Util/Validation".verifyText   "Week of"&&"Immunizations/Util/Date".adjustDate(dose2AdminDate, "%b")&&"15,"&&"Immunizations/Util/Date".adjustDate(dose2AdminDate, "%Y"),"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Two Action columns with chart details")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Hover over the Did Not Count icon."
+		Log "VERIFICATION: Verify the text 'Did Not Count' displays."
+		
+		moveto "Immunizations/Common/DidNotCount/ListView"
+		put ImageRectangle("Immunizations/Common/DidNotCount/ListView").topLeft+(-30,-30) into didNotCountSearchRectangle
+		insert didNotCountSearchRectangle+(130,120) into didNotCountSearchRectangle
+		run "Immunizations/Util/Validation".verifyText testData.didNotCount,didNotCountSearchRectangle
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart a Permanent Not Given with Not Given Type of Unnecessary and an Authorized Date of this month for Vaccine e.g."&&testData.vaccineName
+		run "Immunizations/Common/ChartNotGiven/Task".chartRequiredInput testData.vaccineName, textStrings.unnecessary, testData.permNotGivenAction, testData.permNotGivenReason,"Submit"
+		
+		Log "VERIFICATION: Verify the first column contains the vaccine group name and the column header is labeled Vaccine"    
+		run "Immunizations/Util/Validation".verifyText "Vaccine","Immunizations/Forecaster-Forecast/Helpers".firstcolumnSearchRectangle()
+		
+		Log "VERIFICATION: Verify the charted value displays in the Action column with the following: First Line:  Not Given Type, Second Line: Authorized Date in appropriate mask. E.g. MMM DD, YYYY"
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage("Immunizations/Forecaster-Common/DtapStrikethrough") 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("3")
+		set age to "Immunizations/Util/Date".ageCalculator (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", ("Year":4)), false, true)
+		run "Immunizations/Util/Validation".verifyText textStrings.seriesUnnecessary,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchrectangle)
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".todaysDate("%b %d, %Y")&& age,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchrectangle)
+		
+		Log "VERIFICATION: Verify there are only three Action columns"
+		run "Immunizations/Forecaster-List/Validations".verifyActionColumnCount "3"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Three Action columns with chart details")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart a Temporary Not Given with a Not Given Type of Contraindicated, Reschedule For, Temporary contraindication - reschedule as the Not Given Reason, and an Authorized Date of the patient's birth date for Vaccine e.g."&&testData.vaccineName
+		run "Immunizations/Common/ChartNotGiven/Task".chartWithAuthorizedDate testData.vaccineName, textStrings.contraindicated, testData.tempNotGivenAction, testData.tempNotGivenReason, formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "Submit"
+		
+		Log "VERIFICATION: Verify the first column contains the vaccine group name and the column header is labeled Vaccine"
+		run "Immunizations/Util/Validation".verifyText "Vaccine","Immunizations/Forecaster-Forecast/Helpers".firstcolumnSearchRectangle()
+		
+		Log "VERIFICATION: Verify the charted value displays in the Action column with the following: First Line:  Not Given Type , Second Line: Authorized Date in appropriate mask. E.g. MMM DD, YYYY"
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage("Immunizations/Forecaster-Common/DtapStrikethrough") 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		set age to "Immunizations/Util/Date".ageCalculator (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) )), false, true)
+		run "Immunizations/Util/Validation".verifyText textStrings.contraindicated&return&"Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) ))  && age,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchrectangle)
+		
+		Log "VERIFICATION: Verify there are only four Action columns"
+		run "Immunizations/Forecaster-List/Validations".verifyActionColumnCount "4"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Four Action columns with chart details")
+		--------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart a Permanent Not Given with a Not Given Type of Refused and an Authorized Date of last month for Vaccine e.g."&&testData.vaccineName
+		run "Immunizations/Common/ChartNotGiven/Task".chartWithAuthorizedDate testData.vaccineName, testData.permNotGivenType1, testData.permNotGivenAction, textStrings.patientRefuses,"Immunizations/Util/Date".adjustDate("Immunizations/Util/Date".todaysDate("%m/%d/%Y"), "%b %d, %Y", ("Month":-1)) , "Submit"
+		
+		Log "VERIFICATION: Verify the first column contains the vaccine group name and the column header is labeled Vaccine"
+		run "Immunizations/Util/Validation".verifyText "Vaccine","Immunizations/Forecaster-Forecast/Helpers".firstcolumnSearchRectangle()
+		
+		Log "VERIFICATION: Verify the charted value displays in the Action column with the following: First Line:  Not Given Type, Second Line: Authorized by date in appropriate mask. E.g. MMM DD, YYYY"
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage("Immunizations/Forecaster-Common/DtapStrikethrough") 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("4")
+		set age to "Immunizations/Util/Date".ageCalculator (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", ("Year":3,"Month":11)), false, true)
+		run "Immunizations/Util/Validation".VerifyText testData.permNotGivenType1&return&"Immunizations/Util/Date".adjustDate("Immunizations/Util/Date".todaysDate("%m/%d/%Y"), "%b %d, %Y", ("Month":-1)) && age,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchrectangle)
+		
+		Log "VERIFICATION: Verify there are only five Action columns"
+		run "Immunizations/Forecaster-List/Validations".verifyActionColumnCount "5"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Five Action columns with chart details")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Select the button with three lines that's above the Refresh button within the Immunization List View window and select 'Hide Uncharted Records' to uncheck it."
+		run "Immunizations/Forecaster-Common/Actions".ClickHideRecords "False"
+		
+		Log "VERIFICATION: Verify the first column contains the vaccine group name and the column header is labeled Vaccine"
+		run "Immunizations/Util/Validation".verifyText "Vaccine","Immunizations/Forecaster-Forecast/Helpers".firstcolumnSearchRectangle()
+		
+		Log "VERIFICATION: Verify the first Action column displays a chevron icon on the left hand side with 4 Items Documented"
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage("Immunizations/Forecaster-Common/DtapStrikethrough") 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyImage common.manyItemsDocumentedImage,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "4 Items Documented","Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Verify there are only five Action columns"
+		run "Immunizations/Forecaster-List/Validations".verifyActionColumnCount "5"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Chevron icon in first Action column")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the cell with the chevron icon in the first Action column."
+		click common.manyItemsDocumentedImage
+		
+		Log "VERIFICATION: Verify the uncharted values display the  Uncharted on the first line and Authorized by date on the second line"
+		set age to "Immunizations/Util/Date".ageCalculator (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) )), false, true)
+		if readtext("Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 20, 285, 70)) contains "Contraindicated" then
+			run "Immunizations/Util/Validation".VerifyText textStrings.contraindicated &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) ))&& age ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 20, 285, 70)
+		else
+			run "Immunizations/Util/Validation".VerifyText "Uncharted" &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)), "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob))))&& age ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 20, 285, 70)
+		end if
+		
+		set age to "Immunizations/Util/Date".ageCalculator (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) )), false, true)
+		run "Immunizations/Util/Validation".VerifyText "Uncharted" &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) ))&& age ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 120, 285, 70)
+		
+		Log "VERIFICATION: Verify the Not Given charted value(s) display the Not Given Type  on the first line and Authorized by date on the second line"
+		set age to "Immunizations/Util/Date".ageCalculator (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) )), false, true)
+		if readtext("Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 20, 285, 70)) contains "Contraindicated"   then
+			run "Immunizations/Util/Validation".VerifyText "Uncharted" &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)), "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob))))&& age ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 120, 285, 150)
+		else
+			run "Immunizations/Util/Validation".VerifyText textStrings.contraindicated &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) ))&& age ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 120, 285, 150)
+		end if
+		
+		Log "VERIFICATION: Verify the Historical charted value(s) display the product name or immunization event set display name if a product was not chosen on the first line and Authorized Date on the second line"
+		run "Immunizations/Util/Validation".VerifyText testData.product1 &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b. %Y", ("Month":3)) ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 150, 285, 200)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Uncharted,Not Given and Charted values details")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Hover over the Did Not Count icon."
+		Log "VERIFICATION: Verify text 'Did Not Count' displays."
+		
+		moveto "Immunizations/Common/DidNotCount/ListView"
+		put ImageRectangle("Immunizations/Common/DidNotCount/ListView").topLeft+(-30,-30) into didNotCountSearchRectangle
+		insert didNotCountSearchRectangle+(130,120) into didNotCountSearchRectangle
+		run "Immunizations/Util/Validation".verifyText testData.didNotCount,didNotCountSearchRectangle
+		--------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click outside the popover within the Immunization List View window."
+		Log "VERIFICATION: Verify the popover closes and the Immunization List View window displays."
+		click ImageLocation(common.manyItemsDocumentedImage)+(20,0)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"List View displays")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Document a vaccine or document a Chart Not Given for the vaccine"
+		run "Immunizations/Common/DocumentHistory/Task".documentWithproduct testData.vaccineName, "Date","Immunizations/Util/Date".todaysDate("%m/%d/%Y"), testData.source,testData.product2,"Submit"
+		
+		Log "VERIFICATION: Verify the uncharted values display the Authorized by date on the first line and Uncharted on the second line. Verify the Not Given charted value(s) display the  Not Given Type on the first line and Authorized Date on the second line. Verify the first Action column displays a chevron icon on the left hand side with 5 Items Documented for vaccine e.g."&&testData.vaccineName&&"Verify the Historical charted value(s) display the Authorized Date on the first line and product name or immunization event set display name if a product was not chosen on the second line."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage("Immunizations/Forecaster-Common/DtapStrikethrough") 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyImage common.manyItemsDocumentedImage,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "5 Items Documented","Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("3")
+		run "Immunizations/Util/Validation".verifyText testData.product2&return&"Immunizations/Util/Date".todaysDate("%b %d, %Y"),"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Forecaster-List/Validations".verifyActionColumnCount "5"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Uncharted,Not Given charted values details")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the chevron icon in the first Action column."
+		click  common.manyItemsDocumentedImage
+		
+		Log "VERIFICATION: Verify the uncharted values display the  Uncharted on the first line and Authorized by date on the second line"
+		set age to "Immunizations/Util/Date".ageCalculator (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) )), false, true)
+		if readtext("Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 20, 285, 70)) contains "Contraindicated"  then
+			run "Immunizations/Util/Validation".VerifyText textStrings.contraindicated &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) ))&& age ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 20, 285, 70)
+		else
+			run "Immunizations/Util/Validation".VerifyText "Uncharted" &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)), "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob))))&& age ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 20, 285, 70)
+		end if
+		
+		set age to "Immunizations/Util/Date".ageCalculator (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) )), false, true)
+		run "Immunizations/Util/Validation".VerifyText "Uncharted" &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) ))&& age ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 120, 285, 70)
+		
+		Log "VERIFICATION: Verify the Not Given charted value(s) display the Not Given Type  on the first line and Authorized by date on the second line"
+		set age to "Immunizations/Util/Date".ageCalculator (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) )), false, true)
+		if readtext("Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 20, 285, 70)) contains "Contraindicated"  then
+			run "Immunizations/Util/Validation".VerifyText "Uncharted" &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)), "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob))))&& age ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 120, 285, 150)
+		else
+			run "Immunizations/Util/Validation".VerifyText textStrings.contraindicated &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) ))&& age ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 120, 285, 150)
+		end if
+		
+		Log "VERIFICATION: Verify the Historical charted value(s) display the product name or immunization event set display name if a product was not chosen on the first line and Authorized Date on the second line" 
+		run "Immunizations/Util/Validation".VerifyText testData.product1 &return& "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b. %Y", ("Month":3)),"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 150, 285, 200)
+		
+		Log "VERIFICATION: Verify the vertical scroll bar displays and is enabled"
+		run "Immunizations/Util/Validation".verifyImage  "Immunizations/Forecast-List/List_VerticalScrollBar/BR_ScrollBar","Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 20, 320, 200)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Uncharted,Not Given and Charted values details")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Scroll down to the bottom of the list in the popover."
+		repeat 2 times
+			click  imagename:"Immunizations/Forecast-List/Chevron_VerticalScrollBar/BR_ScrollBar",SearchRectangle:"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 20, 320, 200)
+		end repeat
+		
+		Log "VERIFICATION: Verify the fifth value displays and 4 charted/uncharted values display face up, oldest to newest with oldest being at the top of the list."
+		run "Immunizations/Util/Validation".verifyText testData.defaultProduct,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 165, 285, 200)
+		run "Immunizations/Util/Validation".verifyText  "Immunizations/Util/Date".adjustDate(dose2AdminDate, "%b")&&"15,"&&"Immunizations/Util/Date".adjustDate(dose2AdminDate, "%Y") ,"Immunizations/Common/Helpers".offsetimageRectangle (common.manyItemsDocumentedImage,-280, 165, 285, 200)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Fifth value displays")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click the Refresh button in the top blue banner."		
+		Log "VERIFICATION: Ensure the popover dialog disposes and the view refreshes back to the Immunizations Mpage View."		
+		run "Immunizations/Common/Actions".temporaryRefreshClick
+		
+		Log "VERIFICATION: Ensure the Refresh button is enabled and to the right of the print hyperlink with 'Print Record' text"
+		run "Immunizations/Util/Validation".verifyText textStrings.printRecord,"Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Verify the Document History and Chart Not Given buttons are enabled within the lower right portion of the lower panel"
+		run "Immunizations/Util/Validation".verifyText testData.documentHistory,"Immunizations/Common/Helpers".offsetImageRectangle (common.registryImportLink, 1600, 350, 550, -50)
+		run "Immunizations/Util/Validation".verifyText testData.chartNotGiven,"Immunizations/Common/Helpers".offsetImageRectangle (common.registryImportLink, 1600, 350, 550, -50)
+		
+		Log "VERIFICATION: Verify the Sharing/Follow up: and Registry Import links are enabled within the lower left portion of the lower panel"
+		run "Immunizations/Util/Validation".verifyImage common.registryImportLink , "Immunizations/Forecaster-List/Helpers".registryAndConsentLinksSearchRectangle 
+		run "Immunizations/Util/Validation".verifyImage common.sharingFollowUpLink, "Immunizations/Forecaster-List/Helpers".registryAndConsentLinksSearchRectangle
+		
+		Log "VERIFICATION: Verify the first Action column displays a chevron icon on the left hand side with 5 Items Documented for vaccine e.g."&&testData.vaccineName
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage("Immunizations/Forecaster-Common/DtapStrikethrough") 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyImage common.manyItemsDocumentedImage,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "5 Items Documented","Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Verify there are only five Action columns"
+		run "Immunizations/Forecaster-List/Validations".verifyActionColumnCount "5"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"List View with all links and Chevron icon in first column")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Resize the window until the horizontal scroll bar displays"
+		if imagefound(10, "Millennium_MaximizeRestore_Application/MaximizeApplication")
+		then
+			click FoundImageLocation()
+		else
+			Log "Window is already maximized"
+		end if
+		click "Millennium_MaximizeRestore_Application/RestoreApplication"
+		Drag ImageLocation(common.hamburgerButton)+(35,0)
+		Drop ImageLocation(common.hamburgerButton)+(-660,0)
+		
+		Log "VERIFICATION: Verify the horizontal scroll bar displays and is enabled"
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Forecast-List/List_HorizontalScrollBar/BL_EndOfScrollBar"
+		
+		Log "VERIFICATION: Verify the first column labelled vaccine displays"
+		run "Immunizations/Util/Validation".verifyText "Vaccine", "Immunizations/Forecaster-Forecast/Helpers".firstcolumnSearchRectangle()
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"HorizontalScrollBar enabled")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click and drag the horizontal scroll bar to the far right as far as it follows"
+		click "Immunizations/Forecast-List/List_HorizontalScrollBar/BR_ScrollBar"
+		
+		Log "VERIFICATION: Verify the most recent charted/uncharted value displays"
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage("Immunizations/Forecaster-Common/DtapStrikethrough") 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("4")
+		set age to "Immunizations/Util/Date".ageCalculator (formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "Immunizations/Util/Date".adjustDate(formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) , "%b %d, %Y", ("Year":4)), false, true)
+		run "Immunizations/Util/Validation".verifyText textStrings.seriesUnnecessary,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchrectangle)
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".todaysDate("%b %d, %Y")&& age,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchrectangle)
+		
+		Log "VERIFICATION: Verify the first column labelled vaccine displays"
+		run "Immunizations/Util/Validation".verifyText "Vaccine","Immunizations/Forecaster-Forecast/Helpers".firstcolumnSearchRectangle()
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"First column vaccine displays")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click and hold the left arrow in the horizontal scroll bar until the first Action column displays"
+		click "Immunizations/Forecast-List/List_HorizontalScrollBar/BL_ScrollBar"
+		
+		Log "VERIFICATION: Verify the first column displays a chevron icon on the left hand side with 5 Items documented for Vaccine1 Eg."&&testData.vaccineName
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage("Immunizations/Forecaster-Common/DtapStrikethrough") 
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		run "Immunizations/Util/Validation".verifyImage common.manyItemsDocumentedImage,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "5 Items Documented","Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		Log "VERIFICATION: Verify the first column labelled vaccine displays"
+		run "Immunizations/Util/Validation".verifyText "Vaccine","Immunizations/Forecaster-Forecast/Helpers".firstcolumnSearchRectangle()
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"HorizontalScrollBar enabled")
+		
+		//Reverting back the resized window to its original position
+		click "Millennium_MaximizeRestore_Application/MaximizeApplication"
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit powerchart and Navigate to Corecodebuilder and change the collation sequence of code set 4003106 and apply changes."
+		Log "VERIFICATION: Ensure changes have been saved."
+		run "Immunizations/Setup".closeApplication 
+		run "Open_Application".run "Corecodebuilder"
+		run "Millennium_Login_window".LogIntoMillenniumApps setup.username, decodeText(setup.("password").trimAll, "HLM"), domain
+		run "CoreCodeBuilder".searchCodeSet "4003106"
+		waitfor 100,"Immunizations/Common/CoreCodeBuilder/SetCollationSequence"
+		click  "Immunizations/Common/CoreCodeBuilder/SetCollationSequence"
+		click "CoreCodeBuilder/SetCollationSequence/RadioButton_Descending/RadioButtonUnSelected_Descending"
+		click "CoreCodeBuilder/SetCollationSequence/Button_Sequence"
+		click "CoreCodeBuilder/SetCollationSequence/Button_OK"
+		--------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Exit Corecodebuilder, navigate back to patient chart's immunizations MPAGE"
+		typetext altKey & F4
+		Run "SCPViewUtils".CycleServerByEntryID setup.username,domain, decodeText(setup.("password").trimAll, "HLM"), testData.node,"366","frontend"
+		wait 5 //takes time to reflect changes after server cycle
+		run "Immunizations/Setup".LoginAndLoadcomponentViaMenu setup.username,  decodeText(setup.("password").trimAll, "HLM"),  domain, testData.Patient1.nameFullFormatted, common.menu, common.subMenu, setup.relationship 
+		
+		Log "VERIFICATION: Ensure the view refreshes and you are navigated back to the Immunizations Mpage View."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		--------------------------------------------------------------------------------------------------------------- 
+		
+		Log "Util".stepNumber & "ACTION: Select the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(textStrings.viewForecast)
+		
+		Log "VERIFICATION: Ensure List View opens and reflects the new collation sequence in the vaccine column."
+		set columnSearchRectangle to readtext("Immunizations/Forecaster-Common/Helpers".largeFirstColumnSearchRectangle())
+		set firstvaccine to line 2 of columnSearchRectangle
+		set secondvaccine to line 4 of columnSearchRectangle
+		replace every occurrence of "," with " " in secondvaccine
+		set vaccinesNames to firstvaccine&","&secondvaccine
+		put vaccinesNames sorted descending into sortedcolumnSearchRectangle
+		run "Immunizations/Util/Validation".verifyValueEquals sortedcolumnSearchRectangle,vaccinesNames
+		--------------------------------------------------------------------------------------------------------------- 
+		
+		Log "Util".stepNumber & "ACTION: Search for Patient2, open the chart, and navigate to the Immunizations MPAGE."
+		run "Immunizations/setup".closeChartViaX
+		run "Immunizations/Setup".navigateToImmunizationWorkflowViaMenu  testData.Patient2.nameFullFormatted, common.menu, common.subMenu, setup.relationship 
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(textStrings.viewForecast)
+		run "Immunizations/Common/Actions".temporaryRefreshClick
+		
+		Log "VERIFICATION: Verify the Document History and Chart Not Given buttons are enabled within the lower right portion of the lower panel"
+		run "Immunizations/Util/Validation".verifyText testData.documentHistory, "Immunizations/Common/Helpers".offsetImageRectangle ("Immunizations/Common/RegistryImport_Status/RegistryImport_Link", 800, -40, 1330, 20)
+		run "Immunizations/Util/Validation".verifyText testData.chartNotGiven, "Immunizations/Common/Helpers".offsetImageRectangle ("Immunizations/Common/RegistryImport_Status/RegistryImport_Link", 800, -40, 1330, 20)
+		
+		Log "VERIFICATION: Verify the Sharing/Follow up: and Registry Import links are enabled within the lower left portion of the lower panel"
+		run "Immunizations/Util/Validation".verifyImage common.registryImportLink ,"Immunizations/Forecaster-List/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage common.sharingFollowUpLink,"Immunizations/Forecaster-List/Helpers".registryAndConsentLinksSearchRectangle
+		
+		Log "VERIFICATION: Verify there are only as many Action columns as there are charted and uncharted events for any one vaccine group, totaling no more than 5"
+		run "Immunizations/Forecaster-List/Validations".verifyActionColumnCount "5"
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: If the vertical scroll bar is not displaying, resize the window until it displays, and the first vaccine group within the vaccine column is displaying."
+		Log "VERIFICATION: Verify the vertical scroll bar displays and is enabled"
+		
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Forecast-List/List_VerticalScrollBar/TR_EndOfScrollBar"
+		
+		Log "VERIFICATION: Verify the first column labeled vaccine containing vaccine groups displays."
+		run "Immunizations/Util/Validation".verifyText "Vaccine", "Immunizations/Forecaster-List/Helpers".firstcolumnSearchrectangle() 
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Vertical scroll bar and first column labeled 'Vaccine' displays")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click and drag the vertical scroll bar down as far as it allows."
+		click  imagename:"Immunizations/Forecast-List/List_VerticalScrollBar/BR_ScrollBar"
+		
+		Log "VERIFICATION: Verify the first column labelled vaccine containing vaccine groups doesnt displays for the last charted/uncharted vaccine group."
+		run "Immunizations/Util/Validation".verifyImageNotVisible "Immunizations/Forecaster-Common/Search/BR_FirstColumn","Immunizations/Forecaster-List/Helpers".firstcolumnSearchrectangle() 
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"First column containing Vaccine groups")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click and hold the arrow in the vertical scroll bar until the first vaccine group displays."
+		click imageName: "Immunizations/Forecast-List/List_VerticalScrollBar/TR_ScrollBar"
+		
+		Log "VERIFICATION: Verify the first column labelled vaccine containing vaccine groups displays for the last charted/uncharted vaccine group."
+		run "Immunizations/Util/Validation".verifyText  "Vaccine","Immunizations/Forecaster-List/Helpers".firstcolumnSearchrectangle() 
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Exit powerchart application"    
+		run "Immunizations/Setup".closeApplication 
+		----------------------------------------------------------------------------------------------------------------
+		EndTestCase "WF/HLM-WF-Immunizations-List_View_Updates"
+		
+	Catch 
+		LogError "Exception encountered" && the exception
+		capturescreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End try
+	------------------------------------------------Cleanup----------------------------------------------------
+	
+	Log "Reverting back the pre-requisite preferences set initially"
+	
+	run "Common".LaunchMillenniumWindow "prefmaint"
+	run "Millennium_Login_window".LogIntoMillenniumApps setup.username , decodeText(setup.("password").trimAll, "HLM"), domain
+	waitFor 80, "Prefmaint/Text_ExistingPreferences"
+	click "Prefmaint/Text_ExistingPreferences"
+	wait 3 //takes time to load the window
+	typetext windowskey & upArrow
+	wait 3 //takes time to maximize the window
+	run "Prefmaint".SelectApplication "PowerChart"
+	run "Prefmaint".SelectPosition "DBA"
+	click "Prefmaint/Icon_SearchPreference_64bit"
+	waitFor 80,text:"Immunization Forecaster"
+	run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+	run "Prefmaint".DeletePreference "CONSENT"
+	run "Prefmaint".DeletePreference "REG_IMPORT"
+	run "Prefmaint".DeletePreference "DEFAULT_VI"
+	click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+	waitFor 80,text:"Immunization Forecaster"
+	typetext altKey & F4
+	click "Prefmaint/Icon_Exit"
+	----------------------------------------------------------------------------------------------------------------
+	
+Catch 
+	LogError "Exception encountered" &&  the exception.reason
+	capturescreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End try
+--------------------------------------------------Zero State Script---------------------------------------
+
+run "Cleanup".ZeroStateCloseAllApps

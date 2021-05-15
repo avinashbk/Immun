@@ -1,0 +1,176 @@
+﻿-------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+------------------------------------------------------------------------------------------------------------------------------
+
+#RQM TEST CASE LINK: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=122837
+
+params domain 
+log "Test running in domain"&&domain
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set conversation to setup.conversation
+set encounterOrg to setup.EncounterOrg
+set  encounterType to setup.EncounterType
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set doubleDashImage to common.doubleDashImage
+set varicellaVaccineStrikeThroughImg to common.varicellaVaccineStrikeThroughImg
+
+set fieldLabels to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("fieldLabels.json")),domain)
+set minimum to fieldLabels.minimum
+set earliestRecommended to fieldLabels.earliestRecommended
+set latestRecommended to fieldLabels.latestRecommended
+set maximum to fieldLabels.maximum
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set overdue to textStrings.overdue
+set viewForecast to textStrings.viewForecast
+set notStarted to textStrings.notStarted
+set administered to textStrings.administered
+set seriesUnnecessary to textStrings.seriesUnnecessary
+
+set testData to JSONValue(file resourcePath("VR/Varicella_Vaccine_Forecast/testData.json")).(text of domain)
+set lastName to testData.Patient_Unnecessary.lastName
+set firstName to testData.Patient_Unnecessary.firstName
+set patientName to testData.Patient_Unnecessary.nameFullFormatted
+set newLastName to testData.Patient_Unnecessary.newLastName
+set sex to testData.Patient_Unnecessary.sex
+set dob to formattedTime("%m/%d/%Y",value(testData.Patient_Unnecessary.dob))
+set product2 to testData.product2
+set source to testData.source
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set format to "%b %d, %Y"
+set dateFormat to testData.dateFormat
+
+
+Try
+	#PATIENT CREATION
+	log "Create patient1 (51 years old) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	
+	try
+		BeginTestCase "HLM-VR-Immunizations-Varicella_Series_Unnecessary"
+		
+		log "Util".stepNumber & "ACTION: Open Patient's chart to Immunization Workflow MPage and navigate to Immunization section."
+		run "Immunizations/setup".LoginAndLoadComponentViaMenu Username, Password, Domain, patientName, Menu, SubMenu,  relationship
+		
+		Log "VERIFICATION: Ensure the Immunization Workflow MPage displays without any errors." 
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyVaccineNameColumn vaccineName1
+		
+		Log "VERIFICATION: Verify Varicella displays under History section with status 'Series Unnecessary' under status column."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn  vaccineName1, seriesUnnecessary
+		
+		Log "VERIFICATION: Ensure Next Dose Recommended column displays as '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".VerifyNextRecommendedColumn vaccineName1, doubleDashImage
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Workflow mPage")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link within the MPage."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: Ensure Varicella is displayed under CDC schedule column with a strikethrough line on the Vaccine group name with 'Series Unnecessary' below it. "
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstColumnSearchRectangle()
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(varicellaVaccineStrikeThroughImg)
+		run "Immunizations/Util/Validation".verifyImage varicellaVaccineStrikeThroughImg,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText seriesUnnecessary , "Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		Set startDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		Set endDateHeader to "Immunizations/Util/Date".todaysDate(format)+1 day
+		Set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader, endDateHeader, -15, -15, 200, 900)
+		run "Immunizations/Util/Validation".VerifyText seriesUnnecessary,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Forecaster Validation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Chart Dose 1 at 50 Years +1 day from DOB choosing Varivax as the product and fill in all required fields, and click on the Document button."
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":50, "Day":1)), Source, product2, "Submit"
+		
+		Log "VERIFICATION: Ensure the charted Dose 1 displays the vaccine name  along with administration date dated from 50 years +1 day at the bottom within the timeline.Ensure Dose 1 displays in the timeline for Varicella Vaccine without a dose number." 
+		set alignment to ("Center","Center")
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("Year":50,"Day":1))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, ("Year":50,"Day":1))
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(varicellaVaccineStrikeThroughImg)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,"-250", "-40", "50","50")
+		run "Immunizations/Util/Validation".verifyText product2 &return& "Immunizations/Util/Date".adjustDate(dob, format, ("Year":50,"Day":1)),"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		set startDateHeader to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":50,"Day":1)), false, false)
+		set endDateHeader to "Immunizations/Util/Date".ageCalculator (dob,"Immunizations/Util/Date".adjustDate(dob, format, ("Year":50,"Day":1)), false, false)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,"-250", "-40", "50","50")
+		run "Immunizations/Util/Validation".verifyText product2 &return& "Immunizations/Util/Date".adjustDate(dob, format, ("Year":50,"Day":1)),"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose 1 Timeline Validation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "VERIFICATION: Ensure Zoster displays as 'Not started'."
+		run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		run "Immunizations/Forecaster-Forecast/Actions".clickScrollDownArrow
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText vaccineName2 & return & notStarted, columnSearchRectangle 
+		
+		Log "VERIFICATION: Verify Dose 1 displayed in Red font in Today's column."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Dose 1","Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Forecaster-Forecast/Validations".verifyDoseInRed(vaccineName2)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Forecaster Validation")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on List view."
+		run "Immunizations/Forecaster-Common/Actions".clickFlipViews
+		
+		Log "VERIFICATION: Ensure Varicella Vaccine is strikethrough under Vaccine column and displays 'Series Unnecessary'."
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangleImage(varicellaVaccineStrikeThroughImg)
+		set columnSearchRectangle to "Immunizations/Forecaster-Common/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText seriesUnnecessary,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle, columnSearchRectangle)
+		
+		log "VERIFICATION: Action column1 displays ''--'' with vaccine name  and administered date with age in parenthesis."
+		set columnSearchRectangle to "Immunizations/Forecaster-List/Helpers".columnSearchrectangle("1")
+		set  age to "Immunizations/Util/Date".ageCalculator (dob, "Immunizations/Util/Date".adjustDate(dob, format, ("Year":50,"Day":1)), false, true)
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/DoubleDash","Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".VerifyText product2 &return& "Immunizations/Util/Date".adjustDate(dob, format, ("Year":50,"Day":1))&&age ,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchrectangle,columnSearchRectangle)
+		CaptureScreen(Name:"Step"&Global stepNumber&"-List View Validation ")
+		---------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber &"ACTION: Close Application."
+		run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		EndTestCase "HLM-VR-Immunizations-Varicella_Series_Unnecessary"
+		
+	catch
+		logError "Test Steps Exception: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	end try
+	#PATIENT CLEANUP
+	log "ACTION: Cleanup Patient."
+	#Patient 1
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversation conversation
+	run "Immunizations/PatientCreation".searchPatient lastName,firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+catch
+	logError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+end try
+---------------------------------------------------------------------------------------------------------------
+#SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps
+---------------------------------------------------------------------------------------------------------------

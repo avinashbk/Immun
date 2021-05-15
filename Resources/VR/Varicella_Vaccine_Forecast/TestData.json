@@ -1,0 +1,332 @@
+{
+	"SOLM64": {
+		"Patient_NewBorn": {
+			"lastName": "VaricellaP1",
+			"firstName": "Newborn",
+			"nameFullFormatted": "VaricellaP1,Newborn",
+			"newLastName": "oldVaricella",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Overdue": {
+			"lastName": "VaricellaP2",
+			"firstName": "Overdue",
+			"nameFullFormatted": "VaricellaP2,Overdue",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 4 years",
+			"sex": "Male",
+			"user":"NON, DBA"
+		},
+		"Patient_LiveVirus": {
+			"lastName": "VaricellaP3",
+			"firstName": "Livevirus",
+			"nameFullFormatted": "VaricellaP3,Livevirus",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 6 years",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "VaricellaP4",
+			"firstName": "Complete",
+			"nameFullFormatted": "VaricellaP4,Complete",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 16 years",
+			"sex": "Male"
+		},
+		"Patient_Immunity": {
+			"lastName": "VaricellaP5",
+			"firstName": "Immunity",
+			"nameFullFormatted": "VaricellaP5,Immunity",
+			"newLastName": "oldVaricella",
+			"dob": "1979-01-01",
+			"sex": "Male"
+		},
+		"Patient_Unnecessary": {
+			"lastName": "VaricellaP6",
+			"firstName": "Unnecessary",
+			"nameFullFormatted": "VaricellaP6,Unnecessary",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 51 years",
+			"sex": "Male"
+		},
+		"vaccineName1":"Varicella",
+		"vaccineName2":"Zoster",
+		"vaccineName3":"Measles, Mumps, Rubella",
+		"dateFormat":"Date",
+		"product1":"ProQuad",
+		"product2":"Varivax",
+		"product3":"zoster vaccine live",
+		"source":"Clinician",
+		"user":"Maintenance, Health",
+		"unchartedReason": "Test",
+		"notGivenType": "Contraindicated",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"tempNotGivenAction": "This Season Only",
+		"notGivenReason": "Contraindicated - Do Not Give",
+		"vis":"Varicella(English)"
+	},
+	"SOLGM": {
+		"Patient_NewBorn": {
+			"lastName": "VaricellaP1",
+			"firstName": "Newborn",
+			"nameFullFormatted": "VaricellaP1,Newborn",
+			"newLastName": "oldVaricella",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Overdue": {
+			"lastName": "VaricellaP2",
+			"firstName": "Overdue",
+			"nameFullFormatted": "VaricellaP2,Overdue",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 4 years",
+			"sex": "Male",
+			"user":"NON, DBA"
+		},
+		"Patient_LiveVirus": {
+			"lastName": "VaricellaP3",
+			"firstName": "Livevirus",
+			"nameFullFormatted": "VaricellaP3,Livevirus",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 6 years",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "VaricellaP4",
+			"firstName": "Complete",
+			"nameFullFormatted": "VaricellaP4,Complete",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 16 years",
+			"sex": "Male"
+		},
+		"Patient_Immunity": {
+			"lastName": "VaricellaP5",
+			"firstName": "Immunity",
+			"nameFullFormatted": "VaricellaP5,Immunity",
+			"newLastName": "oldVaricella",
+			"dob": "1979-01-01",
+			"sex": "Male"
+		},
+		"Patient_Unnecessary": {
+			"lastName": "VaricellaP6",
+			"firstName": "Unnecessary",
+			"nameFullFormatted": "VaricellaP6,Unnecessary",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 51 years",
+			"sex": "Male"
+		},
+		"vaccineName1":"Varicella",
+		"vaccineName2":"Zoster",
+		"vaccineName3":"Measles, Mumps, Rubella",
+		"dateFormat":"Date",
+		"product1":"ProQuad",
+		"product2":"Varivax",
+		"product3":"zoster vaccine live",
+		"source":"Clinician",
+		"user":"Maintenance, Health",
+		"unchartedReason": "Test",
+		"notGivenType": "Contraindicated",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"tempNotGivenAction": "This Season Only",
+		"notGivenReason": "Contraindicated - Do Not Give",
+		"vis":"Varicella(English)"
+	},
+	"S18DD": {
+		"Patient_NewBorn": {
+			"lastName": "VaricellaP1",
+			"firstName": "Newborn",
+			"nameFullFormatted": "VaricellaP1,Newborn",
+			"newLastName": "oldVaricella",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Overdue": {
+			"lastName": "VaricellaP2",
+			"firstName": "Overdue",
+			"nameFullFormatted": "VaricellaP2,Overdue",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 4 years",
+			"sex": "Male",
+			"user":"NON, DBA"
+		},
+		"Patient_LiveVirus": {
+			"lastName": "VaricellaP3",
+			"firstName": "Livevirus",
+			"nameFullFormatted": "VaricellaP3,Livevirus",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 6 years",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "VaricellaP4",
+			"firstName": "Complete",
+			"nameFullFormatted": "VaricellaP4,Complete",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 16 years",
+			"sex": "Male"
+		},
+		"Patient_Immunity": {
+			"lastName": "VaricellaP5",
+			"firstName": "Immunity",
+			"nameFullFormatted": "VaricellaP5,Immunity",
+			"newLastName": "oldVaricella",
+			"dob": "1979-01-01",
+			"sex": "Male"
+		},
+		"Patient_Unnecessary": {
+			"lastName": "VaricellaP6",
+			"firstName": "Unnecessary",
+			"nameFullFormatted": "VaricellaP6,Unnecessary",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 51 years",
+			"sex": "Male"
+		},
+		"vaccineName1":"Varicella",
+		"vaccineName2":"Zoster",
+		"vaccineName3":"Measles, Mumps, Rubella",
+		"dateFormat":"Date",
+		"product1":"ProQuad",
+		"product2":"Varivax",
+		"product3":"zoster vaccine live",
+		"source":"Clinician",
+		"user":"Maintenance, Health",
+		"unchartedReason": "Test",
+		"notGivenType": "Contraindicated",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"tempNotGivenAction": "This Season Only",
+		"notGivenReason": "Contraindicated - Do Not Give",
+		"vis":"Varicella(English)"
+	},
+	"S18VE": {
+		"Patient_NewBorn": {
+			"lastName": "VaricellaP1",
+			"firstName": "Newborn",
+			"nameFullFormatted": "VaricellaP1,Newborn",
+			"newLastName": "oldVaricella",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Overdue": {
+			"lastName": "VaricellaP2",
+			"firstName": "Overdue",
+			"nameFullFormatted": "VaricellaP2,Overdue",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 4 years",
+			"sex": "Male",
+			"user":"NON, DBA"
+		},
+		"Patient_LiveVirus": {
+			"lastName": "VaricellaP3",
+			"firstName": "Livevirus",
+			"nameFullFormatted": "VaricellaP3,Livevirus",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 6 years",
+			"sex": "Male"
+		},
+		"Patient_Complete": {
+			"lastName": "VaricellaP4",
+			"firstName": "Complete",
+			"nameFullFormatted": "VaricellaP4,Complete",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 16 years",
+			"sex": "Male"
+		},
+		"Patient_Immunity": {
+			"lastName": "VaricellaP5",
+			"firstName": "Immunity",
+			"nameFullFormatted": "VaricellaP5,Immunity",
+			"newLastName": "oldVaricella",
+			"dob": "1979-01-01",
+			"sex": "Male"
+		},
+		"Patient_Unnecessary": {
+			"lastName": "VaricellaP6",
+			"firstName": "Unnecessary",
+			"nameFullFormatted": "VaricellaP6,Unnecessary",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 51 years",
+			"sex": "Male"
+		},
+		"vaccineName1":"Varicella",
+		"vaccineName2":"Zoster",
+		"vaccineName3":"Measles, Mumps, Rubella",
+		"dateFormat":"Date",
+		"product1":"ProQuad",
+		"product2":"Varivax",
+		"product3":"zoster vaccine live",
+		"source":"Clinician",
+		"user":"Maintenance, Health",
+		"unchartedReason": "Test",
+		"notGivenType": "Contraindicated",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"tempNotGivenAction": "This Season Only",
+		"notGivenReason": "Contraindicated - Do Not Give",
+		"vis":"Varicella(English)"
+	},
+	"S18VX": {
+		"Patient_NewBorn": {
+			"lastName": "VaricellaP1",
+			"firstName": "Newborn",
+			"nameFullFormatted": "VaricellaP1,Newborn",
+			"newLastName": "oldVaricella",
+			"dob": "Today",
+			"sex": "Male"
+		},
+		"Patient_Overdue": {
+			"lastName": "VaricellaP2",
+			"firstName": "Overdue",
+			"nameFullFormatted": "VaricellaP2,Overdue",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 4 years",
+			"sex": "Male",
+			"user":"NON, DBA"
+		},
+		"Patient_LiveVirus": {
+			"lastName": "VaricellaP3",
+			"firstName": "Livevirus",
+			"nameFullFormatted": "VaricellaP3,Livevirus",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 6 years",
+			"sex": "Male"
+		},
+		"Patient_13_2Dose": {
+			"lastName": "VaricellaP4",
+			"firstName": "Complete",
+			"nameFullFormatted": "VaricellaP4,Complete",
+			"newLastName": "oldVaricella",
+			"dob": "Today - 16 years",
+			"sex": "Male"
+		},
+		"Patient_Immunity": {
+			"lastName": "VaricellaP5",
+			"firstName": "Immunity",
+			"nameFullFormatted": "VaricellaP5,Immunity",
+			"newLastName": "oldVaricella",
+			"dob":"1979-01-01",
+			"sex": "Male"
+		},
+		"Patient_Unnecessary": {
+			"lastName": "VaricellaP6",
+			"firstName": "Unnecessary",
+			"nameFullFormatted": "VaricellaP6,Unnecessary",
+			"newLastName": "oldVaricella",
+			"dob":"Today - 51 years",
+			"sex": "Male"
+		},
+		"vaccineName1":"Varicella",
+		"vaccineName2":"Zoster",
+		"vaccineName3":"Measles, Mumps, Rubella",
+		"dateFormat":"Date",
+		"product1":"ProQuad",
+		"product2":"Varivax",
+		"product3":"zoster vaccine live",
+		"source":"Clinician",
+		"user":"Maintenance, Health",
+		"unchartedReason": "Test",
+		"notGivenType": "Contraindicated",
+		"permNotGivenAction": "Cancel series and stop forecasting",
+		"tempNotGivenAction": "This Season Only",
+		"notGivenReason": "Contraindicated - Do Not Give",
+		"vis":"Varicella(English)"
+	}
+}

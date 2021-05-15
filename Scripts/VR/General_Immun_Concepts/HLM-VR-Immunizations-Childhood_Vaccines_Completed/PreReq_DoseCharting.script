@@ -1,0 +1,338 @@
+﻿Params domain
+Log "Test running in domain"&&domain
+Set domain to "Immunizations/Util/Setup".domainRun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+Set username to setup.username
+Set password to decodeText(setup.("password").trimAll, "HLM")
+Set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+Set relationship to setup.relationship
+
+Set common to JSONValue(file resourcePath("Common.json"))
+Set menu to common.menu
+Set subMenu to common.subMenu
+
+Set testData to JSONValue(file ResourcePath("VR/Childhood_Vaccines_Completed/testData.json")).(value of domain)
+Set patientName to testData.Patient1.nameFullFormatted
+Set dob to formattedTime("%m/%d/%Y", value(testData.Patient1.dob))
+
+set vaccineNameDTap to testData.vaccineNameDTap
+set productDTap to testData.productDTap
+set vaccineNameHepA to testData.vaccineNameHepA
+set productHepA to testData.productHepA
+set vaccineNameHepB to testData.vaccineNameHepB
+set productHepB to testData.productHepB
+set vaccineNameHIB to testData.vaccineNameHIB
+set productHIB to testData.productHIB
+set vaccineNameHPV to testData.vaccineNameHPV
+set productHPV to testData.productHPV
+set vaccineNameMMR to testData.vaccineNameMMR
+set productMMR to testData.productMMR
+set vaccineNameRotavirus to testData.vaccineNameRotavirus
+set productRotavirus to testData.productRotavirus
+set vaccineNameMeningococcal to testData.vaccineNameMeningococcal
+set productMeningococcal to testData.productMeningococcal
+set vaccineNamePolio to testData.vaccineNamePolio
+set productPolio to testData.productPolio
+set vaccineNameVaricella to testData.vaccineNameVaricella
+set productVaricella to testData.productVaricella
+set vaccineNamePneumoConju to testData.vaccineNamePneumoConju
+set productPneumoConju to testData.productPneumoConju
+set vaccineNameInfluenza to testData.vaccineNameInfluenza
+set productInfluenza to testData.productInfluenza
+set vaccineNameTDap to testData.vaccineNameTDap
+set productTDap to testData.productTDap
+set source to testData.source
+
+Set format to "%b %d, %Y"
+
+Set global cleanup to  "Immunizations/setup".setCleanup()
+
+---------------------------------------------------------------------------------------------------------------
+Log "PRECONDITION: Patient1 - Age should be 19 years. Has received valid doses of all the Childhood Vaccines at the Earliest Recommended age."	
+Run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, global cleanup, relationship
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Open Charting Dialog"
+run "Immunizations/Common/DocumentHistory/Actions".openDialog
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNameDTap
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+Set documentHistoryDlgRectangle to "Immunizations/Common/DocumentHistory/Helpers".dialogSearchRectangle
+Set documentOtherAdministrationLinkLocation to imageLocation(text: "Document Other Administration", searchRectangle: documentHistoryDlgRectangle)
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All DTap Doses"
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameDTap, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":2)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productDTap
+# Dose 2
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameDTap, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productDTap
+# Dose 3
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50	
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameDTap, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productDTap
+# Dose 4
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameDTap, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":15)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productDTap
+# Dose 5
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameDTap, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productDTap
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All HepA Doses"
+set addImmunizationsLinkLocation to imageLocation("Immunizations/Common/Image_AddImmunizations")
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNameHepA
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton  
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameHepA, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":12)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productHepA
+# Dose 2
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameHepA, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":18)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productHepA
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All HepB Doses"
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNameHepB
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameHepB, "Date", dob, source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productHepB
+# Dose 2
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameHepB, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":1)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productHepB
+# Dose 3
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameHepB, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productHepB
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All HIB Doses"
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNameHIB
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameHIB, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":2)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productHIB
+# Dose 2
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameHIB, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productHIB
+# Dose 3
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameHIB, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productHIB
+# Dose 4
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameHIB, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":12)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productHIB
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All HPV Doses"
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNameHPV
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameHPV, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Year":11)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productHPV
+# Dose 2
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameHPV, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Year":11, "Month":6)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productHPV
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All MMR Doses"
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNameMMR
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameMMR, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":12)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productMMR
+# Dose 2
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameMMR, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productMMR
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All Rotavirus Doses"
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNameRotavirus
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameRotavirus, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":2)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productRotavirus
+# Dose 2
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameRotavirus, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productRotavirus
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All Meningococcal Doses"
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNameMeningococcal
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameMeningococcal, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Year":11)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productMeningococcal
+# Dose 2
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameMeningococcal, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Year":16)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productMeningococcal
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All Polio Doses"
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNamePolio
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNamePolio, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":2)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productPolio
+# Dose 2
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNamePolio, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productPolio
+# Dose 3
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNamePolio, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productPolio
+# Dose 4
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNamePolio, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productPolio
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All Varicella Doses"
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNameVaricella
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameVaricella, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":12)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productVaricella
+# Dose 2
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameVaricella, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Year":4)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productVaricella
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All Pneumococcal Conjugate Doses"
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNamePneumoConju
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNamePneumoConju, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":2)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productPneumoConju
+# Dose 2
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNamePneumoConju, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":4)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productPneumoConju
+# Dose 3
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNamePneumoConju, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productPneumoConju
+# Dose 4
+click documentOtherAdministrationLinkLocation
+moveTo documentOtherAdministrationLinkLocation + (0,100)
+ScrollWheelDown 50
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNamePneumoConju, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":12)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productPneumoConju
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All TDap Doses"
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNameTDap
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameTDap, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Year":11)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productTDap
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Input All Influenza Doses"
+click addImmunizationsLinkLocation
+run "Immunizations/Common/SelectImmunizationsList".selectVaccineName vaccineNameInfluenza
+run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+
+# Dose 1
+run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameInfluenza, "Date", "Immunizations/Util/Date".adjustDate(dob, format, ("Month":6)), source
+run "Immunizations/Common/DocumentHistory/Actions".productInput productInfluenza
+
+# Dose 2 onwards upto current flu season - Annual Doses at beginning of the flu season
+set dose2Year to asData(formattedTime("%Y", dob + 1 year))
+set fluSeasonStart to item 1 of "Immunizations/Util/Date".fluSeasonDateCalc(format)
+set doseLatestYear to asData(formattedTime("%Y", fluSeasonStart))
+
+repeat with doseAdminYear = dose2Year to doseLatestYear
+	click documentOtherAdministrationLinkLocation
+	moveTo documentOtherAdministrationLinkLocation + (0,100)
+	ScrollWheelDown 50
+	
+	set currentDoseAdminDate to formattedTime(format, date(formattedTime("%m", fluSeasonStart) & "/" & formattedTime("%d", fluSeasonStart) & "/" & doseAdminYear))
+	run "Immunizations/Common/DocumentHistory/Actions".requiredInput vaccineNameInfluenza, "Date", currentDoseAdminDate, source
+	run "Immunizations/Common/DocumentHistory/Actions".productInput productInfluenza
+end repeat
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Submit the Charting Dialog"
+run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton "Submit"
+---------------------------------------------------------------------------------------------------------------
+
+Log "PRECONDITION: Exit Powerchart.exe"
+Run "Immunizations/Setup".closeApplication global cleanup

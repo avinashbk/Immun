@@ -1,0 +1,23 @@
+﻿beginTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Patient_Setup"
+Run "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Patient_Setup"
+endTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Patient_Setup"
+
+beginTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Enable_Feature_Flag"
+Run "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Enable_Feature_Flag"
+endTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Enable_Feature_Flag"
+
+beginTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/HLM-WF-Immunizations-Reconciliation_P1"
+Run "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/HLM-WF-Immunizations-Reconciliation_P1"
+endTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/HLM-WF-Immunizations-Reconciliation_P1"
+
+beginTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/HLM-WF-Immunizations-Reconciliation_P2"
+Run "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/HLM-WF-Immunizations-Reconciliation_P2"
+endTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/HLM-WF-Immunizations-Reconciliation_P2"
+
+beginTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Disable_Feature_Flag"
+Run "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Disable_Feature_Flag"
+endTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Disable_Feature_Flag"
+
+beginTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Patient_Cleanup"
+Run "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Patient_Cleanup"
+endTestCase "WF/HLM-WF-Immunizations-Reconciliation_High_Level_Workflow/Patient_Cleanup"

@@ -1,0 +1,67 @@
+{
+    "SOLM64": {
+        "Patient1DoseAt12Months": {
+            "lastName": "Pneumo12MonthP1",
+            "firstName": "Bob",
+            "nameFullFormatted": "Pneumo12MonthP1,Bob",
+            "newLastName": "OldPneumo12MonthP1",
+            "dob": "Today - 12 months",
+            "sex": "Male"
+        },
+        "Patient2DoseAt18Months": {
+            "lastName": "Pneumo12MonthP2",
+            "firstName": "Bob",
+            "nameFullFormatted": "Pneumo12MonthP2,Bob",
+            "newLastName": "OldPneumo12MonthP2",
+            "dob": "Today - 18 months - 3 days",
+            "sex": "Male"
+        },
+        "User": "Maintenance, Health",
+        "vaccineName": "Pneumococcal Conjugate",
+        "vaccineName2": "Pneumococcal Polysaccharide",
+        "dateFormat": "Date",
+        "Source": "Clinician",
+        "product1": "pneumococcal 13-valent conjugate vaccine",
+        "product2": "pneumococcal 23-polyvalent vaccine",
+        "product3": "pneumococcal 7-valent vaccine",
+        "vis1": "Pneumococcal conjugate (PCV13) (English)",
+        "vis2": "Multi-vaccine (English)",
+        "vis3": "Pneumococcal polysaccharide (English)",
+        "notGivenType": "Contraindicated",
+        "action": "Cancel Series and stop forecasting",
+        "notGivenReason": "Contraindicated - Do not give"
+    },
+    "S18VX": {
+        "Patient1DoseAt12Months": {
+            "lastName": "Pneumo12MonthP1",
+            "firstName": "Bob",
+            "nameFullFormatted": "Pneumo12MonthP1,Bob",
+            "newLastName": "OldPneumo12MonthP1",
+            "dob": "Today - 12 months",
+            "sex": "Male"
+        },
+        "Patient2DoseAt18Months": {
+            "lastName": "Pneumo12MonthP2",
+            "firstName": "Bob",
+            "nameFullFormatted": "Pneumo12MonthP2,Bob",
+            "newLastName": "OldPneumo12MonthP2",
+            "dob": "Today - 18 months - 3 days",
+            "sex": "Male"
+        },
+        "User": "Maintenance, Health",
+        "vaccineName": "Pneumococcal Conjugate",
+        "vaccineName2": "Pneumococcal Polysaccharide",
+        "dateFormat": "Date",
+        "Source": "Clinician",
+        "product1": "pneumococcal 13-valent conjugate vaccine",
+        "product2": "pneumococcal 23-polyvalent vaccine",
+        "product3": "pneumococcal 7-valent vaccine",
+        "vis1": "Pneumococcal conjugate (PCV13) (English)",
+        "vis2": "Multi-vaccine (English)",
+        "vis3": "Pneumococcal polysaccharide (English)",
+        "notGivenType": "Contraindicated",
+        "action": "Cancel Series and stop forecasting",
+        "notGivenReason": "Contraindicated - Do not give"
+    },
+	"dateFormat": "Date"
+}

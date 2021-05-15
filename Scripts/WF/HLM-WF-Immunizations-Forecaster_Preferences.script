@@ -1,0 +1,1156 @@
+﻿--------------------------------------------Helper Suite Information----------------------------------------------------------------
+
+#Repo: https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-PowerchartFramework
+#Repo: https://github.cerner.com/EggPlant/IPDev-Shared-Millennium.git
+#Repo: https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#Repo: https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-Immunizations
+#Repo: https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-Bedrock
+#Repo: https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-ProviderSelection
+#Repo: https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+# https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+------------------------------------------------RQM Link----------------------------------------------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=61837
+
+------------------------------------------------Assigning Test Data to Variables-----------------------------------------------------
+
+params domain 
+Log "Test running in domain"&&domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+Log "commonData:" && setup
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set conversation to setup.conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewpoint
+set greyForecastButton to common.greyForecastButton
+set whiteForecastButton to common.whiteForecastButton
+set whiteListButton to common.whiteListButton
+set registryImportLink to common.registryImportLink
+set sharingFollowUpLink to common.sharingFollowUpLink
+set hamburgerButton to common.hamburgerButton
+set unchartIconImage to common.unchartIconImage
+set unchartedCheckMark to common.unchartedCheckMark
+set powerchartIcon to common.powerchartIcon
+set regImportButton to common.regImportButton
+set sharingFollowUpButton to common.sharingFollowUpButton
+set immunizationsDiaLog to common.immunizationsDiaLog
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+set overdue to textStrings.overdue
+
+set testData to "UTIL_Json".initializeResourceData(JSONValue(file ResourcePath("WF/Immunizations_Forecaster_Preferences/testData.json")),domain)
+set patientName to testData.Patient1.nameFullFormatted
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set newLastName to testData.Patient1.newLastName
+set sex to testData.Patient1.sex
+set dob to formattedTime("%m/%d/%Y", (testData.Patient1.dob))
+set format to "%b %d, %Y"
+set dateFormat to testData.dateformat
+set userLastName to item 1 of testData.user
+set userFirstName to item 2 of testData.user
+set bedrockPath to testData.bedrockPath
+set vaccineName to testData.vaccineName
+set vaccineName1 to testData.vaccineName1
+set vaccineName2 to testData.vaccineName2
+set vaccineName3 to testData.vaccineName3
+set vaccineName4 to testData.vaccineName4
+set vaccineName5 to testData.vaccineName5
+set vaccineName6 to testData.vaccineName6
+set vaccineName7 to testData.vaccineName7
+set vaccineName8 to testData.vaccineName8
+set vaccineName9 to testData.vaccineName9
+set product to testData.product
+set product1 to testData.product1
+set product2 to testData.product2
+set product3 to testData.product3
+set product4 to testData.product4
+set product5 to testData.product5
+set product6 to testData.product6
+set product7 to testData.product7
+set product8 to testData.product8
+set source to testData.source
+set childhoodImmunizationSchedule to testData.childhoodImmunizationSchedule
+
+try
+	
+	//Patient1 Data Reset (DOB: Today - 1 year)
+	run "DiscernVisualDeveloper/Actions".openDiscernVisualDeveloper username, password, domain 
+	run "Immunizations/PatientCreation".cleanupPatient lastName, firstName
+	waitFor 100, "DiscernVisualDeveloper/Run_Prompt/No_Data_Found_Text"
+	run "Util".closeApplication 2
+	
+	------------------------------------------Pre-Conditions-------------------------------------------------------
+	Log "Add pre-requisites data to patient for the test by setting the pre-requisite preferences before running this plan"
+	run "Common".LaunchMillenniumWindow "prefmaint"
+	run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+	waitFor 80, "Prefmaint/Text_ExistingPreferences"
+	click "Prefmaint/Text_ExistingPreferences"
+	wait 3 //takes time 
+	typetext windowskey & upArrow
+	wait 3 //takes time 
+	run "Prefmaint".SelectApplication "PowerChart"
+	click "Prefmaint/Icon_SearchPreference_64bit"
+	waitFor 80,text:"Immunization Forecaster"
+	run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster" 
+	run "Prefmaint".ModifyListPreference "ALLOW_DATE_EST","0-Off"
+	run "Prefmaint".ModifyListPreference "IMM_DATE_EST_YEAR","1-Middle of year"
+	click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+	waitFor 80,text:"Immunization Forecaster"
+	typetext altKey & F4
+	click "Prefmaint/Icon_Exit"
+	---------------------------------------------------------------------------------------------------------------------
+	try
+		BeginTestCase "WF/HLM-WF-Immunizations-Forecaster_Preferences"
+		-------------------------------------------------Test Steps------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Launch Powerchart with User1 and open the identified Patient’s chart to Immunizations MPage."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure MPage opens correctly."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure Registry Import (Import) and Consent to Share (Document) button are not displayed on the right-hand side at the bottom of the Mpage."
+		run "Immunizations/Util/Validation".verifyImageNotVisible regImportButton,"Immunizations/WorkflowMPage/Table/Helpers".registryAndConsentButtonSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpButton, "Immunizations/WorkflowMPage/Table/Helpers".registryAndConsentButtonSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"RegistryImportAndConsentNotVisible")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster opens without any errors with Forecasting tab is in focus. List view is also available for selection. Consent to Share button is not displayed. Registry import link is not displayed."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage greyForecastButton,rectangle
+		run "Immunizations/Util/Validation".verifyImage  whiteListButton,rectangle
+		set the searchRectangle to ()
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible  registryImportLink,rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible  sharingFollowUpLink,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Links validation in ForecastView")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: In bedrock.exe, set the Immunization Forecasting Display to 'No' in the MPagesetup wizard. Save the changes."
+		run "Util".closeApplication "2"
+		run "Immunizations/Util/Validation".verifyImageNotVisible whiteListButton
+		run "Common_Components/Bedrock_Dashboard".Startbedrock bedrockPath
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Common_Components/Bedrock_Dashboard/Image_DB&M"
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".clickWizard "Quality Reporting and MPage Setup"
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".selectSolution "MPage"
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".clickMPage "MPage Setup"
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".selectMPageSetup subMenu
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".clickImmunizationForecastingDisplay
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".setImmunizationForecastingDisplay "Immunizations/Common/Bedrock/MPageSetupWindow/RadioButton_No/RadioButton_No"
+		set rectangle to "Immunizations/Util/Bedrock/MPageSetup/Helpers".immunizationForecastingDisplaySearchRectangle
+		
+		Log "VERIFICATION: Ensure the changes are saved."
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/Bedrock/MPageSetupWindow/RadioButton_No/RadioButton_No_Selected",rectangle
+		click "Immunizations/Common/Bedrock/MPageSetupWindow/Button_Finish"
+		repeat 2 times
+			run "Immunizations/Util/Bedrock/MPageSetup/Actions".clickButtonInMPageSetup "Immunizations/Common/Bedrock/MPageSetupWindow/Button_Close"
+		end repeat
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"ImmunizationForcastingDisplay is No")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1 and open the identified patient's chart to Immunizations MPage"
+		run "Common_Components/Bedrock_Dashboard".ExitBedrock
+		run "Immunizations/Util/Validation".verifyImageNotVisible "Common_Components/Bedrock_Dashboard/Image_DB&M"
+		run "Common".LaunchMillenniumWindow "Powerchart"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		run "Millennium_LoadPatient_RecentSearch".LoadPatient patientName
+		run "Millennium_SelectMenu_SubMenu".SelectMenuSubMenu "Task",menu,subMenu
+		if (imageFound(image: "Immunizations/Setup/Server_down_error", waitFor: 50))
+			LogWarning "Bypassing a server error not related to our solution: https://jira2.cerner.com/browse/" & "IMMUN-1802"
+			click image:"Immunizations/Setup/Button_Close", waitFor: 5
+		end if
+		
+		Log "VERIFICATION: Ensure the MPages opens without any errors."
+		set  rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Immunizations",rectangle
+		
+		Log "VERIFICATION: Ensure Registry Import (Import) and Consent to Share (Document) button are not displayed on the right-hand side at the bottom of the Mpage."
+		run "Immunizations/Util/Validation".verifyImageNotVisible regImportButton,"Immunizations/WorkflowMPage/Table/Helpers".registryAndConsentButtonSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpButton, "Immunizations/WorkflowMPage/Table/Helpers".registryAndConsentButtonSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"RegistryImportAndConsentNotVisible")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Review the View Forecast link."
+		Log "VERIFICATION: The link is not visible in the MPage."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible viewForecast,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"ViewForecast not visible")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Navigate to bedrock.exe and in the MPage setup wizard, set the Immunization Forecasting Display as 'Yes' again. Save the changes."
+		run "Util".closeApplication "2"
+		run "Common_Components/Bedrock_Dashboard".Startbedrock bedrockPath
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Common_Components/Bedrock_Dashboard/Image_DB&M"
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".clickWizard "Quality Reporting and MPage Setup"
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".selectSolution "MPage"
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".clickMPage "MPage Setup"
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".selectMPageSetup subMenu
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".clickImmunizationForecastingDisplay
+		run "Immunizations/Util/Bedrock/MPageSetup/Actions".setImmunizationForecastingDisplay "Immunizations/Common/Bedrock/MPageSetupWindow/RadioButton_Yes/RadioButton_Yes"
+		set rectangle to "Immunizations/Util/Bedrock/MPageSetup/Helpers".immunizationForecastingDisplaySearchRectangle
+		
+		Log "VERIFICATION: Ensure the changes are saved."
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Common/Bedrock/MPageSetupWindow/RadioButton_Yes/RadioButton_Yes_Selected" ,rectangle
+		click "Immunizations/Common/Bedrock/MPageSetupWindow/Button_Finish"
+		repeat 2 times
+			run "Immunizations/Util/Bedrock/MPageSetup/Actions".clickButtonInMPageSetup "Immunizations/Common/Bedrock/MPageSetupWindow/Button_Close"
+		end repeat
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Re-launch Powerchart with User1 and open the identified patient's chart to Immunizations MPage."
+		run "Common_Components/Bedrock_Dashboard".ExitBedrock
+		run "Immunizations/Util/Validation".verifyImageNotVisible "Common_Components/Bedrock_Dashboard/Image_DB&M"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure the MPage opens."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"MPAGE opens")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster opens without any errors with Forecasting tab is in focus. List view is also available for selection. Consent to Share button is not displayed. Registry import link is not displayed."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage greyForecastButton,rectangle
+		run "Immunizations/Util/Validation".verifyImage whiteListButton,rectangle
+		set the searchRectangle to ()
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible  registryImportLink,rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible  sharingFollowUpLink,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Links not seen in ForecastView")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In Prefmaint.exe, modify the preference 'IMMUN_VIEWS' to 0 – Display Immunization Forecaster. Save the changes made."
+		run "Util".closeApplication "2"
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpLink
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMMUN_VIEWS","0–Display immunization forecaster"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		Put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMMUN_VIEWS","0-Display immunization forecaster") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Preference is set correctly")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1 and open the identified Patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure MPage opens without any errors."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster opens with Forecasting view in focus. List view is not available for selection. Consent to Share button is not displayed."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "CDC Schedule",rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible whiteListButton,rectangle
+		set the SearchRectangle to ()
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible  sharingFollowUpLink,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"ForecastView in focus")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Navigate to Prefmaint.exe and modify the preference 'IMMUN_VIEWS' to 1 – Display Immunization list view. Save the changes made."
+		run "Util".closeApplication "2"
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpLink
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMMUN_VIEWS","1–Display immunization list view"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMMUN_VIEWS","1-Display immunization list view") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Preference is set correctly")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1 and open identified patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure MPage opens without any errors."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure Registry Import (Import) and Consent to Share (Document) button are not displayed on the right-hand side at the bottom of the Mpage."
+		run "Immunizations/Util/Validation".verifyImageNotVisible regImportButton,"Immunizations/WorkflowMPage/Table/Helpers".registryAndConsentButtonSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpButton, "Immunizations/WorkflowMPage/Table/Helpers".registryAndConsentButtonSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"RegistryImportAndConsentNotVisible")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster opens with List view in focus. Forecasting view is not available for selection. Consent to Share button is not displayed."
+		run "Immunizations/Forecaster-List/Validations".verifyNoVaccineHistory
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible greyForecastButton,rectangle
+		set the searchRectangle to ()
+		set rectangle to "Immunizations/Forecaster-List/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible  sharingFollowUpLink,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Link is not displayed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In Prefmaint.exe, change the preference 'IMMUN_DEFAULT_VIEW' as 0 – Immunization List View. Save the changes made."
+		run "Util".closeApplication "2"
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpLink
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMMUN_DEFAULT_VIEW","0-Immunization List View"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMMUN_DEFAULT_VIEW","0-Immunization List View") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Preference is set correctly")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1 and open identified patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure MPage opens without any errors."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster opens with List view in focus. Forecasting view is not available for selection. Consent to Share button is not displayed."
+		run "Immunizations/Forecaster-List/Validations".verifyNoVaccineHistory
+		set rectangle to "Immunizations/Forecaster-List/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible  sharingFollowUpLink,rectangle
+		set the SearchRectangle to ()
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible greyForecastButton,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Link is not displayed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In Prefmaint.exe, Change the preference 'IMMUN_VIEWS' to '2 – Display Forecaster and list views'. Save the changes made."
+		run "Util".closeApplication "2"
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpLink
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMMUN_VIEWS","2-Display forecaster and list views"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMMUN_VIEWS","2-Display forecaster and list views") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Preference is set correctly")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1 and open identified patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, relationship
+		
+		Log "VERIFICATION: Ensure MPage opens without any errors."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster opens with List view in focus. Forecasting view is also available for selection. Consent to Share button is not displayed."
+		run "Immunizations/Forecaster-List/Validations".verifyNoVaccineHistory
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage whiteForecastButton,rectangle
+		set the searchRectangle to ()
+		set rectangle to "Immunizations/Forecaster-List/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible  sharingFollowUpLink,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Link is not displayed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In Prefmaint.exe, Change the preference 'IMMUN_VIEWS' to '0 – Display Immunization Forecaster'. Save the changes made."
+		run "Util".closeApplication "2"
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpLink
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMMUN_VIEWS","0-Display immunization forecaster"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMMUN_VIEWS","0-Display immunization forecaster") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"'Preference is set correctly")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1 and open identified patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure MPage opens without any errors."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster opens with Forecasting view in focus. List view is not available for selection. Consent to Share button is not displayed. Note:IMMUN_ VIEWS is set to 0 – Display Immunization Forecaster"
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "CDC Schedule",rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible whiteListButton,rectangle
+		set the searchRectangle to ()
+		set rectangle to "Immunizations/Forecaster-List/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible  sharingFollowUpLink,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Link is not displayed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In Prefmaint.exe, set Preference IMMUN_CONSENT to 'ON' at Position level of User1.Save the changes made."
+		run "Util".closeApplication "2"
+		wait 2 //takes time to load run window typed text correctly
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		run "Prefmaint".SelectPosition "DBA"
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMMUN_CONSENT","1-On"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMMUN_CONSENT","1-On") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Preference is set correctly")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1 and open identified patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure MPage opens without any errors."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure Consent to Share (Document) button are displayed on the right-hand side at the bottom of the Mpage."
+		run "Immunizations/Util/Validation".verifyImage sharingFollowUpButton, "Immunizations/WorkflowMPage/Table/Helpers".registryAndConsentButtonSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"ConsentToShareButtonVisible")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Consent to Share button is displayed in the Forecaster. Note: The preference set at Position level is honored."
+		set the searchRectangle to ()
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage  sharingFollowUpLink,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Link is displayed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In Prefmaint.exe, set Preference IMMUN_CONSENT to 'OFF' at User level for User1.Save the changes made."
+		run "Util".closeApplication "2"
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpLink
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		run "Prefmaint".SelectPosition "DBA"
+		run "Common".clickOnImageFound("Prefmaint/Icon_UserSearch_64bit")
+		run "ProviderSelection".ProviderSelectionWindowControl "Maximize"
+		run "ProviderSelection".EnterProviderDetails "Last name",userLastName
+		run "ProviderSelection".EnterProviderDetails "First name",userFirstName
+		run "ProviderSelection".clickSearchButton
+		run "ProviderSelection".clickOKButton
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMMUN_CONSENT","0-Off"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMMUN_CONSENT","0-Off") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1 and open identified patient's chart to Immunizations MPage."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, relationship
+		
+		Log "VERIFICATION: Ensure MPage opens without any errors."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure Consent to Share (Document) button are not displayed on the right-hand side at the bottom of the Mpage."
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpButton, "Immunizations/WorkflowMPage/Table/Helpers".registryAndConsentButtonSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"ConsentToShareButtonNotVisible")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Consent to Share button is not displayed. Note: The preference set at User level is honored."
+		set the searchRectangle to ()
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible  sharingFollowUpLink,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Link is not displayed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In Prefmaint.exe, set Preference IMMUN_REG_IMPORT to 'ON' at Position level of User1. Save the changes made."
+		run "Util".closeApplication "2"
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpLink
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		run "Prefmaint".SelectPosition "DBA"
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMMUN_REG_IMPORT","1-On"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMMUN_REG_IMPORT","1-On") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Preference is set correctly")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1 and open identified patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure MPage opens without any errors."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure Registry Import (Import) are not displayed on the right-hand side at the bottom of the Mpage."
+		run "Immunizations/Util/Validation".verifyImage regImportButton,"Immunizations/WorkflowMPage/Table/Helpers".registryAndConsentButtonSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"RegistryImportButtonVisible")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster displays. Registry Import link is displayed. Note:The preference set at Position level is honored."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "CDC Schedule",rectangle
+		set the searchRectangle to ()
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage  registryImportLink,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Link is displayed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In Prefmaint.exe, set Preference 'IMMUN_REG_IMPORT' to 'OFF' at User level for User1. Save the changes made."
+		run "Util".closeApplication "2"
+		run "Immunizations/Util/Validation".verifyImageNotVisible registryImportLink
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		wait 2
+		run "Prefmaint".SelectApplication "PowerChart"
+		run "Prefmaint".SelectPosition "DBA"
+		run "Common".clickOnImageFound("Prefmaint/Icon_UserSearch_64bit")
+		run "ProviderSelection".ProviderSelectionWindowControl "Maximize"
+		run "ProviderSelection".EnterProviderDetails "Last name",userLastName
+		run "ProviderSelection".EnterProviderDetails "First name",userFirstName
+		run "ProviderSelection".clickSearchButton
+		run "ProviderSelection".clickOKButton
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMMUN_REG_IMPORT","0-Off"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMMUN_REG_IMPORT","0-Off") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Preference is set correctly")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1 and open identified patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure MPage opens without any errors."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		
+		Log "VERIFICATION: Ensure Registry Import (Import) button is not displayed on the right-hand side at the bottom of the Mpage."
+		run "Immunizations/Util/Validation".verifyImageNotVisible regImportButton,"Immunizations/WorkflowMPage/Table/Helpers".registryAndConsentButtonSearchRectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"RegistryImportButtonNotVisible")	
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster displays. Registry link is not displayed. Note: The preference set at User level is honored."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "CDC Schedule",rectangle
+		set the searchRectangle to ()
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers".registryAndConsentLinksSearchRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible  registryImportLink,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Link is not displayed")
+		--------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Document History button."
+		run "Immunizations/Common/DocumentHistory/Actions".OpenDialog
+		
+		Log "VERIFICATION: Ensure Immunization – Historical entry dialog is displayed. Select Immunizations pop-up displays face-up."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".diaLogSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage immunizationsDiaLog,rectangle
+		
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Select any vaccine and click on Select button."
+		run "Immunizations/Common/SelectImmunizationsList".selectvaccineName vaccineName1
+		run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+		
+		Log "VERIFICATION: Ensure the selected vaccine displays in the Immunization – Historical entry dialog. Administration date is a simple date field. Estimation options like Age, Year, Month/Year, Week of, Date are not displayed."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".dialogSearchRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName1,rectangle
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".administrationDateOptionsSearchRectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Date",rectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Week Of",rectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Month/Year",rectangle
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Year",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Estimated options like Age,Year,Month/Year,Week of,Date are not displayed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Cancel button."
+		run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton "Cancel"
+		
+		Log "VERIFICATION: Ensure the Immunization – Historical entry dialog is disposed."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage hamburgerButton,rectangle
+		run "Util".closeApplication "2"
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In Prefmaint.exe, change the preference 'ALLOW_DATE_EST' to '1 - ON'. Save the changes."
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		run "Prefmaint".SelectPosition "DBA"
+		run "Common".clickOnImageFound("Prefmaint/Icon_UserSearch_64bit")
+		run "ProviderSelection".ProviderSelectionWindowControl "Maximize"
+		run "ProviderSelection".EnterProviderDetails "Last name",userLastName
+		run "ProviderSelection".EnterProviderDetails "First name",userFirstName
+		run "ProviderSelection".clickSearchButton
+		run "ProviderSelection".clickOKButton
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMM_DATE_EST_YEAR","1-Middle of year"
+		run "Prefmaint".ModifyListPreference "ALLOW_DATE_EST","1-On"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("ALLOW_DATE_EST","1-On") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Preference is set correctly")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart.exe with User1 and open identified patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure Immunizations MPage opens without any errors."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		
+		Log "VERIFICATION: Ensure Immunization Forecaster opens."
+		set rectangle to "Immunizations/Common/Helpers".tabListSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "CDC Schedule",rectangle
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Document History button."
+		run "Immunizations/Common/DocumentHistory/Actions".OpenDialog
+		
+		Log "VERIFICATION: Ensure Immunization – Historical entry dialog is displayed. Select Immunizations pop-up displays face-up."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".diaLogSearchRectangle
+		run "Immunizations/Util/Validation".verifyImage immunizationsDiaLog,rectangle
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Select any vaccine and click on Select button."
+		run "Immunizations/Common/SelectImmunizationsList".selectvaccineName vaccineName
+		run "Immunizations/Common/SelectImmunizationsList".clickSelectButton 
+		
+		Log "VERIFICATION: Ensure the selected vaccine displays in the Immunization – Historical entrydialog. Administration date allows date estimation options like Year, Month/Year, Week of, Date."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".dialogSearchRectangle
+		run "Immunizations/Util/Validation".verifyText vaccineName,rectangle
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".administrationDateOptionsSearchRectangle
+		typetext downArrow
+		run "Immunizations/Util/Validation".verifyText "Date",rectangle
+		typetext upArrow
+		run "Immunizations/Util/Validation".verifyText "Week Of",rectangle
+		run "Immunizations/Util/Validation".verifyText "Month/Year",rectangle
+		run "Immunizations/Util/Validation".verifyText "Year",rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"AdministratioDateOptions are available")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Select 'Year' from drop list and type a year in the past e.g. 2015."
+		typetext "Year"
+		typetext returnkey
+		typetext tabKey
+		typetext "Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0})
+		
+		Log "VERIFICATION: The display matches the date."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".dialogSearchRectangle
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0}), rectangle
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Enter all other required details and click on Submit button."
+		set rectangle to "Immunizations/Common/DocumentHistory/Helpers".dialogSearchrectangle
+		click imageLocation(Text:"Source", searchrectangle:(rectangle))+(0,30)
+		MoveTo imageLocation(Text:"Administration Date", searchrectangle:(rectangle))
+		click text:source, searchrectangle:(rectangle)
+		run "Immunizations/Common/DocumentHistory/Actions".productInput product
+		run "Immunizations/Common/SaveDocumentHistoryOrNotGivenInput".clickButton "Submit"
+		
+		Log "VERIFICATION: Ensure Immunization – Historical Entry dialog is disposed. The dose of the vaccine charted displays in the timeline. product name displays at the top along with administration date at the bottom within the designated cell. Ensure the administration date shows 2nd July of the year entered in the above step."
+		set startDateHeader to "JUL 02,"&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0})
+		set endDateHeader to "JUL 02,"&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0})
+		set alignment to ("Center","Center")
+		set (topOffset1,topOffset2,bottomOffset1,bottomOffset2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffset1,bottomOffset2)
+		run "Immunizations/Util/Validation".verifyText product&return&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0}),"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"2ndJuly of the year entered")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Document History button. Select any vaccine and click on Select button.Select 'Year' from drop list and type the current year e.g. 2016. Enter all other required details and click on Submit button"		
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, "Year", "Immunizations/Util/Date".adjustDate(dob, format, {"Year":1}), source, product, "Submit"
+		
+		Log "VERIFICATION: Ensure Immunization – Historical Entry dialog is disposed. The dose of the vaccine charted displays in the timeline. product name displays at the top along with administration date at the bottom within the designated cell. Ensure the administration date shows July 02 of the current year entered"
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText product,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":1}),"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Current year")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In Prefmaint.exe, modify the preference 'IMM_DATE_EST_YEAR' to 0 – First Day of the Year. Save the changes."
+		run "Util".closeApplication "2"
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		run "Prefmaint".SelectPosition "DBA"
+		run "Common".clickOnImageFound("Prefmaint/Icon_UserSearch_64bit")
+		run "ProviderSelection".ProviderSelectionWindowControl "Maximize"
+		run "ProviderSelection".EnterProviderDetails "Last name",userLastName
+		run "ProviderSelection".EnterProviderDetails "First name",userFirstName
+		run "ProviderSelection".clickSearchButton
+		run "ProviderSelection".clickOKButton
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMM_DATE_EST_YEAR","0-First day of year"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMM_DATE_EST_YEAR","0-First day of year") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Preference is set correctly")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart with User1. Open identified patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure the MPage opens."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link.Click on Document History button and select a vaccine. Click on Select button.From the Estimation drop list, select Year option and type a year in the past E.g. 2015 and click on Submit button.s"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName3, "Year", "Immunizations/Util/Date".adjustDate(dob, format, {"Year":0}), source, product2, "Submit"
+		
+		Log "VERIFICATION: The display matches the date. On clicking Submit button, ensure the dose charted displays in the timeline correctly with First day of the year entered."
+		set startDateHeader to uppercase(formattedTime("%b %d, %Y", (testData.Patient1.dob)))
+		set endDateHeader to uppercase(formattedTime("%b %d, %Y", (testData.Patient1.dob)))
+		set alignment to ("Center","Center")
+		set (topOffset1,topOffset2,bottomOffset1,bottomOffset2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName3)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffset1,bottomOffset2)
+		run "Immunizations/Util/Validation".verifyText product2&return&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0}),"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"First day of the year")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Document History button and select a vaccine.From the Estimation drop list, select Year option and type current year E.g.2016 and click on Submit button."
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName3, "Year", "Immunizations/Util/Date".adjustDate(dob, format, {"Year":1}), source, product3, "Submit"
+		
+		Log "VERIFICATION: The display matches the date. On clicking Submit button, ensure the dose charted displays in the timeline correctly. Administration date displays 1st Jan of the year entered."
+		set startDateHeader to "JAN 01,"&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":1})
+		set endDateHeader to "JAN 01,"&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":1})
+		set alignment to ("Center","Center")
+		set (topOffset1,topOffset2,bottomOffset1,bottomOffset2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName3)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffset1,bottomOffset2)
+		run "Immunizations/Util/Validation".verifyText product3, "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection (rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":1}), "Immunizations/WorkflowMPage/Table/Helpers".cellIntersection (rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"1stJan of the year entered")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In Prefmaint.exe, modify the preference 'IMM_DATE_EST_YEAR' to 2 – Last Day of the Year. Save the changes."
+		run "Util".closeApplication "2"
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		run "Prefmaint".SelectPosition "DBA"
+		run "Common".clickOnImageFound("Prefmaint/Icon_UserSearch_64bit")
+		run "ProviderSelection".ProviderSelectionWindowControl "Maximize"
+		run "ProviderSelection".EnterProviderDetails "Last name",userLastName
+		run "ProviderSelection".EnterProviderDetails "First name",userFirstName
+		run "ProviderSelection".clickSearchButton
+		run "ProviderSelection".clickOKButton
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMM_DATE_EST_YEAR","2-Last day of year"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMM_DATE_EST_YEAR","2-Last day of year") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Preference is set correctly")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart with User1. Open identified patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure the MPage opens."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link.Click on Document History button and select a vaccine.From the Estimation drop list, select Year option and type a year in the past E.g. 2015. Enter all other mandatory details and click on Submit button."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName3, "Year", "Immunizations/Util/Date".adjustDate(dob, format, {"Year":0}), source, product2, "Submit"
+		
+		Log "VERIFICATION: The display matches the fuzzy date. On clicking Document button, ensure the dose charted displays in the timeline correctly. Administration date displayed in the designated cell is 31st Dec of the year entered."
+		run "Immunizations/Forecaster-Forecast/Actions".scrollToLeft
+		set startDateHeader to  "DEC 31,"&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0})
+		set endDateHeader to  "DEC 31,"&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0})
+		set alignment to ("Center","Center")
+		set (topOffset1,topOffset2,bottomOffset1,bottomOffset2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName3)
+		set the currentTextPlatform.OCRStyles.Default.localenhancecontrast to Yes
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffset1,bottomOffset2)
+		run "Immunizations/Util/Validation".verifyText product2,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0}),"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"31stDec of the year entered")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Document History button again.Select a vaccine and click on Select button.From the Estimation drop list, select Year option and type the current year E.g.2016. Enter all other mandatory details and click on Submit button"
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName4, "Year", "Immunizations/Util/Date".adjustDate(dob, format, {"Year":1}), source, product4, "Submit"
+		
+		Log "VERIFICATION: The display matches the  date.    On clicking Document button, ensure the dose charted displays in the timeline correctly. Administration date displayed in the designated cell is 31st Dec of the current year entered"
+		click "Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarDownArrow"	
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName4)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText product4&return&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":1}),"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Cell displays current year ")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Document History button again.Select a vaccine and click on Select button.From the Estimation drop list, select Month/Year option.Type <current month>/<year in the past> E.g. 02/2015 in the field. Enter allother mandatory details and click on Submit button."
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName5, "Month/Year", "Immunizations/Util/Date".adjustDate(dob, format, {"Month":0}), source, product5, "Submit"	
+		
+		Log "VERIFICATION: The display matches the date. On clicking Submit button,ensure the dose charted displays in the timeline. Administration date displays First day of the monthe with the year entered E.g.1st Feb 2015."
+		run "Immunizations/Forecaster-Forecast/Actions".scrollToLeft
+		set startDateHeader to uppercase(formattedTime("%b %d, %Y", (testData.Patient1.dob)))
+		set endDateHeader to uppercase(formattedTime("%b %d, %Y", (testData.Patient1.dob)))
+		set alignment to ("Center","Center")
+		set (topOffset1,topOffset2,bottomOffset1,bottomOffset2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName5)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffset1,bottomOffset2)
+		run "Immunizations/Util/Validation".verifyText product5,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText  "Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0}),"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"1st month of the year entered")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: In prefmaint.exe, change the preference 'IMM_DATE_EST_MONTH' to 1 – Last Day of the Month. Save the changes made."
+		run "Util".closeApplication "2"
+		run "Common".LaunchMillenniumWindow "prefmaint"
+		run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+		waitFor 80, "Prefmaint/Text_ExistingPreferences"
+		click "Prefmaint/Text_ExistingPreferences"
+		wait 3
+		typetext windowskey & upArrow
+		run "Prefmaint".SelectApplication "PowerChart"
+		run "Prefmaint".SelectPosition "DBA"
+		run "Common".clickOnImageFound("Prefmaint/Icon_UserSearch_64bit")
+		run "ProviderSelection".ProviderSelectionWindowControl "Maximize"
+		run "ProviderSelection".EnterProviderDetails "Last name",userLastName
+		run "ProviderSelection".EnterProviderDetails "First name",userFirstName
+		run "ProviderSelection".clickSearchButton
+		run "ProviderSelection".clickOKButton
+		click "Prefmaint/Icon_SearchPreference_64bit"
+		waitFor 80,text:"Immunization Forecaster"
+		run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+		run "Prefmaint".ModifyListPreference "IMM_DATE_EST_MONTH","1–Last Day of Month"
+		click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+		
+		Log "VERIFICATION: Ensure the preference is set correctly."
+		waitFor 80,text:"Immunization Forecaster"
+		put "PreferenceMaintenanceTool".ValidatePreferenceValue ("IMM_DATE_EST_MONTH","1-Last Day of Month") into validatePreference
+		run "Immunizations/Util/Validation".verifyValueEquals  validatePreference, "true"
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Exit and re-launch Powerchart with User1. Open identified patient's chart to Immunizations MPage."
+		typetext altKey & F4
+		click "Prefmaint/Icon_Exit"
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,relationship
+		
+		Log "VERIFICATION: Ensure the MPage opens."
+		run "Immunizations/Util/Validation".verifyText "Immunizations", "Immunizations/Common/Helpers".tabListSearchRectangle
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on the View Forecast link.Click on Document History button and select a vaccine. From Estimation drop list, select Month/Year option and type <current month>/<year in the past> E.g. 02/2015. Enter all other mandatory details and click on Submit button."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast(viewForecast)
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName2, "Month/Year","Immunizations/Util/Date".adjustDate(dob, format, {"Month":0}), source, product1, "Submit"	
+
+		Log "VERIFICATION: The display matches the fuzzy date. On clicking Submit button, ensure the dose charted Is displayed in the timeline. Administration date displayed is last day of the month with the year entered E.g. 28th Feb 2015."
+		click "Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarArrowUp"
+		run "Immunizations/Forecaster-Forecast/Actions".scrollToLeft
+		set startDateHeader to "JAN 31,"&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0})
+		set endDateHeader to "JAN 31,"&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0})
+		set alignment to ("Center","Center")
+		set (topOffset1,topOffset2,bottomOffset1,bottomOffset2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName2)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffset1,bottomOffset2)
+		run "Immunizations/Util/Validation".verifyText product1,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".adjustDate(dob, "%b", {"Month":0})&"."&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":0}),"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Last day of the month")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Click on Document History button once again and select any vaccine.From Estimation drop list, select Month/Year option and type <current month>/<current year>. Enter all other mandatory details and click on Submit button."
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName6, "Month/Year",("Immunizations/Util/Date".adjustDate(dob,format, {"Year":1})),source, product6, "Submit"	
+		
+		Log "VERIFICATION: The display matches the fuzzy date. On clicking Submit button, ensure the dose charted Is displayed in the timeline. Administration date displays is last day of the month with current year entered"
+		set startDateHeader to "JAN 31,"&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":1})
+		set endDateHeader to "JAN 31,"&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":1})
+		set alignment to ("Center","Center")
+		set (topOffset1,topOffset2,bottomOffset1,bottomOffset2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName6)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffset1,bottomOffset2)
+		run "Immunizations/Util/Validation".verifyText product6,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyText "Immunizations/Util/Date".adjustDate(dob, "%b", {"Month":0})&"."&&"Immunizations/Util/Date".adjustDate(dob, "%Y", {"Year":1}),"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"AdminDateDisplaysInTodaysColumn")
+		---------------------------------------------------------------------------------------------------------------
+		//Only 1 dose of the vaccine is charted below and the vertical scroll bar gets activated
+		Log "Util".stepNumber & "ACTION: Chart few more vaccines (the ones not defined by CDC) for the same patient tillthe vertical scroll bar is activated."
+		run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName7, "Year","Immunizations/Util/Date".adjustDate(dob, format, (dob)), source, "Submit"
+		
+		Log "VERIFICATION: Ensure the vertical scrollbar displays correctly."
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/Forecast-List/List_VerticalScrollBar/TR_EndOfScrollBar"
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"VerticalScrollBar displays")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Scroll the screen using the vertical scroll bar."
+		click "Immunizations/Forecast-List/List_VerticalScrollBar/BR_ScrollBar"
+		
+		Log "VERIFICATION: Ensure the column headers freeze and display at all times when scrolling the page."
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".firstcolumnSearchRectangle()
+		run "Immunizations/Util/Validation".verifyText "Immunizations" ,columnSearchRectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"ColumnHeaders display")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Chart a vaccine E.g. Influenza historically in the past flu season."
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1,dateFormat, ("Immunizations/Util/Date".adjustDate(dob, "%m/%d/%Y", (dob))), source,product7,"Submit"
+		
+		Log "VERIFICATION: Ensure the dose charted displays in the timeline correctly and a dose number is not displayed."
+		run "Immunizations/Forecaster-Forecast/Actions".scrollToLeft
+		set startDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, (dob))
+		set endDateHeader to "Immunizations/Util/Date".adjustDate(dob, format, (dob))
+		set alignment to ("Center","Center")
+		set (topOffset1,topOffset2,bottomOffset1,bottomOffset2) to "Immunizations/Forecaster-Forecast/Helpers".columnHeaderAlignment(alignment)
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName1)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangle(startDateHeader,endDateHeader,topOffset1,topOffset2,bottomOffset1,bottomOffset2)
+		run "Immunizations/Util/Validation".verifyTextNotVisible "Dose 1","Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"DoseNumber is not displayed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Un-chart any charted dose and review the timeline."
+		run "Immunizations/Common/Actions".clickMPagesView viewPoint
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName  vaccineName4
+		run  "Immunizations/WorkflowMPage/SidePanel/Task".unchart "Immunizations/Util/Date".todaysDate("%m/%d/%Y") ,"1","test"
+		run "Immunizations/Common/Actions".temporaryRefreshclick
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast (viewForecast)
+		
+		Log "VERIFICATION: Ensure uncharted dose is not displayed in the timeline. Hide Uncharted Records checkbox is displayed as checked in the upper right hand corner of MPage menu."
+		click "Immunizations/Forecaster-Forecast/Search/Icon_ScrollBarDownArrow"
+		set rowSearchrectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName4)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyTextNotVisible product4 ,"Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		run "Immunizations/Util/Validation".verifyImage unchartIconImage,"Immunizations/WorkflowMPage/Table/Helpers".CellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"UnchartedDose is not displayed")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: Review the doses for Pneumococcal Conjugate vaccine."
+		Log "VERIFICATION: Ensure Dose 1 displays  in the Today column."
+		
+		set rowSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".rowSearchRectangle(vaccineName8)
+		set columnSearchRectangle to "Immunizations/Forecaster-Forecast/Helpers".columnSearchRectangleToday()
+		run "Immunizations/Util/Validation".verifyText "Dose 1","Immunizations/WorkflowMPage/Table/Helpers".cellIntersection(rowSearchRectangle,columnSearchRectangle)
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Dose1 in the Today column")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber & "ACTION: click Dose 1 for Pneumococcal Conjugate"
+		run "Immunizations/Forecaster-Forecast/Actions".clickVaccineName vaccineName8
+		click text:"1", searchrectangle:"Immunizations/Forecaster-Forecast/Helpers".expandedViewDoseSearchrectangle()
+		
+		Log "VERIFICATION: Verify the expander opens and Dose 1 for Pneumococcal Conjugate is listed as 'Overdue'"
+		set rectangle to "Immunizations/Forecaster-Forecast/Helpers". expandedViewLeftPaneDoseSearchRectangle("1")
+		run "Immunizations/Util/Validation".verifyText overdue,rectangle
+		
+		CaptureScreen(Name:"Step"&Global stepNumber&"Dose1 is Overdue")
+		---------------------------------------------------------------------------------------------------------------
+		Log "Util".stepNumber &"ACTION: Close the Application."
+		run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		EndTestCase "WF/HLM-WF-Immunizations-Forecaster_Preferences"
+		
+	Catch 
+		LogError "Exception encountered" && the exception
+		capturescreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End try
+	--------------------------------------------Cleanup Script-----------------------------------------------------
+	
+	Log "Reverting back the pre-requisite preferences set at Application level"
+	
+	run "Common".LaunchMillenniumWindow "prefmaint"
+	run "Millennium_Login_window".LogIntoMillenniumApps username,password,domain
+	waitFor 80, "Prefmaint/Text_ExistingPreferences"
+	click "Prefmaint/Text_ExistingPreferences"
+	wait 3
+	typetext windowskey & upArrow
+	wait 3
+	run "Prefmaint".SelectApplication "PowerChart"
+	click "Prefmaint/Icon_SearchPreference_64bit"
+	waitFor 80,text:"Immunization Forecaster"
+	run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+	run "Prefmaint".ModifyListPreference "ALLOW_DATE_EST","1-On"
+	run "Prefmaint".ModifyListPreference "DATE_EST_YEAR","0-First day of year"
+	run "Prefmaint".ModifyListPreference "DEFAULT_VI","1-Immunization Forecast View"
+	run "Prefmaint".ModifyListPreference "IMMUN_VIEWS","2-Display forecaster and list views"
+	click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+	waitFor 80,text:"Immunization Forecaster"
+	Log "Reverting back the pre-requisite preferences set at Position level"
+	
+	run "Prefmaint".SelectPosition "DBA"
+	click "Prefmaint/Icon_SearchPreference_64bit"
+	waitFor 80,text:"Immunization Forecaster"
+	run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+	run "Prefmaint".DeletePreference "CONSENT"
+	run "Prefmaint".DeletePreference "REG_IMPORT"
+	click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+	waitFor 80,text:"Immunization Forecaster"
+	
+	Log "Reverting back the pre-requisite preferences set at User level"
+	
+	run "Common".clickOnImageFound("Prefmaint/Icon_UserSearch_64bit")
+	run "ProviderSelection".ProviderSelectionWindowControl "Maximize"
+	run "ProviderSelection".EnterProviderDetails "Last name",userLastName
+	run "ProviderSelection".EnterProviderDetails "First name",userFirstName
+	run "ProviderSelection".clickSearchButton
+	run "ProviderSelection".clickOKButton
+	click "Prefmaint/Icon_SearchPreference_64bit"
+	waitFor 80,text:"Immunization Forecaster"
+	run "PreferenceMaintenanceTool".Selecttab "Immunization Forecaster","Immunization Forecaster"
+	run "Prefmaint".DeletePreference "CONSENT"
+	run "Prefmaint".DeletePreference "REG_IMPORT"
+	run "Prefmaint".DeletePreference "ALLOW_DATE_EST"
+	run "Prefmaint".DeletePreference "DATE_EST_YEAR"
+	run "Prefmaint".DeletePreference "DATE_EST_MONTH"
+	click "Prefmaint/Button_ApplyInDefinePrefrenceWindow" 
+	waitFor 80,text:"Immunization Forecaster"
+	typetext altKey & F4
+	click "Prefmaint/Icon_Exit"
+	---------------------------------------------------------------------------------------------------------------
+Catch 
+	LogError "Exception encountered" && the exception
+	capturescreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+end try	
+--------------------------------------------------Zero State Script---------------------------------------
+
+run "Cleanup".ZeroStateCloseAllApps

@@ -1,0 +1,282 @@
+{
+    	"SOLM64": {
+        		"Patient_Overdue": {
+            			"lastName": "Influenza",
+           			"firstName": "1",
+            			"nameFullFormatted": "Influenza,1",
+            			"newLastName": "OldInflu1",
+           		 	"dob": "Today - 4 years",
+            			"sex": "Male"
+        		},
+        		"Patient_Perm_Not_Given": {
+           			 "lastName": "Influenza",
+            			 "firstName": "2",
+            			"nameFullFormatted": "Influenza,2",
+           			 "newLastName": "OldInflu2",
+           			 "dob": "Today - 9 years - 1 day",
+            			"sex": "Male"
+        		},
+       		 "Patient_Temp_Not_Given": {
+          			  "lastName": "Influenza",
+            			  "firstName": "3",
+           			  "nameFullFormatted": "Influenza,3",
+            			  "newLastName": "OldInflu3",
+            			  "dob": "Today - 6 months + 1 day",
+            			  "sex": "Male"
+       		 },
+       		 "Patient_Live_Virus": {
+          			  "lastName": "Influenza",
+          			  "firstName": "4",
+        		 	  "nameFullFormatted": "Influenza,4",
+          			  "newLastName": "OldInflu4",
+          			  "dob": "Today - 2 years",
+         			  "sex": "Male"
+        		},
+       		"user": "Maintenance, Health",
+        	"vaccineName": "Influenza",
+        	"vis1": "Influenza (LAIV) (English)",
+        	"product1": "Afluria 2016-2017",
+        	"product2": "influenza virus vaccine, live",
+       		"source": "Device",
+		"dateFormat":"Date",
+		"unchartedReason":"Test",
+        	"notGivenType": "Refused",
+        	"permNotGivenAction": "Cancel series and stop forecasting",
+       		"tempNotGivenAction": "This Season Only",
+        	"notGivenReason": "Patient Refuses"
+    	},
+   	 "S18VX": {
+        		"Patient_Overdue": {
+            			"lastName": "Influenza",
+           			"firstName": "1",
+            			"nameFullFormatted": "Influenza,1",
+            			"newLastName": "OldInflu1",
+           		 	"dob": "Today - 4 years",
+            			"sex": "Male"
+        		},
+        		"Patient_Perm_Not_Given": {
+           			 "lastName": "Influenza",
+            			 "firstName": "2",
+            			"nameFullFormatted": "Influenza,2",
+           			 "newLastName": "OldInflu2",
+           			 "dob": "Today - 9 years - 1 day",
+            			"sex": "Male"
+        		},
+       		 "Patient_Temp_Not_Given": {
+          			  "lastName": "Influenza",
+            			  "firstName": "3",
+           			  "nameFullFormatted": "Influenza,3",
+            			  "newLastName": "OldInflu3",
+            			  "dob": "Today - 6 months + 1 day",
+            			  "sex": "Male"
+       		 },
+       		 "Patient_Live_Virus": {
+          			  "lastName": "Influenza",
+          			  "firstName": "4",
+        		 	  "nameFullFormatted": "Influenza,4",
+          			  "newLastName": "OldInflu4",
+          			  "dob": "Today - 2 years",
+         			  "sex": "Male"
+        		},
+       		"user": "Maintenance, Health",
+        	"vaccineName": "Influenza",
+        	"vis1": "Influenza (LAIV) (English)",
+        	"product1": "Afluria 2016-2017",
+        	"product2": "influenza virus vaccine, live",
+		"product3":"Influenza Current Season",
+       		"source": "Device",
+		"dateFormat":"Date",
+		"unchartedReason":"Test",
+        	"notGivenType": "Refused",
+        	"permNotGivenAction": "Cancel series and stop forecasting",
+       		"tempNotGivenAction": "This Season Only",
+        	"notGivenReason": "Patient Refuses"
+    	},
+	"S18DC": {
+        		"Patient_Overdue": {
+            			"lastName": "Influenza",
+           			"firstName": "1",
+            			"nameFullFormatted": "Influenza,1",
+            			"newLastName": "OldInflu1",
+           		 	"dob": "Today - 4 years",
+            			"sex": "Male"
+        		},
+        		"Patient_Perm_Not_Given": {
+           			 "lastName": "Influenza",
+            			 "firstName": "2",
+            			"nameFullFormatted": "Influenza,2",
+           			 "newLastName": "OldInflu2",
+           			 "dob": "Today - 9 years - 1 day",
+            			"sex": "Male"
+        		},
+       		 "Patient_Temp_Not_Given": {
+          			  "lastName": "Influenza",
+            			  "firstName": "3",
+           			  "nameFullFormatted": "Influenza,3",
+            			  "newLastName": "OldInflu3",
+            			  "dob": "Today - 6 months + 1 day",
+            			  "sex": "Male"
+       		 },
+       		 "Patient_Live_Virus": {
+          			  "lastName": "Influenza",
+          			  "firstName": "4",
+        		 	  "nameFullFormatted": "Influenza,4",
+          			  "newLastName": "OldInflu4",
+          			  "dob": "Today - 2 years",
+         			  "sex": "Male"
+        		},
+       		"user": "Maintenance, Health",
+        	"vaccineName": "Influenza",
+        	"vis1": "Influenza (LAIV) (English)",
+        	"product1": "Afluria 2011-2012",
+        	"product2": "influenza virus vaccine, live",
+		"product3":"Influenza Current Season",
+       		"source": "Device",
+		"dateFormat":"Date",
+		"unchartedReason":"Test",
+        	"notGivenType": "Refused",
+        	"permNotGivenAction": "Cancel series and stop forecasting",
+       		"tempNotGivenAction": "This Season Only",
+        	"notGivenReason": "Patient Refuses"
+    	},
+	"S18VC": {
+        		"Patient_Overdue": {
+            			"lastName": "Influenza",
+           			"firstName": "1",
+            			"nameFullFormatted": "Influenza,1",
+            			"newLastName": "OldInflu1",
+           		 	"dob": "Today - 4 years",
+            			"sex": "Male"
+        		},
+        		"Patient_Perm_Not_Given": {
+           			 "lastName": "Influenza",
+            			 "firstName": "2",
+            			"nameFullFormatted": "Influenza,2",
+           			 "newLastName": "OldInflu2",
+           			 "dob": "Today - 9 years - 1 day",
+            			"sex": "Male"
+        		},
+       		 "Patient_Temp_Not_Given": {
+          			  "lastName": "Influenza",
+            			  "firstName": "3",
+           			  "nameFullFormatted": "Influenza,3",
+            			  "newLastName": "OldInflu3",
+            			  "dob": "Today - 6 months + 1 day",
+            			  "sex": "Male"
+       		 },
+       		 "Patient_Live_Virus": {
+          			  "lastName": "Influenza",
+          			  "firstName": "4",
+        		 	  "nameFullFormatted": "Influenza,4",
+          			  "newLastName": "OldInflu4",
+          			  "dob": "Today - 2 years",
+         			  "sex": "Male"
+        		},
+       		"user": "Maintenance, Health",
+        	"vaccineName": "Influenza",
+        	"vis1": "Influenza (LAIV) (English)",
+        	"product1": "Afluria 2011-2012",
+        	"product2": "influenza virus vaccine, live",
+		"product3":"Influenza Current Season",
+       		"source": "Device",
+		"dateFormat":"Date",
+		"unchartedReason":"Test",
+        	"notGivenType": "Refused",
+        	"permNotGivenAction": "Cancel series and stop forecasting",
+       		"tempNotGivenAction": "This Season Only",
+        	"notGivenReason": "Patient Refuses"
+    	},
+	 "S18VE": {
+        		"Patient_Overdue": {
+            			"lastName": "Influenza",
+           			"firstName": "1",
+            			"nameFullFormatted": "Influenza,1",
+            			"newLastName": "OldInflu1",
+           		 	"dob": "Today - 4 years",
+            			"sex": "Male"
+        		},
+        		"Patient_Perm_Not_Given": {
+           			 "lastName": "Influenza",
+            			 "firstName": "2",
+            			"nameFullFormatted": "Influenza,2",
+           			 "newLastName": "OldInflu2",
+           			 "dob": "Today - 9 years - 1 day",
+            			"sex": "Male"
+        		},
+       		 "Patient_Temp_Not_Given": {
+          			  "lastName": "Influenza",
+            			  "firstName": "3",
+           			  "nameFullFormatted": "Influenza,3",
+            			  "newLastName": "OldInflu3",
+            			  "dob": "Today - 6 months + 1 day",
+            			  "sex": "Male"
+       		 },
+       		 "Patient_Live_Virus": {
+          			  "lastName": "Influenza",
+          			  "firstName": "4",
+        		 	  "nameFullFormatted": "Influenza,4",
+          			  "newLastName": "OldInflu4",
+          			  "dob": "Today - 2 years",
+         			  "sex": "Male"
+        		},
+       		"user": "Maintenance, Health",
+        	"vaccineName": "Influenza",
+        	"vis1": "Influenza (LAIV) (English)",
+        	"product1": "Afluria 2011-2012",
+        	"product2": "influenza virus vaccine, live",
+		"product3":"Influenza Current Season",
+       		"source": "Device",
+		"dateFormat":"Date",
+		"unchartedReason":"Test",
+        	"notGivenType": "Refused",
+        	"permNotGivenAction": "Cancel series and stop forecasting",
+       		"tempNotGivenAction": "This Season Only",
+        	"notGivenReason": "Patient Refuses"
+    	},
+ 	"SOLGM": {
+        		"Patient_Overdue": {
+            			"lastName": "Influenza",
+           			"firstName": "1",
+            			"nameFullFormatted": "Influenza,1",
+            			"newLastName": "OldInflu1",
+           		 	"dob": "Today - 4 years",
+            			"sex": "Male"
+        		},
+        		"Patient_Perm_Not_Given": {
+           			 "lastName": "Influenza",
+            			 "firstName": "2",
+            			"nameFullFormatted": "Influenza,2",
+           			 "newLastName": "OldInflu2",
+           			 "dob": "Today - 9 years - 1 day",
+            			"sex": "Male"
+        		},
+       		 "Patient_Temp_Not_Given": {
+          			  "lastName": "Influenza",
+            			  "firstName": "3",
+           			  "nameFullFormatted": "Influenza,3",
+            			  "newLastName": "OldInflu3",
+            			  "dob": "Today - 6 months + 1 day",
+            			  "sex": "Male"
+       		 },
+       		 "Patient_Live_Virus": {
+          			  "lastName": "Influenza",
+          			  "firstName": "4",
+        		 	  "nameFullFormatted": "Influenza,4",
+          			  "newLastName": "OldInflu4",
+          			  "dob": "Today - 2 years",
+         			  "sex": "Male"
+        		},
+       		"user": "Maintenance, Health",
+        	"vaccineName": "Influenza",
+        	"vis1": "Influenza (LAIV) (English)",
+        	"product1": "Fluarix 2013-2014",
+        	"product2": "influenza virus vaccine, live",
+       		"source": "Device",
+		"dateFormat":"Date",
+		"unchartedReason":"Test",
+        	"notGivenType": "Refused",
+        	"permNotGivenAction": "Cancel series and stop forecasting",
+       		"tempNotGivenAction": "This Season Only",
+        	"notGivenReason": "Patient Refuses"
+   	 }
+}

@@ -1,0 +1,188 @@
+﻿--------------------------------------------------HELPER SUITE INFORMATION-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+#https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+# https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+------------------------------------------------RQM TEST CASE LINK--------------------------------------------------------
+
+#https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=125362
+
+-------------------------------------------------------------------------------------------------------------------------------------
+params domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+Log "Test running in domain"&&domain
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+Log "commonData:" && setup
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set relationship to setup.relationship
+set conversation to setup.Conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set sidePanelCloseButtonImage to common.sidePanelCloseButtonImage
+set pluSignImage to common.plusSignImage
+set modifyButtonEnabledImage to common.modifyButtonEnabledImage
+set unchartedButtonEnabledImage to common.unchartedButtonEnabledImage
+set sharingFollowupLabelMpage to common.sharingFollowupLabelMpage
+set sharingFollowUpButton to common.sharingFollowUpButton
+set registryImportLabelMpage to common.registryImportLabelMpage
+set regImportButton to common.regImportButton
+set sharingFollowUpLabel to common.sharingFollowUpLabel
+set sharingFollowUpLink to common.sharingFollowUpLink
+set registryImportLabel to common.registryImportLabel
+set registryImportLink to common.registryImportLink
+set sidePanelCloseButtonImage to common.sidePanelCloseButtonImage
+set documentHistoryImage to common.documentHistoryImage
+set chartNotGivenImage to common.chartNotGivenImage
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set viewForecast to textStrings.viewForecast
+
+set testData to JSONValue(file ResourcePath("VR/Patient_No_Encounter/testData.json")).(text of domain)
+set lastName to testData.Patient1.lastName
+set firstName to testData.Patient1.firstName
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient1.dob)) 
+set sex to testData.Patient1.sex
+set patientName to testData.Patient1.nameFullFormatted
+set newLastName to testData.Patient1.newLastName
+set user to testData.User
+set vaccineName to testData.vaccineName
+set cancelConversation to testData.cancelConversation
+set transactionReason to testData.transactionReason
+set source to testData.source
+set dateFormat to testData.dateFormat
+
+
+set format to "%b %d, %Y"
+
+Try
+	#PATIENT CREATION
+	Log "Create patient1 (2 years old) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Util".closeApplication 2
+	
+	//Pre-Req Data
+	run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, relationship
+	run "Immunizations/Common/DocumentHistory/Task".documentRequiredInput vaccineName, dateFormat,  "Immunizations/Util/Date".todaysDate(format), source, "Submit"
+	run "Util".closeApplication 2
+	run "Immunizations/PatientCreation".cancelEncounter username, password, domain,cancelConversation,lastName,firstName,transactionReason
+	run "Util".closeApplication 2
+	//-------------------End Patient Setup------------
+	
+	Try
+		#TEST STEPS
+		BeginTestCase "VR/General_Immun_Concepts/HLM-VR-Immunizations-Patient_No_Encounter"
+		
+		Log "Util".stepNumber &"ACTION: Open Powerchart.exe with User1, search for and open the chart for patient1, and open the Immunizations Workflow component."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,cleanup, relationship
+		
+		log "VERIFICATION: Ensure the followng informational banner displays on the top of table: 'No valid encounters found. You cannot perform actions for a patient without a valid encounter'."
+		set rectangle to (imageLocation(image:"Immunizations/Search/TL_TabList"), imageLocation(image:"Immunizations/Search/BR_TabList"))
+		run "Immunizations/Util/Validation".verifyImage "Immunizations/WorkflowMPage/Table/NoEncounterBanner", rectangle
+		
+		log "VERIFICATION: Ensure plus button is hidden at the top right side of the table."
+		run "Immunizations/Util/Validation".verifyImageNotVisible "Immunizations/WorkflowMPage/Table/TL_PlusSignDropDown", rectangle
+		
+		Log "VERIFICATION: Ensure that Sharing/Followup and Resgistry links and Labels are Hidden'."
+		set rectangle to (imageLocation(image:"Immunizations/WorkflowMPage/Table/TL_Workflow"), imageLocation(image:"Immunizations/WorkflowMPage/Table/BR_Workflow"))
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowupLabelMpage, rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpButton, rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible registryImportLabelMpage, rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible regImportButton, rectangle
+		
+		Log "VERIFICATION: Ensure that View Outside Records link is Hidden'."
+		run "Immunizations/Util/Validation".verifyImageNotVisible "Immunizations/WorkflowMPage/Table/View_Outside_Records_Hyperlink", rectangle
+		captureScreen(Name:"Step"&Global stepNumber&"-MPage View")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on the vaccine group (such as Hepatitis B that has valid administration)."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		
+		Log "VERIFICATION: Ensure that Modify and Unchart buttons are Hidden'."
+		set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelTopHeaderRectangle()
+		run "Immunizations/Util/Validation".verifyImageNotVisible modifyButtonEnabledImage , sidePanelHeaderRectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible unchartedButtonEnabledImage , sidePanelHeaderRectangle
+		captureScreen(Name:"Step"&Global stepNumber&"-SidePanel View")
+		----------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Click on close (x) button within side panel."
+		Click "Immunizations/WorkflowMPage/SidePanel/Button"
+		
+		Log "VERIFICATION: Ensure side panel closes without error."
+		run "Immunizations/Util/Validation".verifyImageNotVisible sidePanelCloseButtonImage
+		CaptureScreen(Name:"Step" & Global stepNumber & "-Side Panel Closes")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Click on the View Forecast button."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickViewForecast viewForecast
+		
+		Log "VERIFICATION: Ensure that Dcoument History and Chart not given buttons are Hidden'.", 
+		set rectangle to (imageLocation(image:"Immunizations/Search/TL_TabList"), imageLocation(image:"Immunizations/Search/BR_TabList"))
+		run "Immunizations/Util/Validation".verifyImageNotVisible documentHistoryImage, rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible chartNotGivenImage, rectangle
+		
+		Log "VERIFICATION: Ensure that Sharing/Followup and Resgistry links and Labels are Hidden in the Forecaster'."
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpLabel, rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpLink, rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible registryImportLabel, rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible registryImportLink, rectangle
+		CaptureScreen(Name:"Step" & Global stepNumber & "-Forecaster View")
+		---------------------------------------------------------------------------------------------------------------	
+		
+		Log "Util".stepNumber &"ACTION:  Click on the List View."
+		run "Immunizations/Forecaster-Common/Actions".ClickFlipViews
+		
+		Log "VERIFICATION: Ensure that Document History and Chart not given buttons are Hidden'."
+		set rectangle to (imageLocation(image:"Immunizations/Search/TL_TabList"), imageLocation(image:"Immunizations/Search/BR_TabList"))
+		run "Immunizations/Util/Validation".verifyImageNotVisible documentHistoryImage, rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible chartNotGivenImage, rectangle
+		
+		Log "VERIFICATION: Ensure that Sharing/Followup and Registry links and labels are Hidden in the List View'."
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpLabel, rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible sharingFollowUpLink, rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible registryImportLabel, rectangle
+		run "Immunizations/Util/Validation".verifyImageNotVisible registryImportLink,rectangle
+		CaptureScreen(Name:"Step" & Global stepNumber & "-List View") 
+		--------------------------------------------------------------------------------------------------------------
+		
+		log "Util".stepNumber &"ACTION: Close Application."
+		run "Immunizations/setup".closeApplication
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase  "VR/General_Immun_Concepts/HLM-VR-Immunizations-Patient_No_Encounter"
+		
+		
+	Catch
+		LogError "Test Steps Exception: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+	#PATIENT CLEANUP
+	Log "ACTION: Cleanup Patient."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName,firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	run "Immunizations/PatientCreation".renamePatientNoEncounter newLastName, encounterType
+	run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+#SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

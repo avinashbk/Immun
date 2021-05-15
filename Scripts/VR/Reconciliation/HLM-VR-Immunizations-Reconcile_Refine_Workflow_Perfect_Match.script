@@ -1,0 +1,85 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=116532
+
+*)
+
+params domain 
+
+set domain to "Immunizations/Util/setup".domainrun(domain)
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+Log "commonData:" && setup
+set format to "%b %d, %Y"
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set encounterOrg to setup.encounterOrg
+set encounterType to setup.encounterType
+set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set conversation to setup.conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set viewPoint to common.viewPoint
+set viewingOutsideRecordsBannerImage to common.viewingOutsideRecordsBannerImage
+set refineButtonWhiteImage to common.refineButtonWhiteImage
+
+set testData to JSONValue(file ResourcePath("VR/Reconcile_Refine_Workflow/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file resourcePath("VR/Reconcile_Refine_Workflow/testData.json")).(text of domain)
+set lastName to testData.Patient_Perfect_Match.lastName
+set firstName to testData.Patient_Perfect_Match.firstName
+set patientName to testData.Patient_Perfect_Match.nameFullFormatted
+set newLastName to testData.Patient_Perfect_Match.newLastName
+set dob to formattedTime("%m/%d/%Y", value(testData.Patient_Perfect_Match.dob)) 
+
+
+
+Try
+	#################################################################################
+	# TEST STEPS
+	
+	BeginTestCase "VR/Reconciliation/HLM-VR-Immunizations-Reconcile_Refine_Workflow_Perfect_Match"
+	
+	log "Util".stepNumber & "ACTION: Open Powerchart and navigate to Patient's chart then click on the 'View' button within the reconciliation banner."
+	run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+	run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+	
+	log "VERIFICATION:Ensure the reconciliation banner displays on the top of the table with the message 'You are viewing outside records. Import information into your local record to view it in the patient's chart.'."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	run "Immunizations/Util/Validation".verifyImage viewingOutsideRecordsBannerImage, rectangle
+	
+	Log "VERIFICATION: The Refine query banner should not be present."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	run "Immunizations/Util/Validation".verifyImageNotVisible refineButtonWhiteImage, rectangle
+	
+	Log "VERIFICATION: The Refine button is not displayed in the informational banner section of the modal."
+	set rectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".TopHeaderRectangle
+	run "Immunizations/Util/Validation".verifyImageNotVisible refineButtonWhiteImage, rectangle
+	capturescreen (Name:"Step"&Global stepNumber&"- Initial Reconciliation View")
+	---------------------------------------------------------------------------------------------------------------
+	EndTestCase "VR/Reconciliation/HLM-VR-Immunizations-Reconcile_Refine_Workflow_Perfect_Match"
+	
+catch exception
+	logError "Exception encountered" && exception.reason
+	log "Exception Location:" && exception.location	
+	captureScreen"Exception" && "at" & Global stepNumber
+end try
+---------------------------------------------------------------------------------------------------------------
+
+log "Util".stepNumber & "ACTION: Close the application."
+run "Immunizations/setup".closeApplication 
+
+---------------------------------------------------------------------------------------------------------------
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

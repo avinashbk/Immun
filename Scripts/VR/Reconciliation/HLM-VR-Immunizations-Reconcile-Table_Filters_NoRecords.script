@@ -1,0 +1,118 @@
+﻿-----------------------------------------------------------------------Helper Suite Information-----------------------------------------------------------------------
+
+# https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+# https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https://github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# RQM TEST CASE LINK: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=118263
+
+params domain
+set domain to "Immunizations/Util/Setup".domainRun(domain)
+set format to "%b %d, %Y"
+log "Test running in domain"&&domain
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+set encounterOrg to setup.EncounterOrg
+set encounterType to setup.EncounterType
+set conversation to setup.Conversation
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set testData to JSONValue(file ResourcePath("VR/Reconcile-Filters/testData.json")).(text of domain)
+set vaccineName1 to testData.vaccineName1
+set patientName to testData.Patient_NoRecords.nameFullFormatted
+set newLastName to testFData.Patient_NoRecords.newLastName
+set vaccineName1Admin1Date1 to formattedTime("%m/%d/%Y", value(testData.Patient_NoRecords.vaccineName1Admin1Date1))  
+set vaccineName1Admin1Source to testData.Source
+set vaccineName1Admin1Product to testData.varicellaProduct1
+set dateFormat1 to testData.dateFormat
+
+set global cleanup to "Immunizations/Setup".setCleanup()
+
+try
+	
+	// -------------------------------------------------------------------- Patient Setup -------------------------------------------------------------------------
+	Log "Create patient_NoRecords"	
+	set lastName to testData.Patient_NoRecords.lastName
+	set firstName to testData.Patient_NoRecords.firstName
+	set dob to formattedTime("%m/%d/%Y", value(testData.Patient_NoRecords.dob)) 
+	set sex to testData.Patient_NoRecords.sex
+	
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	wait 3
+	run "Util".closeApplication 2	
+	// -------------------------------------------------------------------- End Patient Setup -------------------------------------------------------------------------
+	
+	try 
+		###################################################################
+		# TEST STEPS
+		BeginTestCase "VR/Reconciliation/HLM-VR-Immunizations-Reconcile-Table_Filters_NoRecords"
+		
+		Log "Util".stepNumber &"ACTION: Open Patient_NoRecords's chart and navigate to the Immunizations workflow mPage, chart an administration for" && vaccineName1 & "and click 'View Outside Records' link at the bottom as there will not be a banner due to no records."
+		run "Immunizations/setup".loginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu, cleanup, relationship
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName1, dateFormat1, vaccineName1Admin1Date1, vaccineName1Admin1Source, vaccineName1Admin1Product, "submit"
+		run "Immunizations/WorkflowMPage/Table/Actions".clickReconcileHyperlink
+		
+		Log "VERIFICATION: The Maximum Date Range filter is defaulted to 'All'."
+		set maxDateRangeFilterSearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".filterRectangle("Maximum Date Range")
+		run "Immunizations/Util/Validation".verifyText "All", maxDateRangeFilterSearchRectangle
+		
+		Log "VERIFICATION: The Records Displaying filter is defaulted to 'Pending'."
+		set recordsFilterSearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".filterRectangle("Records Displaying")
+		run "Immunizations/Util/Validation".verifyText "Pending", recordsFilterSearchRectangle
+		
+		Log "VERIFICATION: The Source filter is defaulted to 'External'."
+		set sourceFilterSearchRectangle to "Immunizations/WorkflowMPage/Reconciliation/Headers/Helpers".filterRectangle("Source")
+		run "Immunizations/Util/Validation".verifyText "External", sourceFilterSearchRectangle
+		
+		Log "VERIFICATION: Administration Date column is empty as there are no local records."
+		run "Immunizations/WorkflowMPage/Reconciliation/Table/Validations".verifyEmptyColumn true, "Administration Date"
+		
+		Log "VERIFICATION: 'Displaying 0 results' is displayed at the bottom of outside records section."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Headers/Outside_Records_Text") + (-30, 635, 0, 635)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Bottom_summary/Displaying_0_Results", rectangle
+		
+		Log "VERIFICATION: 'No results' is displayed in outside records section with the folder like icon."
+		set rectangle to ImageRectangle("Immunizations/WorkflowMPage/Reconciliation/Filters/Source/Header") + (250, 180, 295, 260)
+		run "Immunizations/Util/Validation".Verifyimage "Immunizations/WorkflowMPage/Reconciliation/Outside_Record_Table/No_Results_For_Any_Filter", rectangle
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Initial Reconciliation (No records) patient_NoRecords")
+		---------------------------------------------------------------------------------------------------------------
+		EndTestCase "VR/Reconciliation/HLM-VR-Immunizations-Reconcile-Table_Filters_NoRecords"
+		###################################################################
+		
+	catch exception
+		logError "Exception encountered in Workflow Steps" && exception.reason
+		log "Exception Location:" && exception.location 
+		captureScreen"Exception" && "at" & Global stepNumber 
+	end try	
+	
+	Log "Util".stepNumber & "Close Patient_NoRecords’s chart."
+	run "Immunizations/setup".closeChartViaX
+	run "Immunizations/Setup".closeApplication global cleanup
+	
+	Log "Cleanup patient_NoRecords."
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	wait 3
+	run "Util".closeApplication 2
+	
+catch exception	
+	logError "Exception encountered during patient setup or cleanup due to" && exception.reason
+	log "Exception Location:" && exception.location
+	captureScreen"Exception" && "at" & Global stepNumber 
+end try
+
+run "Cleanup".ZeroStateCloseAllApps

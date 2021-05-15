@@ -1,0 +1,67 @@
+{
+	"SOLM64": {
+		"Patient1": {
+			"lastName": "Pneumo24MonthsP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo24MonthsP1,Bob",
+			"newLastName": "oldPneumo24MonthsP1",
+			"dob": "Today - 24 months",
+			"sex": "Male"
+		},
+		"vaccineName": "Pneumococcal Conjugate",
+		"user": "Maintenance, Health",
+		"source": "Clinician",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)"
+	},
+	"S18VX": {
+		"Patient1": {
+			"lastName": "Pneumo24MonthsP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo24MonthsP1,Bob",
+			"newLastName": "oldPneumo24MonthsP1",
+			"dob": "Today - 24 months",
+			"sex": "Male"
+		},
+		"vaccineName": "Pneumococcal Conjugate",
+		"vaccineName2":"Varicella",
+		"user": "Maintenance, Health",
+		"source": "Clinician",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)",
+		"vis2": "Varicella (English)",
+		"visDetail": "Pneumococcal polysaccharide",
+		"orderableName":"varicella virus vaccine",
+		"encounterType":"Outpatient",
+		"vfc":"Native American/Alaskan",
+		"vfc2":"Medicaid",
+		"visGivenDate":"04/05/2015",
+		"fundingSource":"State Funds",
+		"fundingSource2":"Tribal Funds",
+		"lotNumber":"ABC123",
+		"manufacturer":"3M Healthcare",
+		"expirationDate":"03/02/2025",
+		"site":"Left Eye",
+		"visPublishedDate":"NOV 05, 2015",
+		"visPublishedDate2":"NOV 04, 2015"
+	},
+	"S18VA": {
+		"Patient1": {
+			"lastName": "Pneumo24MonthsP1",
+			"firstName": "Bob",
+			"nameFullFormatted": "Pneumo24MonthsP1,Bob",
+			"newLastName": "oldPneumo24MonthsP1",
+			"dob": "Today - 24 months",
+			"sex": "Male"
+		},
+		"vaccineName": "Pneumococcal Conjugate",
+		"user": "Maintenance, Health",
+		"source": "Clinician",
+		"product1": "Prevnar 13",
+		"product2": "pneumococcal 7-valent vaccine",
+		"vis": "Pneumococcal conjugate (PCV13) (English)"
+	},
+	"dateFormat": "Date"
+}

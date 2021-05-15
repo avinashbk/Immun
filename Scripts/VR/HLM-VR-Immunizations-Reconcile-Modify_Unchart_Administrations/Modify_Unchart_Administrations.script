@@ -1,0 +1,22 @@
+﻿--------------------------------------------------Helper Suite Information-------------------------------------------
+
+#https://github.cerner.com/EggPlant/IPDev-Shared-Millennium
+#https://github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+
+--------------------------------------------------Helper Suite Information-------------------------------------------
+
+BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/Patient_Setup"
+Run "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/Patient_Setup"
+EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/Patient_Setup"
+
+BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Admins_ExternalAndLocal"
+Run "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Admins_ExternalAndLocal"
+EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Admins_ExternalAndLocal"
+
+BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Admins_PED"
+Run "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Admins_PED"
+EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Admins_PED"
+
+BeginTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/Patient_Cleanup"
+Run "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/Patient_Cleanup"
+EndTestCase "VR/HLM-VR-Immunizations-Reconcile-Modify_Unchart_Administrations/Patient_Cleanup"

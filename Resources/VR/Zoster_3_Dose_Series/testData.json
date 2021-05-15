@@ -1,0 +1,139 @@
+{
+  "SOLM64":{
+ 		
+		"Patient1":{
+			"lastName":"Zoster",
+			"firstName":"Dose3",
+			"nameFullFormatted":"Zoster,Dose3",
+			"newLastName":"Old1Z",
+			"sex":"Male",
+			"DOB":"Today - 51 years"
+			},
+		
+		"vaccineName1":"Zoster",
+		"vaccineName2":"Varicella",
+		"productName1":"Zoster vaccine live",
+		"productName2":"Zoster Recombinant",
+		"vislinkproduct1":"Shingles (zoster) (English)",
+		"vislinkproduct2":"Zoster Recombinant (zoster) (English)",
+		"source":"Device",
+		"dateFormat":"Date",
+		"user":"Maintenance,Health",
+		"button":"Submit"
+		
+	},
+  "SOLGM":{
+ 		
+		"Patient1":{
+			"lastName":"Zoster",
+			"firstName":"Dose3",
+			"nameFullFormatted":"Zoster,Dose3",
+			"newLastName":"Old1Z",
+			"sex":"Male",
+			"DOB":"Today - 51 years"
+			},
+		
+		"vaccineName1":"Zoster",
+		"vaccineName2":"Varicella",
+		"productName1":"Zoster vaccine live",
+		"productName2":"Zoster Recombinant",
+		"vislinkproduct1":"Shingles (zoster) (English)",
+		"vislinkproduct2":"Zoster Recombinant (zoster) (English)",
+		"source":"Device",
+		"dateFormat":"Date",
+		"user":"Maintenance,Health",
+		"button":"Submit"
+		
+	},
+  "S18BX":{
+ 		
+		"Patient1":{
+			"lastName":"Zoster",
+			"firstName":"Dose3",
+			"nameFullFormatted":"Zoster,Dose3",
+			"newLastName":"Old1Z",
+			"sex":"Male",
+			"DOB":"Today - 51 years"
+			},
+		
+		"vaccineName1":"Zoster",
+		"vaccineName2":"Varicella",
+		"productName1":"Zoster vaccine live",
+		"productName2":"Zoster Recombinant",
+		"vislinkproduct1":"Shingles (zoster) (English)",
+		"vislinkproduct2":"Zoster Recombinant (zoster) (English)",
+		"source":"Device",
+		"dateFormat":"Date",
+		"user":"Maintenance,Health",
+		"button":"Submit"
+		
+	},
+  "INTGM":{
+ 		
+		"Patient1":{
+			"lastName":"Zoster",
+			"firstName":"Dose3",
+			"nameFullFormatted":"Zoster,Dose3",
+			"newLastName":"Old1Z",
+			"sex":"Male",
+			"DOB":"Today - 51 years"
+			},
+		
+		"vaccineName1":"Zoster",
+		"vaccineName2":"Varicella",
+		"productName1":"Zoster vaccine live",
+		"productName2":"Zoster Recombinant",
+		"vislinkproduct1":"Shingles (zoster) (English)",
+		"vislinkproduct2":"Zoster Recombinant (zoster) (English)",
+		"source":"Device",
+		"dateFormat":"Date",
+		"user":"Maintenance,Health",
+		"button":"Submit"
+		
+	},
+  "S18VE":{
+ 		
+		"Patient1":{
+			"lastName":"Zoster",
+			"firstName":"Dose3",
+			"nameFullFormatted":"Zoster,Dose3",
+			"newLastName":"Old1Z",
+			"sex":"Male",
+			"DOB":"Today - 51 years"
+			},
+		
+		"vaccineName1":"Zoster",
+		"vaccineName2":"Varicella",
+		"productName1":"Zoster vaccine live",
+		"productName2":"Zoster Recombinant",
+		"vislinkproduct1":"Shingles (zoster) (English)",
+		"vislinkproduct2":"Zoster Recombinant (zoster) (English)",
+		"source":"Device",
+		"dateFormat":"Date",
+		"user":"Maintenance,Health",
+		"button":"Submit"
+		
+	},
+"S18VX":{
+ 		
+		"Patient1":{
+			"lastName":"Zoster",
+			"firstName":"Dose3",
+			"nameFullFormatted":"Zoster,Dose3",
+			"newLastName":"Old1Z",
+			"sex":"Male",
+			"DOB":"Today - 51 years"
+			},
+		
+		"vaccineName1":"Zoster",
+		"vaccineName2":"Varicella",
+		"productName1":"Zoster vaccine live",
+		"productName2":"Zoster Recombinant",
+		"vislinkproduct1":"Shingles (zoster) (English)",
+		"vislinkproduct2":"Zoster Recombinant (English)",
+		"source":"Device",
+		"dateFormat":"Date",
+		"user":"Maintenance,Health",
+		"button":"Submit"
+	}
+}  

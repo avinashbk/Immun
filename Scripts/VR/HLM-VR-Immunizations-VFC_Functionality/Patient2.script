@@ -1,0 +1,37 @@
+﻿params domain
+
+set domain to "Immunizations/Util/setup".domainRun(domain)
+log "Test running in domain"&&domain
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+log "commonData:" && setup
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+set global cleanup to "Immunizations/setup".setCleanup()
+
+set testData to JSONValue (file ResourcePath("VR/HLM-VR-Immunizations-VFC_Functionality/testData.json")).(value of domain)
+set patient to testData.Patient2.nameFullFormatted
+
+Try
+	Log "Util".stepNumber &"ACTION: Open Patient 2's chart and navigate to the page which contains the VFC component"
+	Run "Immunizations/Setup".NavigateToImmunizationWorkflowViaMenu patient, Menu, SubMenu, relationship
+	
+	Log "VERIFICATION: Ensure that the VFC status displays and View/Modify button is displayed next to the VFC status"
+	Run "Immunizations/Util/Validation".verifyText "VFC Status:", "Immunizations/Common/Helpers".tabListSearchRectangle
+	Run "Immunizations/Util/Validation".Verifyimage "Immunizations/Common/Button_ViewModify", "Immunizations/Common/Helpers".tabListSearchRectangle
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch theException
+	
+	LogError "Exception encountered" & newline & "Exception Reason:" && theException.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+Log "Util".stepNumber &"ACTION: Close powerchart."
+run "Immunizations/Setup".CloseApplication Cleanup
+

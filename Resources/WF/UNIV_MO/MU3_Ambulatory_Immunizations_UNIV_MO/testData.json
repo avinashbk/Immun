@@ -1,0 +1,76 @@
+{
+	"S18XA": {
+		"Patient1": {
+			"lastName": "Registry",
+			"firstName": "Pat1",
+			"nameFullFormatted": "Registry,Pat1",
+			"newLastName": "oldRegistry",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"applicationName":"S18XA Applications 2016",
+		"user": "Maintenance,Health",
+		"orderableName": "varicella virus vaccine",
+		"registryName":"Alaska Immunization Registry VacTrAK",
+		"vaccineName": "Varicella",
+		"VIS1": "Varicella (English)",
+		"exceptionMAR": "Contraindicated - Do Not Give",
+		"exceptionReasonMAR": "Contraindicated - Do Not Give"
+	},
+	"S18XB": {
+		"Patient1": {
+			"lastName": "Registry",
+			"firstName": "Pat1",
+			"nameFullFormatted": "Registry,Pat1",
+			"newLastName": "oldRegistry",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"applicationName":"2016 S18XB Applications",
+		"user": "Maintenance,Health",
+		"orderableName": "varicella virus vaccine",
+		"registryName":"Alaska Immunization Registry VacTrAK",
+		"vaccineName": "Varicella",
+		"VIS1": "Varicella (English)",
+		"exceptionMAR": "Contraindicated - Do Not Give",
+		"exceptionReasonMAR": "Contraindicated - Do Not Give"
+	},
+	"S18BX": {
+		"Patient1": {
+			"lastName": "Registry",
+			"firstName": "Pat1",
+			"nameFullFormatted": "Registry,Pat1",
+			"newLastName": "oldRegistry",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"applicationName":"S18BX Applications 2012R2",
+		"user": "Maintenance,Health",
+		"orderableName": "varicella virus vaccine",
+		"registryName":"Alaska Immunization Registry VacTrAK",
+		"vaccineName": "Varicella",
+		"VIS1": "Varicella (English)",
+		"exceptionMAR": "Contraindicated - Do Not Give",
+		"exceptionReasonMAR": "Contraindicated - Do Not Give"
+	},
+	"S18XC": {
+		"Patient1": {
+			"lastName": "Registry",
+			"firstName": "Pat1",
+			"nameFullFormatted": "Registry,Pat1",
+			"newLastName": "oldRegistry",
+			"dob": "Today - 2 years",
+			"sex": "Male"
+		},
+		"applicationName":"2016 S18XC Apps",
+		"user": "Maintenance,Health",
+		"orderableName": "varicella virus vaccine",
+		"registryName":"Alaska Immunization Registry VacTrAK",
+		"vaccineName": "Varicella",
+		"VIS1": "Varicella (English)",
+		"exceptionMAR": "Contraindicated - Do Not Give",
+		"exceptionReasonMAR": "Contraindicated - Do Not Give"
+	},
+	"citrixLoginUsername": "",
+	"citrixLoginPassword": ""
+}

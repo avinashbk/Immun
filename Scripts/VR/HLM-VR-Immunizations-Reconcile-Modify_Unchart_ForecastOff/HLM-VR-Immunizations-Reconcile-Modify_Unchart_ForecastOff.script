@@ -1,0 +1,319 @@
+﻿
+try
+	
+	Log "Util".stepNumber &"ACTION: Open Patient1's chart and navigate to the Immunizations workflow mPage and click on 'View' within the Outside records available banner."
+	
+	//vaccineName2Admin1Date1 validations
+	Log "VERIFICATION:" && vaccineName2Admin1Date1 && "displays in the outside records table within the subsection for" && vaccineName2 & "."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Date1 && "with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName2 & "."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1OrigSource1 && "displays in the Source column within the outside record table for" && vaccineName2Admin1Date1 & "."
+	
+	Log "VERIFICATION:" && "'" & vaccineName2 && "- Administered' displays in the Details column within the outside record table for the administration charted for" && vaccineName2Admin1Date1 & "."
+	
+	Log "VERIFICATION:" && newAdministration && "displays in the Updates column within the outside record table for" && vaccineName2Admin1Date1 & "."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1LastModifiedDate1 && "displays in the Last Modified column within the outside record table for" && vaccineName2Admin1Date1 & "."
+	
+	Log "VERIFICATION: The Add (with a drop down arrow) button is displayed in the Action column within the outside record table for" && vaccineName2Admin1Date1 & "."
+	
+	Log "VERIFICATION: The Reject button is displayed in the Action column within the outside record table for" && vaccineName2Admin1Date1 & "."
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Initial Reconciliation External Table patient1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Set the Source filter to Patient."
+	
+	//vaccineName1NotGiven1Date1 validations
+	Log "VERIFICATION:" && vaccineName1NotGiven1Date1 && "displays in the outside records table within the subsection for" && vaccineName1 & "."
+	
+	Log "VERIFICATION:" && vaccineName1NotGiven1Date1 && "with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName1 & "."
+	
+	Log "VERIFICATION:" && vaccineName1NotGiven1OrigSource1 && "displays in the Source column within the outside record table for" && vaccineName1NotGiven1Date1 & "."
+	
+	Log "VERIFICATION:" && "'" & vaccineName1 && "- Administered' displays in the Details column within the outside record table for the administration charted for" && vaccineName1NotGiven1Date1 & "."
+	
+	Log "VERIFICATION:" && newNotGiven && "displays in the Updates column within the outside record table for" && vaccineName1NotGiven1Date1 & "."
+	
+	Log "VERIFICATION:" && vaccineName1NotGiven1LastModifiedDate1 && "displays in the Last Modified column within the outside record table for" && vaccineName1NotGiven1Date1 & "."
+	
+	Log "VERIFICATION: The Add (with a drop down arrow) button is displayed in the Action column within the outside record table for" && vaccineName1NotGiven1Date1 & "."
+	
+	Log "VERIFICATION: The Reject button is displayed in the Action column within the outside record table for" && vaccineName1NotGiven1Date1 & "."
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Initial Reconciliation PED Table patient1")
+	----------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Click on the Add dropdown arrow within the outside record table and click on 'Add with Modify' for" && vaccineName1NotGiven1Date1 & "."
+	
+	Log "VERIFICATION: Save button is displayed and is disabled."
+	
+	Log "VERIFICATION: Cancel button is displayed and is enabled."
+	
+	Log "VERIFICATION:" && vaccineName1 && "is displayed."
+	
+	logWarning "Test Update: Order and fields that display are subject to change.  Review during automation to ensure it's still accurate, reorder as needed, add missing ones as needed, and remove ones that are not displayed as needed (review source being visible)"
+	Log "VERIFICATION:" && vaccineName1NotGiven1OrigSource1 && "is displayed within the Originating Source field."
+	
+	Log "VERIFICATION:" && vaccineName1NotGivenDate1 && "is displayed in the Not Given Date field."
+	
+	Log "VERIFICATION:" && vaccineName1NotGivenType1 && "is displayed in the Not Given Type field."
+	
+	Log "VERIFICATION:" && vaccineName1NotGivenReason1 && "is displayed in the Not Given Reason field."
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Initial Modify Mode" && vaccineName1NotGivenDate1 && "patient1")
+	----------------------------------------------------------------------------------------------------------------
+	logWarning "Steps will be impacted if not givens are removed from modify"
+	Log "Util".stepNumber &"ACTION: Modify the values for Not Given Type and Not Given Reason."
+	
+	Log "VERIFICATION: Save button is displayed and is enabled."
+	
+	Log "VERIFICATION:" && vaccineName1NotGivenType2 && "is displayed in the Not Given Type field."
+	
+	Log "VERIFICATION:" && vaccineName1NotGivenReason2 && "is displayed in the Not Given Reason field."
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Type and Reason Updated in Modify Mode patient1")
+	---------------------------------------------------------------------------------------------------------------
+	logWarning "Steps will be impacted if not givens are removed from modify"
+	Log "Util".stepNumber &"ACTION: Click the Save button."
+	
+	Log "VERIFICATION:" && vaccineName1NotGivenDate1 && "displays in the local record table within the subsection for" && vaccineName1 & "."
+	
+	Log "VERIFICATION:" && vaccineName1NotGivenDate1 && "received from RSS with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the local record table for" && vaccineName1 & "."
+	
+	Log "VERIFICATION:" && "'" & vaccineName1 && "- Not Given' displays in the Details column within the local record table for the permanent not given charted for" && vaccineName1NotGivenDate1 & "."
+	
+	Log "VERIFICATION: An ellipsis button displays in the Action column within the local record table for" && vaccineName1NotGivenDate1 & "."
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Type and Reason Modification Saved (Table) for" && vaccineName1NotGivenDate1 && "patient1")
+	---------------------------------------------------------------------------------------------------------------
+	logWarning "Steps will be impacted if not givens are removed from modify"
+	Log "Util".stepNumber &"ACTION: Switch the filter to External and click on" && vaccineName1NotGivenDate1 && "within the local record table."
+	
+	Log "VERIFICATION: Unchart button is displayed and is enabled."
+	
+	Log "VERIFICATION: Modify button is displayed and is enabled."
+	
+	Log "VERIFICATION:" && vaccineName1 && "is displayed."
+	
+	logWarning "Test Update: Order and fields that display are subject to change.  Review during automation to ensure it's still accurate, reorder as needed, add missing ones as needed, and remove ones that are not displayed as needed (review source being visible)"
+	Log "VERIFICATION:" && vaccineName1NotGivenDate1 && age && "-" && notGiven && "is displayed."
+	
+	Log "VERIFICATION:" && vaccineName1NotGivenDate1DocumentedBy && "is displayed within the Documented By field."
+	
+	Log "VERIFICATION: Today's date is displayed within the Last Modified field."
+	
+	Log "VERIFICATION:" && vaccineName1NotGivenType2 && "is displayed within the Not Given Type field."
+	
+	Log "VERIFICATION:" && vaccineName1NotGivenReason2 && "is displayed within the Not Given Reason field."
+	
+	Log "VERIFICATION:" && vaccineName1NotGivenComment1 && "is displayed within the Comments field with the system user for the domain (e.g." && systemUser && ") and the not given date (e.g." && vaccineName3CommentDate1 && ")."
+	
+	Log "VERIFICATION:" && vaccineName1NotGiven1OrigSource1 && "is displayed within the Originating Source field."
+	
+	Log "VERIFICATION:" && vaccineName1NotGiven1OrigSource1Date && "is displayed within the Originating Date field."
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Type and Reason Modification Saved (Side Panel) for" && vaccineName1 && "patient1")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Click on the Add dropdown arrow within the side panel and click on 'Add with Modify'."
+	
+	Log "VERIFICATION: Save button is displayed and is disabled."
+	
+	Log "VERIFICATION: Cancel button is displayed and is enabled."
+	
+	Log "VERIFICATION:" && vaccineName2 && "is displayed."
+	
+	logWarning "Test Update: Order and fields that display are subject to change.  Review during automation to ensure it's still accurate, reorder as needed, add missing ones as needed, and remove ones that are not displayed as needed (review source being visible)"
+	Log "VERIFICATION:" && vaccineName2Admin1OrigSource1 && "is displayed within the Originating Source field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Date1 && "received from RSS is displayed in the Administration Date field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Product && "is displayed within the Product field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1DoseNumber1 && "is displayed within the Dose field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Unit1 && "is displayed within the Unit field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Route1 && "is displayed within the Route field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Site1 && "is displayed within the Site field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1LotNumber1 && "is displayed within the Lot Number field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1ExpirationDate1 && "is displayed within the Expiration Date field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Manufacturer1 && "is displayed within the Manufacturer field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Comment1 && "is displayed within the Comments field with the system user for the domain (e.g." && systemUser && ") and the administration date (e.g." && vaccineName2Admin1Date1 && ") and the comments section is disabled."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Vis1 && "is displayed within the VIS field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1VisPublishedDate1 && "is displayed within the VIS Published field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1VisGivenDate1 && "is displayed within the VIS Given field."
+	
+	Log "VERIFICATION:" && vaccineName1Admin1FundingOrigSource1 && "is displayed within the Funding Source field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1VFC1 && "is displayed within the VFC field."
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Initial Outside Modify Mode" && vaccineName2Admin1Date1 && "patient1")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Enter a different value for" && vaccineName2Admin1Unit2 && "in the Unit field, click the Save button, and click on" && vaccineName2Admin1Date1 & "."
+	
+	Log "VERIFICATION: Unchart button is displayed and is enabled."
+	
+	Log "VERIFICATION: Modify button is displayed and is enabled."
+	
+	Log "VERIFICATION:" && vaccineName2 && "is displayed."
+	
+	logWarning "Test Update: Order and fields that display are subject to change.  Review during automation to ensure it's still accurate, reorder as needed, add missing ones as needed, and remove ones that are not displayed as needed (review source being visible)"
+	Log "VERIFICATION:" && vaccineName2Admin1Date1 && age && "-" && administered && "is displayed."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1DocumentedBy && "is displayed within the Administered By field."
+	
+	Log "VERIFICATION: Today's date is displayed within the Last Modified field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Product && "is displayed within the Product field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Site1 && "is displayed within the Site field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Route1 && "is displayed within the Route field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1DoseNumber1 && "is displayed within the Dose field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Unit2 && "is displayed within the Unit field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1LotNumber1 && "is displayed within the Lot Number field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1ExpirationDate1 && "is displayed within the Expiration Date field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Manufacturer1 && "is displayed within the Manufacturer field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Vis1 && "is displayed within the VIS field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1VisPublishedDate1 && "is displayed within the VIS Published field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1VisGivenDate1 && "is displayed within the VIS Given field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1VFC1 && "is displayed within the VFC field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1FundingOrigSource1 && "is displayed within the Funding Source field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1Comment1 && "is displayed within the Comments field with the system user for the domain (e.g." && systemUser && ") and the administration date (e.g." && vaccineName2Admin1Date1 && ")."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1OrigSource1 && "is displayed within the Originating Source field."
+	
+	Log "VERIFICATION:" && vaccineName2Admin1OrigSource1Date && "is displayed within the Originating Date field."
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Modification Saved (Local Side Panel) for" && vaccineName2Admin1Date1 && "patient1")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Close Reconciliation via the X button."
+	
+	//vaccineName1 validations
+	Log "VERIFICATION: The Administrations column displays with '--' for" && vaccineName1 && "."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName1, "--"
+	
+	Log "VERIFICATION: The Last Action column displays with 'Not Given' for" && vaccineName1 && "."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, notGiven
+	
+	Log "VERIFICATION: The Last Action Date column displays with" && vaccineName1NotGivenDate1 && "age at time of for" && vaccineName1 && "."
+	run "Immunizations/WorkflowMPage/Table/Validations".VerifyLastActionDateColumn vaccineName1, vaccineName1NotGivenDate1, age
+	
+	//vaccineName2 validations
+	Log "VERIFICATION: The Administrations column displays with '1' for" && vaccineName2 & "."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName2, "1", "false"
+	
+	Log "VERIFICATION: The Last Action column displays with 'Administered' for" && vaccineName2 & "."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName2, administered
+	
+	Log "VERIFICATION: The Last Action Date column displays with" && vaccineName2Admin1Date1 && "for" && vaccineName2 & "."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName2, vaccineName2Admin1Date1, age
+	CaptureScreen(Name:"Step"&Global stepNumber&"-mPage Table Modified Details for" && vaccineName2 && "Saved Patient1")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Click on" && vaccineName1 & "."
+	run "Immunizations/WorkflowMPage/Table/Actions".clickvaccineNameName vaccineName1
+	
+	Log "VERIFICATION:" && vaccineName1 && "displays within the side panel header." 
+	set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelTopHeaderRectangle
+	logWarning "May need to add handler for when forecast is off or use verifyText, will add during automation."
+	
+	Log "VERIFICATION: The not given charted on" && vaccineName1NotGivenDate1 && "displays with all of the administration details."
+	set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+	set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName1NotGivenDate1, false, true)
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", documentedByField, sidePanelRectangle, vaccineName1NotGivenDate1 && age && "-" && notGiven
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", documentedByField, sidePanelRectangle, vaccineName1NotGivenDate1DocumentedBy
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", notGivenTypeField, sidePanelRectangle, vaccineName1NotGivenType2
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", notGivenReasonField, sidePanelRectangle, vaccineName1NotGivenReason2
+	CaptureScreen(Name:"Step"&Global stepNumber&"-mPage Side Panel" && vaccineName1 && "After Modifications patient1")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Click on" && vaccineName2 && "and expand the details section."
+	run "Immunizations/WorkflowMPage/Table/Actions".clickvaccineNameName vaccineName2
+	
+	Log "VERIFICATION:" && vaccineName2 && "displays within the side panel header." 
+	set sidePanelHeaderRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".sidePanelTopHeaderRectangle
+	logWarning "May need to add handler for when forecast is off or use verifyText, will add during automation."
+	
+	logWarning "Test Update: Order and fields that display are subject to change.  Review during automation to ensure it's still accurate, reorder as needed, add missing ones as needed, and remove ones that are not displayed as needed (review source being visible)"
+	Log "VERIFICATION: The administration given on" && vaccineName2Admin1Date1 && "displays with all of the administration details."
+	set sidePanelRectangle to "Immunizations/WorkflowMPage/SidePanel/Helpers".SidePanelRectangle
+	set age to "Immunizations/Util/Date".ageCalculator(dob, vaccineName2Admin1Date1, false, true)
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".lastActionWithIndex "1", documentedByField, sidePanelRectangle, vaccineName2Admin1Date1 && age && "- Administered"
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", documentedByField, sidePanelRectangle, vaccineName2Admin1DocumentedBy
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", mpageSourceField, sidePanelRectangle, vaccineName2Admin1OrigSource1
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", productField, sidePanelRectangle, vaccineName2Admin1Product
+	run "Immunizations/WorkflowMPage/SidePanel/Validations".verifyFieldValue "1", unitField, sidePanelRectangle, vaccineName2Admin1Unit2
+	CaptureScreen(Name:"Step"&Global stepNumber&"-mPage Side Panel" && vaccineName2 && "After Modifications patient1")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Unchart the admin for" && vaccineName2 & " ."
+	
+	Log "VERIFICATION: The Administrations column displays with '--' for" && vaccineName2 & "."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyNextRecommendedColumn vaccineName2, "--", "false"
+	
+	Log "VERIFICATION: The Last Action column displays with '--' for" && vaccineName2 & "."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName2, "--"
+	
+	Log "VERIFICATION: The Last Action Date column displays with '--' for" && vaccineName2 & "."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionDateColumn vaccineName2, "--"
+	CaptureScreen(Name:"Step"&Global stepNumber&"-mPage Table" && vaccineName2 && "After Uncharting patient1")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Chart a not given for" && vaccineName2 & " dated for" && vaccineName2Admin1Date1 && "and click on 'View' within the Outside records available banner."
+	
+	Log "VERIFICATION:" && vaccineName2NotGiven1Date1 && "displays in the outside records table within the subsection for" && vaccineName2 & "."
+	
+	Log "VERIFICATION:" && vaccineName2NotGiven1Date1 && "with patient's age at the time of charting (e.g." && age & ") displays in the Administration Date column within the outside record table for" && vaccineName2 & "."
+	
+	Log "VERIFICATION:" && vaccineName2NotGiven1OrigSource1 && "displays in the Source column within the outside record table for" && vaccineName2NotGiven1Date1 & "."
+	
+	Log "VERIFICATION:" && "'" & vaccineName2 && "- Administered' displays in the Details column within the outside record table for the administration charted for" && vaccineName2NotGiven1Date1 & "."
+	
+	Log "VERIFICATION:" && newNotGiven && "displays in the Updates column within the outside record table for" && vaccineName2NotGiven1Date1 & "."
+	
+	Log "VERIFICATION:" && vaccineName2NotGiven1LastModifiedDate1 && "displays in the Last Modified column within the outside record table for" && vaccineName2NotGiven1Date1 & "."
+	
+	Log "VERIFICATION: The Add (with a drop down arrow) button is displayed in the Action column within the outside record table for" && vaccineName2NotGiven1Date1 & "."
+	
+	Log "VERIFICATION: The Reject button is displayed in the Action column within the outside record table for" && vaccineName2NotGiven1Date1 & "."
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Reconciliation Table" && vaccineName2NotGiven1Date1 && "Charted Locally.")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Switch the filter to All and click on Unchart for both" && vaccineName1Admin1Date1 && "and" && vaccineName1NotGivenDate1 && ", enter a comment, and save."
+	
+	Log "VERIFICATION:" && vaccineName1Admin1Date1 && "and" && vaccineName1NotGivenDate1 && "are not displayed in the outside records or local record table."
+	
+	CaptureScreen(Name:"Step"&Global stepNumber&"-Reconciliation Table" && vaccineName1Admin1Date1 && "and" && vaccineName1NotGivenDate1 && "Uncharted")
+	---------------------------------------------------------------------------------------------------------------
+	
+	Log "Util".stepNumber &"ACTION: Close Reconciliation via the X button."
+	
+	Log "VERIFICATION: The Last Action column displays with '--' for" && vaccineName1 && vaccineName2 & "."
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName1, "--"
+	run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName2, "--"
+	
+catch exception
+	logError "Exception encountered" && exception.reason
+	captureScreen"Exception"
+end try
+
+Log "Util".stepNumber &"ACTION: Close application."
+run "Immunizations/setup".closeApplication Cleanup
+

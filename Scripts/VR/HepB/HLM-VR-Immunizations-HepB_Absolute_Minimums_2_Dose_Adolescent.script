@@ -1,0 +1,158 @@
+﻿(* 
+
+HELPER SUITE INFO: 
+# https: //github.cerner.com/EggPlant/IPDev-mPages-Shared-Immunizations
+# https: //github.cerner.com/EggPlant/IPDev-Shared-Millennium 
+# https: //github.cerner.com/EggPlant/IPDev-Millennium-Shared-HealthMaintenanceTools
+#https://github.cerner.com/EggPlant/IPDev-Shared-Utilities
+
+RQM TEST CASE LINK: 
+# https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=114952
+
+*)
+params domain
+
+Log "Test running in domain" && domain
+set domain to "Immunizations/Util/setup".domainrun(domain)
+
+set setup to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("setup.json")),domain)
+set username to setup.username
+set password to decodeText(setup.("password").trimAll, "HLM")
+Set encounterOrg to setup.encounterOrg
+Set encounterType to setup.encounterType
+Set conversation to setup.conversation
+set the remoteWorkInterval to value(setup.("remoteWorkInterval"))
+set relationship to setup.relationship
+
+set common to JSONValue(file resourcePath("Common.json"))
+set menu to common.menu
+set subMenu to common.subMenu
+
+set textStrings to "UTIL_Json".initializeResourceData(JSONValue(file resourcePath("textStrings.json")),domain)
+set overdue to textStrings.overdue
+set complete to textStrings.complete
+
+set testData to JSONValue(file ResourcePath("VR/HepB_Absolute_Minimums/testData.json"))
+set dateFormat to testData.dateFormat
+
+set testData to JSONValue(file ResourcePath("VR/HepB_Absolute_Minimums/testData.json")).(value of domain)
+Set lastName to testData.Patient2.lastName
+Set firstName to testData.Patient2.firstName
+Set patientName to testData.Patient2.nameFullFormatted
+Set newLastName to testData.Patient2.newLastName
+Set sex to testData.Patient2.sex
+set dob to formattedTime("%m/%d/%Y", value(testData.patient2.dob))
+set vaccineName to testData.vaccineName
+set source to testData.source
+set product1 to testData.product1
+
+set format to "%b %d, %Y"
+
+
+Try
+	---------------------------------------------------------------------------------------------------------------
+	# PATIENT SETUP
+	Log "PATIENT CREATION: Open PmLaunch and Create patient(s) for the test"
+	run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	run "Immunizations/PatientCreation".openConversationContinuous conversation
+	run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	run "Immunizations/PatientCreation".patientSearched encounterOrg, firstName, sex, "%m/%d/%Y", dob, encounterType
+	Run "Util".closeApplication 2
+	
+	Try
+		#################################################################################
+		# TEST STEPS
+		BeginTestCase "VR/HLM-VR-HepB_Absolute_Minimums_2_Dose_Adolescent"
+		
+		Log "Util".stepNumber &"ACTION:  Open Patient2's chart and navigate to the Immunizations workflow mPage and chart dose 1 of CVX 43" && product1 && "at <DOB + 11 years - 4 day> and chart dose 2 with CVX 43" && product1 && "at <Dose 1 admin date + 4 months - 4 day>."
+		//unable to test with counting vs not counting method, instead this script will use the status to test flipping between 2 dose adolescent series and 3 dose series.
+		run "Immunizations/setup".LoginAndLoadcomponentViaMenu username, password, domain, patientName, menu, subMenu,  relationship
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("year":11, "day": -4)), source, product1, "Submit"
+		set dose1Admin to "Immunizations/Util/Date".adjustDate(dob, format, ("year":11, "day": -4))
+		run "Immunizations/Common/DocumentHistory/Task".documentWithProduct vaccineName, dateFormat, "Immunizations/Util/Date".adjustDate(dose1Admin, format, ("month":4, "day": -4)), source, product1, "Submit"
+		
+		Log "VERIFICATION: The status column displays 'Complete'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, complete
+		
+		Log "VERIFICATION: The administrations column displays '2' without the did not count icon for" && vaccineName && "."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for" && vaccineName
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Equal to Abs Min Interval Flip to 2 Dose Series P2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 2's admin date from <Dose 1 admin date + 4 months - 4 day> to <DOB + 16 years>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dose1Admin, format, ("month":4, "day": -4)), "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("year":16))
+		
+		Log "VERIFICATION: The status column displays '--'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, "--"
+		
+		Log "VERIFICATION: The administrations column displays '2' without the did not count icon for" && vaccineName && "."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for" && vaccineName && "."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Above Max Age Flip to 3 Dose Series P2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 2's admin date from <DOB + 16 years> to <DOB + 16 years - 1 day>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("year":16)), "1", dateFormat, "Immunizations/Util/Date".adjustDate(dob, format, ("year":16, "day":-1))
+		
+		Log "VERIFICATION: The status column displays 'Complete'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, complete
+		
+		Log "VERIFICATION: The administrations column displays '2' without the did not count icon for" && vaccineName && "."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for" && vaccineName && "."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Equal to Max Age Flip to 2 Dose Series P2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber &"ACTION: Open the side panel and modify Dose 2's admin date from <DOB + 16 years - 1 day> to <Dose 1 admin date + 4 months - 5 day>."
+		run "Immunizations/WorkflowMPage/Table/Actions".clickVaccineGroupName vaccineName
+		run "Immunizations/WorkFlowMPage/SidePanel/Task".modifyAdminDate "Immunizations/Util/Date".adjustDate(dob, format, ("year":16, "day":-1)), "1", dateFormat, "Immunizations/Util/Date".adjustDate(dose1Admin, format, ("month":4, "day": -5))
+		
+		Log "VERIFICATION: The status column displays 'Overdue'."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyStatusColumn vaccineName, overdue
+		
+		Log "VERIFICATION: The administrations column displays '2' without the did not count icon for" && vaccineName && "."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyAdministrationColumn vaccineName, "2", "false"
+		
+		Log "VERIFICATION: The Last Action column displays 'Administered' for" && vaccineName && "."
+		run "Immunizations/WorkflowMPage/Table/Validations".verifyLastActionColumn vaccineName, "Administered"
+		CaptureScreen(Name:"Step"&Global stepNumber&"-Dose2 Less Than Abs Min Interval Flip to 3 Dose Series P2")
+		---------------------------------------------------------------------------------------------------------------
+		
+		Log "Util".stepNumber & "ACTION: Close patient 2's chart."
+		Run "Immunizations/Setup".closeApplication 
+		---------------------------------------------------------------------------------------------------------------
+		
+		EndTestCase "VR/HLM-VR-HepB_Absolute_Minimums_2_Dose_Adolescent"
+		
+	Catch
+		LogError "Patient Workflow Steps Exception encountered: " && the exception.reason
+		captureScreen "PWF_Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+	End Try
+	
+	#################################################################################
+	# PATIENT CLEANUP
+	Log "PATIENT CLEANUP: Open PmLaunch and Rename patient(s) from the test"
+	Run "Immunizations/PatientCreation".openPMLaunch username, password, domain
+	Run "Immunizations/PatientCreation".openConversationContinuous conversation
+	Run "Immunizations/PatientCreation".searchPatient lastName, firstName
+	Run "Immunizations/PatientCreation".renamePatientSearched newLastName
+	Run "Util".closeApplication 2
+	---------------------------------------------------------------------------------------------------------------
+	
+Catch
+	LogError "Exception encountered: " && the exception.reason
+	captureScreen "Ex" & formattedTime("_%m%d%Y%H%M%S", the time)
+End Try
+---------------------------------------------------------------------------------------------------------------
+
+# SUT CLEANUP
+run "Cleanup".ZeroStateCloseAllApps

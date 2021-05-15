@@ -1,0 +1,36 @@
+{
+	"DEFAULT":{
+		"Patient1":{
+			"lastName":"FP",
+			"firstName":"P1",
+			"nameFullFormatted":"FP,P1",
+			"newLastName":"oldFP",
+			"dob":"1/20/2020",
+			"sex":"Male"
+		},
+		"user":"Maintenance, Health",
+                "bedrockPath":"C:\\Program Files\\Cerner\\Bedrock32\\Bedrock32.exe",
+		"vaccineName":"Hepatitis A",
+                "vaccineName1":"Influenza",
+                "vaccineName2":"Hepatitis B",
+                "vaccineName3":"Haemophilus Influenzae Type B",
+                "vaccineName4":"Meningococcal",
+                "vaccineName5":"Human Papillomavirus",
+                "vaccineName6":"Diphtheria, Tetanus, and Pertussis",
+                "vaccineName7":"Cholera",
+                "vaccineName8":"Pneumococcal Conjugate",
+                "vaccineName9":"Measles, Mumps, Rubella",
+                "product":"Havrix",
+                "product1":"HepB-CpG",
+                "product2":"ActHIB",
+                "product3":"Hiberix",
+                "product4":"Menactra",
+                "product5":"Gardasil9",
+                "product6":"Boostrix",
+                "product7":"Fluad 2016-2017",
+                "product8":"measles/mumps/rubella virus vaccine",
+          	"childhoodImmunizationSchedule": "https://www.cdc.gov/vaccines/schedules/hcp/imz/child-adolescent.html",
+                "source":"Device",
+		"dateformat":"Date"
+	}
+}
